@@ -142,7 +142,7 @@
   Mu.gain = () => { const s = S() ? S().settings() : {}, d = DATA.audio.defaults; return s.mute || Mu.muted ? 0 : (s.master ?? d.master) * (s.music ?? d.music ?? 0.7); };
   Mu.ensureBus = function () { const c = S().ctx; if (c && !Mu.bus) { Mu.bus = c.createGain(); Mu.bus.gain.value = Mu.gain(); Mu.bus.connect(S().master || c.destination); } return Mu.bus; };
   Mu.applySettings = function () {
-    if (Mu.bus) Mu.bus.gain.setTargetAtTime(Mu.gain(), S().ctx.currentTime, 0.05);
+    if (Mu.bus) { const c = S().ctx; if (Mu.ducking) { Mu.ducking = null; Mu.bus.gain.cancelScheduledValues(c.currentTime); } Mu.bus.gain.setTargetAtTime(Mu.gain(), c.currentTime, 0.05); }   // a settings change ends a sting's duck
     for (const v of Mu.voices) if (v.el) v.apply();
     if (Mu.state) Mu.set(Mu.state, Mu.zone);
   };
@@ -153,14 +153,15 @@
     const key = M().enabled === false ? null : Mu.trackFor(Mu.held(state), zone);
     Mu.want = key;
     if (!hasDom || !S() || !S().unlocked || !S().enabled) return;
-    if (Mu.gain() <= 0) { Mu.stopAll(); Mu.trim(); return; }
+    if (Mu.gain() <= 0) { Mu.stingHold = null; Mu.stopAll(); Mu.trim(); return; }
+    if (Mu.holding()) { if (key && M().tracks[key]) Mu.load(key); return; }   // a wipe / extraction sting: silence until near its end (Mu.stingOut)
     for (const k of ((M().preload || {})[state] || [])) if (M().tracks[k]) Mu.load(k);
     if (state === "run") { const bk = Mu.trackFor("battle", zone); if (bk && M().tracks[bk]) Mu.load(bk); }   // this zone's battle track, decoded early (Snare's note)
     if (!key) { Mu.stopAll(); return; }
     if (Mu.main && Mu.main.key === key) return;
     const e = Mu.load(key); if (e.state === "ok") Mu.go(key, Mu.held(state));
   };
-  Mu.onReady = function (key) { if (Mu.want === key && (!Mu.main || Mu.main.key !== key)) Mu.go(key, Mu.held(Mu.state)); };
+  Mu.onReady = function (key) { if (Mu.holding()) return; if (Mu.want === key && (!Mu.main || Mu.main.key !== key)) Mu.go(key, Mu.held(Mu.state)); };
   Mu.onUnlock = function () { if (Mu.state) Mu.set(Mu.state, Mu.zone); };
   // Music on / off for this visit: the title's sound button and Settings > Music on both come here. On also lifts a
   // saved Mute, so turning music on is never silent
@@ -268,6 +269,41 @@
     if (Mu.state === "battle") Mu.set("battle", Mu.zone);
     else if (h.voice && Mu.main === h.voice) h.voice.restore();   // left before the reveal (exit / failure): back to full level
   };
+  // ---- Snare's stingers (js/sfx.js SFX.sting, data/audio.js stingers) ----
+  // Mu.duck(to, attack, hold, release): the music bus ramps to to x Mu.gain() over attack s, holds for hold s from the
+  // start, then ramps back over release s. Web Audio only: under file:// (HTMLAudio, no bus) there is no duck.
+  // It rides the bus, not the voices, so it never touches a switch or the battle reveal's per-voice fades.
+  Mu.ducking = null;
+  Mu.duck = function (to, attack, hold, release) {
+    const c = S() && S().ctx; if (!c || !Mu.bus || !useWA() || Mu.gain() <= 0) return false;
+    const g = Mu.gain(), p = Mu.bus.gain, t = c.currentTime, a = Math.max(0.01, attack || 0.12), hd = Math.max(a, hold || 0), r = Math.max(0.05, release ?? 1.5);
+    p.cancelScheduledValues(t); p.setValueAtTime(p.value, t); p.linearRampToValueAtTime(to * g, t + a); p.setValueAtTime(to * g, t + hd); p.linearRampToValueAtTime(g, t + hd + r);
+    Mu.ducking = { to, at: t, until: t + hd + r, hold: hd, release: r };
+    note({ at: t, duck: to, attack: a, hold: hd, release: r });
+    return true;
+  };
+  // Mu.stingOut(dur, { fade, lead, leaveState }): the wipe and the extraction success. The music fades out over fade s
+  // and nothing starts until lead s before the sting ends; then whatever the state wants starts from its top with the
+  // usual first fade-in (firstFadeSec), never the 1.75 s restart crossfade under the sting. leaveState (the wipe): the
+  // silence also lasts until the music state changes (the battle summary stays quiet; the run result starts the outpost).
+  Mu.stingHold = null;
+  Mu.holding = function () {
+    const h = Mu.stingHold; if (!h) return false;
+    if (Mu.now() < h.until || (h.leaveState && Mu.state === h.state)) return true;
+    Mu.stingHold = null; return false;
+  };
+  Mu.stingOut = function (dur, o) {
+    o = o || {}; if (Mu.gain() <= 0) return false;
+    const f = o.fade ?? 0.25, until = Mu.now() + Math.max(0, dur - (o.lead ?? 0.3)) * 1000;
+    const keepState = Mu.stingHold && Mu.stingHold.leaveState ? Mu.stingHold.state : Mu.state;
+    Mu.stingHold = { until, leaveState: !!o.leaveState, state: keepState };
+    for (const v of Mu.voices.slice()) { if (v.stopping) continue; v.stopping = true; if (v.src) v.fadeOut(S().ctx.currentTime, f); else if (v.fadeOut) v.fadeOut(f); }
+    Mu.main = null;
+    clearTimeout(Mu._stingTimer); Mu._stingTimer = setTimeout(Mu.stingCheck, Math.max(0, until - Mu.now()) + 5);
+    note({ at: Mu.now(), stingOut: dur, fade: f, until, leaveState: !!o.leaveState });
+    return true;
+  };
+  Mu.stingCheck = function () { if (!Mu.stingHold) return; if (Mu.holding()) { if (!Mu.stingHold.leaveState || Mu.now() < Mu.stingHold.until) Mu._stingTimer = setTimeout(Mu.stingCheck, Math.max(5, Mu.stingHold.until - Mu.now() + 5)); return; } if (Mu.state) Mu.set(Mu.state, Mu.zone); };
   Mu.stopAll = function () { const f = M().restartFadeSec; for (const v of Mu.voices.slice()) { if (v.stopping) continue; v.stopping = true; if (v.src) v.fadeOut(S().ctx.currentTime, f); else if (v.fadeOut) v.fadeOut(f); } Mu.main = null; };
   // debug / tests: what is playing and where
   Mu.snapshot = function () {

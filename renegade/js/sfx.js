@@ -57,7 +57,9 @@
     return exts.map((x) => base() + A().ambPath + key + x);
   };
   SFX.status = (key) => ((A().sfx[key] || {}).pending ? "pending (no file yet)" : SFX.cache[key] ? SFX.cache[key].state : "not loaded");
-  SFX.onReady = function (key) { if (SFX.vol("ambient") > 0 && A().loops[key] && SFX.wantLoop === key && (!SFX.amb || SFX.amb.key !== key)) SFX.startLoop(key); };
+  SFX.onReady = function (key) {
+    const e = SFX.cache[key], w = e && e.stingWant; if (w) { e.stingWant = null; if (now() - w.at <= (ST().lateMs ?? 800)) startSting(key, e, w.opts); }
+    if (SFX.vol("ambient") > 0 && A().loops[key] && SFX.wantLoop === key && (!SFX.amb || SFX.amb.key !== key)) SFX.startLoop(key); };
 
   // ---- one-shot SFX ----
   SFX.play = function (key, opts) {
@@ -66,6 +68,7 @@
     const def = A().sfx[key] || { vol: 0.7 }, vol = (def.vol ?? 0.7) * (opts.vol ?? 1) * SFX.vol("sfx"), t = now();
     SFX.played.push(key); if (SFX.played.length > 50) SFX.played.shift();   // debug / tests: what the game asked for
     if (!A().sfx[key] || def.pending) return false;   // unknown keys and pending files are silent (never requested)
+    if (def.sting) return SFX.sting(key, opts);        // Snare's stingers: one at a time, with the music duck (below)
     if (!hasDom || !SFX.unlocked || vol <= 0) return false;
     const e = load(key, sfxUrls(key));
     if (e.state !== "ok") return false;
@@ -86,6 +89,75 @@
       }
     } catch (x) { return false; }
     if (voice && def.group === "gun") SFX.guns.push(voice);
+    return true;
+  };
+
+  // ---- Snare's stingers (assets/music_src/README_stingers.md, README_heat_reveal.md; data/audio.js stingers) ----
+  // Keys marked sting: true. They are music: silent and never fetched while the music is off (G.Music.gain() 0: the
+  // per-visit Music toggle or Mute) or the SFX slider is 0, and they ride the SFX bus at Snare's levels.
+  // One at a time: a higher-priority sting fades the playing one out (fadeMs, never a hard cut); otherwise the new one is
+  // skipped. A sting asked for before its file is decoded plays when it lands, if that is within lateMs (else it's
+  // dropped: a late sting is worse than none). oneShot: the decoded buffer is dropped once the sting ends, so stingers
+  // never sit in memory (SFX.preloadStings decodes them just before they can fire: a battle, an extraction attempt).
+  // Music: duck (the music bus to `to` over `attack` s, held through the sting, back over `release` s) or out (the zone /
+  // battle music fades out over `fade` s and the next track starts from its top `lead` s before the sting ends:
+  // G.Music.stingOut).
+  SFX.stingNow = null; SFX.stingLog = [];
+  const ST = () => A().stingers || {};
+  SFX.stingAudible = () => SFX.vol("sfx") > 0 && !!(G.Music && G.Music.gain() > 0);
+  SFX.preloadStings = function (keys) {
+    if (!hasDom || !SFX.unlocked || !SFX.enabled || !SFX.stingAudible()) return 0;
+    let n = 0; for (const k of keys) { const d = A().sfx[k]; if (d && d.sting && !d.pending) { load(k, sfxUrls(k)); n++; } } return n;
+  };
+  SFX.stingPrio = (key) => (ST().priority || []).indexOf(key);
+  SFX.sting = function (key, opts) {
+    opts = opts || {};
+    const def = A().sfx[key] || {}, t = now();
+    if (!def.sting || def.pending || !SFX.enabled) return false;
+    if (!hasDom || !SFX.unlocked || !SFX.stingAudible()) return false;   // muted: nothing fetched
+    const cur = SFX.stingNow && SFX.stingNow.end > t ? SFX.stingNow : null;
+    if (cur && SFX.stingPrio(key) <= SFX.stingPrio(cur.key)) { SFX.stingLog.push({ key, skipped: cur.key }); return false; }
+    const e = load(key, sfxUrls(key));
+    if (e.state === "missing") return false;
+    if (e.state !== "ok") { e.stingWant = { at: t, opts }; return "queued"; }
+    return startSting(key, e, opts);
+  };
+  function startSting(key, e, opts) {
+    const def = A().sfx[key] || {}, t = now(), vol = (def.vol ?? 1) * (opts.vol ?? 1) * SFX.vol("sfx");
+    if (vol <= 0 || !SFX.stingAudible()) return false;
+    const cur = SFX.stingNow && SFX.stingNow.end > t ? SFX.stingNow : null;
+    if (cur) { if (SFX.stingPrio(key) <= SFX.stingPrio(cur.key)) return false; cur.fade((ST().fadeMs ?? 80) / 1000); }
+    const dur = e.buf ? e.buf.duration : (e.el && e.el.duration) || 4;
+    let stop, fade;
+    try {
+      if (e.buf && SFX.ctx) {
+        const c = SFX.ctx, src = c.createBufferSource(), g = c.createGain(); src.buffer = e.buf; g.gain.value = vol;
+        src.connect(g); g.connect(SFX.bus || SFX.master); src.start();
+        stop = () => { try { src.stop(); } catch (x) {} };
+        fade = (sec) => { const t0 = c.currentTime; g.gain.cancelScheduledValues(t0); g.gain.setValueAtTime(g.gain.value, t0); g.gain.linearRampToValueAtTime(0, t0 + sec); try { src.stop(t0 + sec + 0.02); } catch (x) {} };
+      } else if (e.el) {
+        const n = e.el.cloneNode(); n.volume = Math.min(1, vol * ((A().bus || {}).gain ?? 1)); n.play().catch(() => {});
+        stop = () => n.pause(); fade = (sec) => { const v0 = n.volume, t0 = now(); const id = setInterval(() => { const f = Math.min(1, (now() - t0) / (sec * 1000)); n.volume = v0 * (1 - f); if (f >= 1) { clearInterval(id); n.pause(); } }, 20); };
+      } else return false;
+    } catch (x) { return false; }
+    const s = SFX.stingNow = { key, start: t, end: t + dur * 1000, dur, stop, fade: (sec) => { s.end = now(); fade(sec); } };
+    SFX.last[key] = t; SFX.stingLog.push({ key, at: t, dur }); if (SFX.stingLog.length > 40) SFX.stingLog.shift();
+    const D = ST(), duck = (D.duck || {})[key], out = (D.out || {})[key];
+    if (G.Music) { if (duck) G.Music.duck(duck.to, duck.attack, duck.hold ?? dur, duck.release); else if (out) G.Music.stingOut(dur, out); }   // (again at the start: a sting that landed late moves the hold)
+    setTimeout(() => {   // oneShot: drop the decoded buffer once it has played (unless another play of it is running)
+      if (SFX.stingNow === s) SFX.stingNow = null;
+      if (def.oneShot && SFX.cache[key] === e) delete SFX.cache[key];
+    }, dur * 1000 + 100);
+    return true;
+  }
+  // the extraction stings come after a die / a sound effect: G.Music's part (the fade out) starts now, the sting at delayMs
+  SFX.stingLater = function (key, delayMs, opts) {
+    opts = opts || {};
+    if (!SFX.stingAudible() || !(A().sfx[key] || {}).sting) return false;
+    SFX.preloadStings([key]);
+    const out = (ST().out || {})[key];
+    if (out && G.Music && hasDom && SFX.unlocked) { G.Music.stingOut(((delayMs || 0) / 1000) + (out.durSec || 4), out); opts = Object.assign({}, opts, { musicOut: true }); }
+    setTimeout(() => SFX.sting(key, opts), delayMs || 0);
     return true;
   };
 
@@ -118,7 +190,8 @@
   };
   SFX.cancelMutedLoads = function () {
     for (const key of Object.keys(SFX.cache)) {
-      const e = SFX.cache[key]; if (e.state !== "pending" || SFX.vol(A().loops[key] ? "ambient" : "sfx") > 0) continue;
+      const e = SFX.cache[key], sting = !!(A().sfx[key] || {}).sting;
+      if (e.state !== "pending" || (sting ? SFX.stingAudible() : SFX.vol(A().loops[key] ? "ambient" : "sfx") > 0)) continue;   // a sting's download stops when the music goes off
       delete SFX.cache[key]; if (e.abort) e.abort.abort();
       if (e.loading) { e.loading.pause(); if (e.loading.removeAttribute) e.loading.removeAttribute("src"); e.loading.load(); }
     }

@@ -48,10 +48,31 @@ DATA.audio = {
     stinger_roll: { vol: 0.45, path: "music/", noPitch: true },   // Snare (assets/music_src/README_zones2.md): on top of the landing thunk, SFX bus
     // Snare (assets/music_src/README_stingers.md): the battle stingers, once per battle (G.BattleView.sting, js/battleview.js):
     // Vixie (Oct 4) when the kill shot holding the fight-ending blow ends, or right on a skip; with no such shot, when the
-    // fight ends. Their files are not in this branch's assets/music/ yet: pending (silent, never requested) until they land.
-    stinger_battle_win: { vol: 1.0, path: "music/", noPitch: true, pending: true },    // a battle won
-    stinger_battle_wipe: { vol: 1.0, path: "music/", noPitch: true, pending: true },   // the squad went down (or your body died)
+    // fight ends. sting: true = one of Snare's stingers (js/sfx.js SFX.sting: one at a time by priority, the music duck /
+    // fade below, silent and never fetched while the music is off). oneShot: the decoded buffer is dropped after it plays.
+    stinger_battle_win: { vol: 1.0, path: "music/", noPitch: true, sting: true, oneShot: true },    // a battle won
+    stinger_battle_wipe: { vol: 1.0, path: "music/", noPitch: true, sting: true, oneShot: true },   // the squad went down (or your body died)
+    stinger_extract_success: { vol: 1.0, path: "music/", noPitch: true, sting: true, oneShot: true },   // extracted with the loot (the EXTRACTED result, js/ui.js)
+    stinger_extract_fail: { vol: 0.9, path: "music/", noPitch: true, sting: true, oneShot: true },     // an extraction check failed and you stay in the zone
+    // Snare (assets/music_src/README_heat_reveal.md): the Heat meter's first fade-in, once per save. Not fired anywhere yet:
+    // the build has no Heat-meter fade-in (the panel just appears at heat.revealAt), so per Snare it waits for that moment.
+    stinger_heat_reveal: { vol: 0.8, path: "music/", noPitch: true, sting: true, oneShot: true },
     sfx_bonk_1: { vol: 1.0 }, sfx_bonk_2: { vol: 1.0 }, sfx_bonk_3: { vol: 0.95 }, sfx_bonk_bass: { vol: 0.8 }
+  },
+  // Snare's stingers (README_stingers.md "Playback notes", README_heat_reveal.md): priority low -> high (a higher one
+  // fades the playing one out over fadeMs; otherwise the new one is skipped), how late a sting may still start once its
+  // file lands, and what the music does under each. duck: the music bus to `to` over attack s, held through the sting
+  // (hold: a fixed hold instead), back over release s. out: the music fades out over fade s, and the next track starts
+  // from its top lead s before the sting ends (leaveState: and not before the music state changes). durSec: the clip
+  // length, used to plan the silence before the file is decoded.
+  stingers: {
+    priority: ["stinger_heat_reveal", "stinger_battle_win", "stinger_extract_success", "stinger_extract_fail", "stinger_battle_wipe"],
+    fadeMs: 80, lateMs: 800,
+    resultDelayMs: 400,     // the EXTRACTED result: sfx_extract first, the sting 0.4 s later (Snare: stagger them)
+    crashDelayMs: 300,      // a truck crash: sfx_truck_crash_1 first, the fail sting 0.3 s later (Snare)
+    duck: { stinger_battle_win: { to: 0.25, attack: 0.12, release: 1.5 }, stinger_extract_fail: { to: 0.25, attack: 0.12, release: 1.5 },
+            stinger_heat_reveal: { to: 0.7, attack: 0.3, hold: 4.0, release: 1.5 } },
+    out: { stinger_battle_wipe: { fade: 0.25, lead: 0.3, leaveState: true, durSec: 4.6 }, stinger_extract_success: { fade: 0.25, lead: 0.3, durSec: 4.7 } }
   },
   // SFX bus: every one-shot goes through a gain + limiter (DynamicsCompressor) before the master, so 6 stacked shots
   // don't clip (loops bypass it). Under file:// (HTMLAudio, no Web Audio graph) gunshots are attenuated instead:
@@ -78,6 +99,7 @@ DATA.audio = {
       // Slice 4 §G (Snare, assets/music_src/README.md + README_zones2.md). Only tracks a state / zone / preload names are
       // requested or packaged (tools/asset-manifest.js), so the future-zone pairs cost nothing until a zone uses them.
       music_title:           { vol: 1, bpm: 100, beatsPerBar: 4, loopSec: 134.4 },                     // v6 "dark toms": 56 bars, bar 2.4 s; the start screen
+      music_extract_victory: { vol: 1, bpm: 100, beatsPerBar: 4, loopSec: 96 },                       // Snare: the old folk title, the EXTRACTED results screen (after stinger_extract_success)
       music_greyback:        { vol: 1, bpm: 125, beatsPerBar: 3, loopSec: 92.16, sync: "greyback" },   // 3/4, bar 1.44 s (Greyback Hills, Slice 5 §G)
       music_greyback_battle: { vol: 1, bpm: 500 / 3, beatsPerBar: 4, loopSec: 92.16, sync: "greyback", quantize: "bar" },   // 4/4 on the same 1.44 s bar: bar lines only
       music_scablands:       { vol: 1, bpm: 150, beatsPerBar: 4, loopSec: 102.4, sync: "scablands" }, // bar 1.6 s (the late wasteland; NOT zone a)
@@ -90,7 +112,8 @@ DATA.audio = {
     // music state -> track. outpost = town view, outpost panels, the run result and body offer; run = zone map, location
     // views, searches, events and the pre-battle card; battle = the battle screen (placement, fight, summary).
     // title = the start screen (Slice 4 §G): starts on the first tap / the 🔊 button; Play crossfades to the outpost
-    states: { title: "music_title", outpost: "music_outpost", run: "music_hushwood", battle: "music_hushwood_battle" },
+    // victory = the EXTRACTED results screen (Megan, Oct 8, via Snare): music_extract_victory, then the outpost on Continue
+    states: { title: "music_title", outpost: "music_outpost", run: "music_hushwood", battle: "music_hushwood_battle", victory: "music_extract_victory" },
     // per-zone overrides. b = the Drowned Suburbs (data/zones.js); hollis = the Hollis Outskirts (wired with the zone,
     // Slice 5 §G). Zone a (The Hushwood) keeps the default pair. scablands: the same
     // sync group on both tracks (bar-line crossfade, like the Hushwood pair) (Snare, Slice 5 §G).
@@ -100,7 +123,7 @@ DATA.audio = {
     preload: {},   // Snare: a run preloads only its own zone's battle track (js/music.js Mu.set: trackFor("battle", zone)), so the switch is on time
     // same key + tempo, different lengths (so not one sync group): the incoming track still restarts from its top, but on
     // the outgoing one's next bar line, so the beat grids line up during the crossfade (Snare: title -> outpost)
-    barAlign: [["music_title", "music_outpost"]],
+    barAlign: [["music_title", "music_outpost"], ["music_extract_victory", "music_outpost"]],   // the victory cue is the old title: same tempo
     restartFadeSec: 1.75,                       // different groups (outpost <-> Hushwood): equal-power crossfade, incoming from 0
     // RNG-077 / SP-006 (Megan, Oct 2): the 3D battle's loading screen keeps the zone track playing, dipping very gradually
     // (linear over dipSec) to no less than dipFloor (80%) of its level; once loaded it ends on the zone track's next
@@ -117,6 +140,6 @@ DATA.audio = {
     leadSec: 0.06,                              // scheduling headroom for Web Audio start times
     // SP-118: decoded PCM budget for Mu.trim's LRU (tunable). Phone uses the Touch layout test.
     cacheMB: { desktop: 220, phone: 120 },
-    oneShot: ["music_title"]                    // dropped as soon as nothing plays or wants it (the title plays once per load), budget or not
+    oneShot: ["music_title", "music_extract_victory"]   // dropped as soon as nothing plays or wants it (the title plays once per load), budget or not
   }
 };

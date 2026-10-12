@@ -134,7 +134,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     const s = G.state, scr = $("#screen");
     const title = !!(G.Title && G.Title.open);   // Slice 4 §G: the title screen is up (music_title, the camp's ambience)
     G.Sfx.setScreen(title ? "title" : s.run || UI.battle ? "run" : "outpost");   // ambient loop per screen (crossfades)
-    if (G.Music) G.Music.set(title ? "title" : UI.battle ? "battle" : s.run ? "run" : "outpost", title ? null : s.run ? s.run.zone : null);   // music state (js/music.js)
+    if (G.Music) G.Music.set(title ? "title" : UI.battle ? "battle" : s.run ? "run" : s.lastResult && s.lastResult.kind === "extracted" ? "victory" : "outpost", title ? null : s.run ? s.run.zone : null);   // music state (js/music.js); victory: the EXTRACTED result
     if (UI.battle) return; // battle view owns the screen
     if (s.run) { UI.renderExpedition(scr); if (!UI.search) UI.renderStep(); return; }
     UI.renderOutpost(scr);
@@ -690,7 +690,8 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
 
   UI.showRunResult = function () {
     const s = G.state, lr = s.lastResult;
-    if (UI._resultSfx !== lr) { UI._resultSfx = lr; G.Sfx.play(lr.kind === "extracted" ? "sfx_extract" : "sfx_player_death"); }
+    if (UI._resultSfx !== lr) { UI._resultSfx = lr; G.Sfx.play(lr.kind === "extracted" ? "sfx_extract" : "sfx_player_death");
+      if (lr.kind === "extracted" && G.Sfx.stingLater) G.Sfx.stingLater("stinger_extract_success", (DATA.audio.stingers || {}).resultDelayMs); }   // Snare: the sting just after the sound
     const box = h("div");
     if (lr.kind === "extracted") {
       box.appendChild(h("h2", { class: "good" }, "EXTRACTED"));
@@ -955,7 +956,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     if (acts[0] === "extract" && o.opp) {
       const od = G.V2.oppDef(site.nid, o.opp), ck = od.check ? UI.checkLabel(G.Checks.compute(od.check.skill, od.check.dc, X.members(), X.gearItems())) : "No check.";
       UI.modal(h("div", { "data-hotspot": "opportunity" }, h("h2", null, o.name), h("p", { class: "examine" }, X.examine(o)), h("p", null, ck), h("p", { class: "hint" }, "A failed attempt is loud (whatever's still nearby may come), and you'll have to step away before trying again."),
-        h("div", { class: "confirm-row" }, h("button", { class: "primary confirm-btn", "data-act": "extract-opportunity", onclick: () => { UI.closeModal(); const res = G.V2.attemptOpp(G.state.run.loc, o.opp); if (res.error) UI.fail(res.error); else UI.toast(res.text); UI.render(); } }, "Try it"),
+        h("div", { class: "confirm-row" }, h("button", { class: "primary confirm-btn", "data-act": "extract-opportunity", onclick: () => { UI.closeModal(); if (G.Sfx.preloadStings) G.Sfx.preloadStings(["stinger_extract_success", "stinger_extract_fail"]); const res = G.V2.attemptOpp(G.state.run.loc, o.opp); if (res.error) UI.fail(res.error); else { UI.toast(res.text); UI.extractFailSting(res); } UI.render(); } }, "Try it"),
           h("button", { class: "confirm-btn", onclick: () => { UI.closeModal(); UI.render(); } }, "Not now"))));
       return;
     }
@@ -1051,6 +1052,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     const bopts = { speed: UI.battleSpeed, onEnd: (bb) => UI.battleSummary(step, bb) };
     UI.battle.v = G.Gfx ? G.Gfx.mountBattle(scr, b, bopts) : G.BattleView.mount(scr, b, bopts);   // SP-100: 3D (js/gfx.js) or 2D
     if (G.Music) G.Music.set("battle", G.state.run ? G.state.run.zone : null);   // battle music: on the bar grid (js/music.js)
+    if (G.Sfx && G.Sfx.preloadStings) G.Sfx.preloadStings(["stinger_battle_win", "stinger_battle_wipe"]);   // Snare's battle stingers, decoded before the fight ends
     G.log(`Battle seed ${b.seed}`);
   };
 
@@ -1074,13 +1076,23 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
   // Slice 5 §A: the truck crash: the heavy sound, a short line across the screen, the roll in a toast
   // Slice 5 §B: a check extraction rolls the d20 on screen first (G.Dice queue); the flash / toast / screen wait for it.
   UI.extractClick = function () {
+    if (G.Sfx.preloadStings) G.Sfx.preloadStings(["stinger_extract_success", "stinger_extract_fail"]);   // decoded while the die rolls
     const res = G.Exp.extract();
-    if (res.crash) UI.crashFlash(res); else UI.toast(res.text); UI.render();
+    if (res.crash) UI.crashFlash(res); else { UI.toast(res.text); UI.extractFailSting(res); } UI.render();
     return res;
+  };
+  // Snare's stinger_extract_fail: a failed extraction check that leaves you in the zone (not a stall / chase fight), after
+  // the die; a crash plays it crashDelayMs after the crash sound (UI.crashFlash)
+  UI.extractFailSting = function (res, delayMs) {
+    if (!res || res.ok || !res.roll || res.stall || !G.Sfx.stingLater) return false;
+    const go = () => G.Sfx.stingLater("stinger_extract_fail", delayMs || 0);
+    if (G.Dice && G.Dice.busy()) G.Dice.whenIdle(go); else go();
+    return true;
   };
   UI.crashFlash = function (res) {
     if (G.Dice && G.Dice.busy()) return G.Dice.whenIdle(() => UI.crashFlash(res));   // after the die
     if (res.sfx) G.Sfx.play(res.sfx);
+    UI.extractFailSting(res, res.sfx ? (DATA.audio.stingers || {}).crashDelayMs : 0);
     const el = h("div", { class: "crash-flash", "data-flash": "crash" }, res.line); document.body.appendChild(el);
     setTimeout(() => el.remove(), DATA.config.extraction.crash.lineMs);
     UI.toast(res.text);
