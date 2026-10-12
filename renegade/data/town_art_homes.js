@@ -27,13 +27,13 @@ DATA.townArtHomes = {
   "owls": {
    "near": {
     "file": "town_forest/town_forest_owl_strip4.png",
-    "frameW": 34,
-    "frameH": 22
+    "frameW": 12,
+    "frameH": 4
    },
    "far": {
     "file": "town_forest/town_forest_owl_far_strip4.png",
-    "frameW": 22,
-    "frameH": 10
+    "frameW": 6,
+    "frameH": 2
    },
    "frames": [
     "open",
@@ -41,55 +41,94 @@ DATA.townArtHomes = {
     "closed",
     "gone"
    ],
-   "note": "not in the bg. Show frame 0 most of the time; blink 0-1-2-1-0 (~70 ms a step) every periodS +- 40%; now and then hold 2 then 3 (gone) for a few seconds and come back, or reappear at another position (follow-the-eyes lore). Frame 3 is empty.",
-   "positions": [
+   "note": "Oct 8 rework (Megan: WAY fewer eyes): no permanent owls. positions is empty on purpose, so the current code draws none. Wanted: ONE pair of eyes at a time (count), hidden most of the time; every goneS (random in range) it opens at a random spawnSpot (frames 2, 1, 0 at stepS), stays open ~periodS, blinks 1-2-1 or (prob. vanish) closes 1, 2 (holdS) and is gone (3) again. firstS = delay before the first one. Same strips as before.",
+   "count": 1,
+   "timing": {
+    "firstS": [
+     4,
+     12
+    ],
+    "goneS": [
+     12,
+     30
+    ],
+    "vanish": 0.5,
+    "stepS": 0.07,
+    "holdS": 0.4
+   },
+   "positions": [],
+   "spawnSpots": [
     {
-     "x": 72,
-     "y": 4,
-     "variant": "near",
-     "periodS": 7
-    },
-    {
-     "x": 256,
-     "y": 10,
+     "x": 352,
+     "y": 6,
      "variant": "far",
-     "periodS": 9.5
+     "periodS": 1.2
     },
     {
-     "x": 680,
-     "y": 4,
+     "x": 82,
+     "y": 14,
      "variant": "near",
-     "periodS": 8
+     "periodS": 1.2
     },
     {
-     "x": 848,
+     "x": 228,
+     "y": 8,
+     "variant": "far",
+     "periodS": 1.2
+    },
+    {
+     "x": 156,
+     "y": 24,
+     "variant": "near",
+     "periodS": 1.2
+    },
+    {
+     "x": 32,
+     "y": 68,
+     "variant": "near",
+     "periodS": 1.2
+    },
+    {
+     "x": 114,
+     "y": 86,
+     "variant": "near",
+     "periodS": 1.2
+    },
+    {
+     "x": 12,
+     "y": 164,
+     "variant": "near",
+     "periodS": 1.2
+    },
+    {
+     "x": 780,
+     "y": 6,
+     "variant": "far",
+     "periodS": 1.2
+    },
+    {
+     "x": 882,
+     "y": 8,
+     "variant": "far",
+     "periodS": 1.2
+    },
+    {
+     "x": 956,
      "y": 12,
      "variant": "far",
-     "periodS": 12.5
+     "periodS": 1.2
     },
     {
-     "x": 44,
-     "y": 116,
-     "variant": "near",
-     "periodS": 10
-    },
-    {
-     "x": 116,
-     "y": 60,
+     "x": 8,
+     "y": 304,
      "variant": "far",
-     "periodS": 14
+     "periodS": 1.2
     },
     {
-     "x": 6,
-     "y": 236,
+     "x": 8,
+     "y": 500,
      "variant": "far",
-     "periodS": 13
-    },
-    {
-     "x": 978,
-     "y": 300,
-     "variant": "far",
-     "periodS": 9
+     "periodS": 1.2
     }
    ]
   },
@@ -330,6 +369,7 @@ DATA.townArtHomes = {
      "off",
      "on"
     ],
+    "note": "rows 0-2: armed mines; rows 3-13: CCTV cameras; rows 14-16: motion sensors (Oct 8 rework)",
     "positions": [
      {
       "row": 0,
@@ -348,9 +388,267 @@ DATA.townArtHomes = {
       "x": 6,
       "y": 396,
       "periodS": 1.9
+     },
+     {
+      "row": 3,
+      "x": 304,
+      "y": 20,
+      "periodS": 2.1
+     },
+     {
+      "row": 4,
+      "x": 460,
+      "y": 20,
+      "periodS": 1.7
+     },
+     {
+      "row": 5,
+      "x": 672,
+      "y": 20,
+      "periodS": 2.6
+     },
+     {
+      "row": 6,
+      "x": 836,
+      "y": 20,
+      "periodS": 1.9
+     },
+     {
+      "row": 7,
+      "x": 164,
+      "y": 94,
+      "periodS": 2.4
+     },
+     {
+      "row": 8,
+      "x": 20,
+      "y": 226,
+      "periodS": 2
+     },
+     {
+      "row": 9,
+      "x": 20,
+      "y": 394,
+      "periodS": 2.8
+     },
+     {
+      "row": 10,
+      "x": 976,
+      "y": 146,
+      "periodS": 1.8
+     },
+     {
+      "row": 11,
+      "x": 976,
+      "y": 422,
+      "periodS": 2.3
+     },
+     {
+      "row": 12,
+      "x": 2,
+      "y": 526,
+      "periodS": 2.5
+     },
+     {
+      "row": 13,
+      "x": 992,
+      "y": 314,
+      "periodS": 2.2
+     },
+     {
+      "row": 14,
+      "x": 80,
+      "y": 186,
+      "periodS": 3.1
+     },
+     {
+      "row": 15,
+      "x": 988,
+      "y": 238,
+      "periodS": 3.6
+     },
+     {
+      "row": 16,
+      "x": 720,
+      "y": 10,
+      "periodS": 3.3
      }
     ]
    }
+  },
+  "security": {
+   "note": "Oct 8 rework: CCTV cameras on the palisade + on poles outside, motion sensors on stakes, cable runs. Baked into the bg; their red status lights blink via mines.led (rows above).",
+   "cameras": [
+    {
+     "at": [
+      296,
+      18
+     ],
+     "face": "left",
+     "pole": false
+    },
+    {
+     "at": [
+      452,
+      18
+     ],
+     "face": "left",
+     "pole": false
+    },
+    {
+     "at": [
+      672,
+      18
+     ],
+     "face": "right",
+     "pole": false
+    },
+    {
+     "at": [
+      836,
+      18
+     ],
+     "face": "right",
+     "pole": false
+    },
+    {
+     "at": [
+      156,
+      92
+     ],
+     "face": "left",
+     "pole": false
+    },
+    {
+     "at": [
+      12,
+      224
+     ],
+     "face": "left",
+     "pole": false
+    },
+    {
+     "at": [
+      12,
+      392
+     ],
+     "face": "left",
+     "pole": false
+    },
+    {
+     "at": [
+      976,
+      144
+     ],
+     "face": "right",
+     "pole": false
+    },
+    {
+     "at": [
+      976,
+      420
+     ],
+     "face": "right",
+     "pole": false
+    },
+    {
+     "at": [
+      2,
+      524
+     ],
+     "face": "right",
+     "pole": true
+    },
+    {
+     "at": [
+      984,
+      312
+     ],
+     "face": "left",
+     "pole": true
+    }
+   ],
+   "sensors": [
+    {
+     "at": [
+      80,
+      184
+     ]
+    },
+    {
+     "at": [
+      988,
+      236
+     ]
+    },
+    {
+     "at": [
+      720,
+      8
+     ]
+    }
+   ]
+  },
+  "electricLights": {
+   "note": "Oct 8 rework: floodlights, a work lamp on a generator cable, caged bulbs. Baked into the bg (static, cool-white pools). No overlay needed.",
+   "lights": [
+    {
+     "kind": "flood",
+     "pool": [
+      80,
+      560
+     ]
+    },
+    {
+     "kind": "work",
+     "pool": [
+      856,
+      568
+     ]
+    },
+    {
+     "kind": "string",
+     "pool": [
+      256,
+      124
+     ]
+    },
+    {
+     "kind": "flood",
+     "pool": [
+      916,
+      212
+     ]
+    },
+    {
+     "kind": "bulb",
+     "pool": [
+      60,
+      232
+     ]
+    },
+    {
+     "kind": "flood",
+     "pool": [
+      704,
+      236
+     ]
+    },
+    {
+     "kind": "flood",
+     "pool": [
+      320,
+      224
+     ]
+    },
+    {
+     "kind": "flood",
+     "pool": [
+      216,
+      504
+     ]
+    }
+   ]
   },
   "smoke": {
    "file": "town_forest/town_forest_smoke_strip6.png",
