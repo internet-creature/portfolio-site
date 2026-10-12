@@ -808,13 +808,17 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     }
     // squad
     const body = X.body(), maxHp = X.maxBodyHp();
-    const sq = h("section", { class: "panel" }, h("h3", null, "Squad"));
-    sq.appendChild(h("div", { class: "sq-row" }, SP.icon(G.State.bodySprite(body), 22), h("span", { class: "sq-name" }, body.name + " (you)"), bar(r.bodyHp / maxHp, "#5fd35f", `${Math.ceil(r.bodyHp)}/${Math.round(maxHp)}`),
-      h("button", { disabled: !(r.bag.res.med > 0) || r.bodyHp >= maxHp, onclick: () => { UI.toast(X.useMed("body")); UI.render(); } }, healIco(), "Heal")));
+    const sq = h("section", { class: "panel" }, h("h3", null, "Squad", h("small", { class: "hint" }, ` · ${TL() ? "tap" : "click"} someone for their gear`)));
+    // SP-173: a row (not its Heal button) opens that member's loadout screen (js/gruntlook.js UI.showLoadout)
+    const opener = (row, who) => { row.classList.add("sq-open"); row.tabIndex = 0; row.setAttribute("role", "button"); row.dataset.loadoutWho = String(who); row.title = "Gear";
+      const go = (e) => { if (e.target.closest("button")) return; if (r.queue.length || UI.search) return UI.toast("Finish what's happening first."); UI.showLoadout(who); };
+      row.addEventListener("click", go); row.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(e); } }); return row; };
+    sq.appendChild(opener(h("div", { class: "sq-row" }, SP.icon(G.State.bodySprite(body), 22), h("span", { class: "sq-name" }, body.name + " (you)"), bar(r.bodyHp / maxHp, "#5fd35f", `${Math.ceil(r.bodyHp)}/${Math.round(maxHp)}`),
+      h("button", { disabled: !(r.bag.res.med > 0) || r.bodyHp >= maxHp, onclick: () => { UI.toast(X.useMed("body")); UI.render(); } }, healIco(), "Heal")), "body"));
     r.squad.forEach((m, i) => {
       const mx = G.Battle.unitFromGrunt(m.g).maxHp, isCarried = r.carriedCritical.includes(m.g.uid);
-      sq.appendChild(h("div", { class: "sq-row" + (m.hp <= 0 ? " dead" : "") }, UI.gruntIcon(m.g, 18), h("span", { class: "sq-name" }, G.Allies.name(m.g)), m.hp > 0 ? bar(m.hp / mx, "#5fd35f", `${Math.ceil(m.hp)}/${Math.round(mx)}`) : h("span", { class: "bad" }, isCarried ? "Critical (carried)" : m.left ? "left behind" : "dead"),
-        m.hp > 0 ? h("button", { disabled: !(r.bag.res.med > 0) || m.hp >= mx, onclick: () => { UI.toast(X.useMed(i)); UI.render(); } }, healIco(), "Heal") : null));
+      sq.appendChild(opener(h("div", { class: "sq-row" + (m.hp <= 0 ? " dead" : "") }, UI.gruntIcon(m.g, 18), h("span", { class: "sq-name" }, G.Allies.name(m.g)), m.hp > 0 ? bar(m.hp / mx, "#5fd35f", `${Math.ceil(m.hp)}/${Math.round(mx)}`) : h("span", { class: "bad" }, isCarried ? "Critical (carried)" : m.left ? "left behind" : "dead"),
+        m.hp > 0 ? h("button", { disabled: !(r.bag.res.med > 0) || m.hp >= mx, onclick: () => { UI.toast(X.useMed(i)); UI.render(); } }, healIco(), "Heal") : null), i));
     });
     side.appendChild(sq);
     // carry

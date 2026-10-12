@@ -386,10 +386,11 @@
     return null;
   };
   // the Grunt slot an item would go to on squad member idx: { slot } or { why }
-  X.memberSlot = function (idx, item) {
+  X.memberSlot = function (idx, item, want) {   // want (SP-173, the loadout screen): that exact slot, or why not
     const r = run(), m = r.squad[idx], I = G.Items, St = G.State; if (!m || !(m.hp > 0)) return { why: "They can't take gear right now." };
     const slots = St.gruntSlots(m.g), b = I.base(item.base); if (!b || I.isQuest(item) || I.isPet(item)) return { why: "That can't be equipped." };
     if (!Object.keys(slots).length) return { why: `${G.Allies.name(m.g)} can't wear gear.` };
+    if (want) return St.gruntSlotOk(want, item, m.g) ? { slot: want } : { why: `${G.Allies.name(m.g)} can't use that in the ${(X.LOADOUT_GRUNT[want] || want).toLowerCase()} slot.` };
     let slot;
     if (I.isHandItem(item)) slot = I.autoSlot(item, (k) => (m.g.gear[k] && m.g.gear[k].uid !== item.uid ? m.g.gear[k] : null), "main");
     else slot = Object.keys(slots).find((k) => !I.HAND_SLOTS.includes(k) && slots[k].includes(b.slot));
@@ -407,10 +408,10 @@
     });
     return out;
   };
-  X.equipToMember = function (uid, idx) {
+  X.equipToMember = function (uid, idx, want) {
     const r = run(), m = r.squad[idx], src = X.findCarried(uid); if (!src) return "That item isn't with you.";
     if (src.where === "grunt" && src.idx === idx) return "They already have it on.";
-    const it = src.item, ms = X.memberSlot(idx, it); if (ms.why) return ms.why;
+    const it = src.item, ms = X.memberSlot(idx, it, want); if (ms.why) return ms.why;
     const slot = ms.slot, g = m.g, I = G.Items, oldMax = G.Battle.unitFromGrunt(g).maxHp;
     if (I.isHandItem(it)) { const fit = I.handFit(slot, it, (k) => g.gear[k] || null); if (fit.why) return fit.why; for (const k of fit.clear) { if (g.gear[k] && k !== slot) { r.bag.items.push(g.gear[k]); g.gear[k] = null; } } }
     // take it off its current holder
@@ -429,6 +430,46 @@
   X.unequipMember = function (idx, slot) {
     const r = run(), m = r.squad[idx]; if (!m || !m.g.gear || !m.g.gear[slot]) return "Nothing there.";
     r.bag.items.push(m.g.gear[slot]); m.g.gear[slot] = null; m.hp = Math.min(m.hp, G.Battle.unitFromGrunt(m.g).maxHp); return null;
+  };
+  // SP-173 (SP-155 slice 1): the loadout screen's data, one shape for your body ("body") and a teammate (squad index), so
+  // the camp entry point (slice 2) can feed the same screen. Slots: [key, label, item slots it takes]; the body keeps its
+  // Backup set. Changes go through the run's own equip / unequip (bag in, bag out), so a battle reads them as before.
+  X.LOADOUT_BODY = [["head", "Head", ["head"]], ["body", "Body", ["body"]], ["backpack", "Pack", ["backpack"]], ["weapon", "Main hand", ["weapon"]], ["offhand", "Off hand", ["weapon", "shield"]],
+    ["weapon2", "Backup main", ["weapon"]], ["offhand2", "Backup off", ["weapon", "shield"]]];
+  X.LOADOUT_GRUNT = { head: "Head", body: "Body", pack: "Pack", weapon: "Main hand", offhand: "Off hand" };
+  X.loadout = function (who) {
+    const r = run(), I = G.Items, B = G.Battle; if (!r) return null;
+    if (who === "body") {
+      const u = B.unitFromBody(X.body(), r.gear, {});
+      return { who, name: X.body().name, you: true, canEdit: true, why: null, hp: r.bodyHp, maxHp: u.maxHp, unit: u, innate: I.base(DATA.bodies.basicBody.naturalWeapon).name,
+        slots: X.LOADOUT_BODY.map(([key, label, accepts]) => ({ key, label, accepts, item: r.gear[key] || null })) };
+    }
+    const m = r.squad[who]; if (!m) return null;
+    const g = m.g, slots = G.State.gruntSlots(g), u = B.unitFromGrunt(g, m.hp), standing = m.hp > 0;
+    return { who, name: G.Allies.name(g), you: false, grunt: g, canEdit: standing && !!Object.keys(slots).length, why: !Object.keys(slots).length ? `${G.Allies.rankName(g)}s don't wear gear.` : standing ? null : "They can't take gear right now.",
+      hp: Math.max(0, m.hp), maxHp: B.unitFromGrunt(g).maxHp, unit: u, innate: g.weapon ? I.base(g.weapon).name : null,
+      slots: Object.keys(X.LOADOUT_GRUNT).filter((k) => slots[k]).map((key) => ({ key, label: X.LOADOUT_GRUNT[key], accepts: slots[key], item: (g.gear && g.gear[key]) || null })) };
+  };
+  // bag items that can go in that slot (hand rules checked: what handFit refuses isn't listed)
+  X.loadoutPool = function (who, key) {
+    const r = run(), I = G.Items, v = X.loadout(who); if (!v || !v.canEdit) return [];
+    const sl = v.slots.find((x) => x.key === key); if (!sl) return [];
+    return r.bag.items.filter((it) => {
+      const b = I.base(it.base); if (!b || I.isQuest(it) || I.isPet(it) || !sl.accepts.includes(b.slot)) return false;
+      if (who === "body") return !(I.isHandItem(it) && I.handFit(key, it, (k) => r.gear[k] || null).why);
+      if (X.memberSlot(who, it, key).why) return false;
+      return !(I.isHandItem(it) && I.handFit(key, it, (k) => v.grunt.gear[k] || null).why);
+    });
+  };
+  X.loadoutEquip = function (who, key, uid) {
+    if (!X.loadoutPool(who, key).some((it) => it.uid === uid)) return "That can't go there.";
+    if (who === "body") return X.equipFromBag(uid, /2$/.test(key) ? "backup" : "main", key) || null;
+    return X.equipToMember(uid, who, key);
+  };
+  X.loadoutUnequip = function (who, key) {
+    if (who === "body") { if (!run().gear[key]) return "Nothing there."; X.unequip(key); return null; }
+    const v = X.loadout(who); if (!v || !v.canEdit) return (v && v.why) || "Nothing there.";
+    return X.unequipMember(who, key);
   };
   X.unequipQuiet = function (slot) { const r = run(); const it = r.gear[slot]; if (!it) return null; delete r.gear[slot]; r.bodyHp = Math.min(r.bodyHp, G.Battle.unitFromBody(X.body(), r.gear, {}).maxHp); return it; };
   X.toPouch = function (uid) {

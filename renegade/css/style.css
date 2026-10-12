@@ -526,3 +526,7 @@ button.promote { background: #6a5a1a; }
 .att-bar .att-owed { color: #ff9a8a; flex-basis: 100%; }
 .att-bar.off { color: #9fd6a0; }
 .att-esc-note { color: #ff9a8a; font-weight: bold; }
+/* SP-173: the run's Squad rows open the loadout screen (js/gruntlook.js UI.showLoadout) */
+.sq-row.sq-open { cursor: pointer; border-radius: 3px; padding: 1px 2px; }
+.sq-row.sq-open:hover, .sq-row.sq-open:focus-visible { background: #2c2a1f; outline: 1px solid #5a4a2a; }
+.loadout-stats { margin-bottom: 8px; line-height: 1.5; }

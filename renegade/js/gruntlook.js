@@ -131,5 +131,66 @@
     const draw = () => { const wrap = h("div", { class: "doll-modal" }, h("h2", null, g ? G.Allies.name(g) + " · gear" : "Your gear"), UI.dollEl(target, draw), h("button", { class: "primary", onclick: () => { UI.closeModal(); UI.render(); } }, "Done")); UI.modal(wrap, "doll-modal-wrap"); };
     draw();
   };
+  // ---------- SP-173 (SP-155 slice 1): the universal loadout screen ----------
+  // One member's slots around the doll, their stats, and the bag filtered by the chosen slot: tap a bag item to equip it,
+  // Unequip sends the slot back to the bag. Data and changes come from G.Exp.loadout* (who: "body" or a squad index);
+  // the camp entry point (slice 2) feeds the same screen. Same classes as the outpost doll: no new art.
+  G.UI.loadoutEl = function (who, redraw) {
+    const UI = G.UI, h = UI.h, X = G.Exp, I = G.Items, v = X.loadout(who);
+    if (!v) return h("div", null);
+    if (!v.slots.length) return h("div", { class: "doll loadout", "data-loadout": String(who) }, UI.gruntIcon(v.grunt, 96, "doll-art"), h("p", { class: "hint" }, v.why));
+    const tid = "run:" + who, cur = (v.slots.find((x) => x.key === GL.sel[tid]) || v.slots.find((x) => x.key === "weapon") || v.slots[0]).key; GL.sel[tid] = cur;
+    const act = (fn) => { const e = fn(); if (e) return UI.fail(e); if (G.Sfx) G.Sfx.play("sfx_ui_click"); if (G.Touch && G.Touch.layout()) UI.hideTip(); redraw(); };
+    const css = (key) => (key === "backpack" ? "pack" : key), worn = v.slots.map((x) => x.item).filter(Boolean);
+    const box = h("div", { class: "doll loadout", "data-loadout": String(who) });
+    const fig = h("div", { class: "doll-fig" + (v.slots.some((x) => x.key === "offhand") ? " hands" : "") }), px = FS() * DATA.gruntLook.dollScale;
+    fig.appendChild(v.you ? SP.icon(G.State.bodySprite(X.body()), px, "doll-art") : UI.gruntIcon(v.grunt, px, "doll-art"));
+    for (const sl of v.slots) {
+      const gs = css(sl.key), it = sl.item, icon = it ? SP.icon(I.sprite(it), 36) : SP.icon(DATA.sprites["slot_" + gs] ? "slot_" + gs : "slot_gear", 36, "slot-empty");
+      const b = h("button", { class: "doll-slot s-" + gs + (cur === sl.key ? " on" : "") + (it ? " filled r-" + it.rarity : ""), "data-dslot": sl.key, title: it ? null : sl.label + " (empty)", onclick: () => { GL.sel[tid] = sl.key; redraw(); } }, icon, h("span", null, sl.label));
+      fig.appendChild(it ? UI.itemTip(b, it, worn) : b);
+    }
+    box.appendChild(fig);
+    const side = h("div", { class: "doll-list" }), u = v.unit, w = u.weapon;
+    side.appendChild(h("div", { class: "loadout-stats", "data-stats": "" }, h("b", null, `HP ${Math.ceil(v.hp)} / ${Math.round(v.maxHp)}`),
+      ` · Armor ${Math.round(u.armor || 0)} · Evasion ${Math.round(u.eva || 0)}% · Speed ${U.fmt1(u.speed || 0)} · Crit ${Math.round(u.critChance || 0)}%`,
+      w ? h("div", { class: "hint" }, `${w.name}: ${U.fmt1(w.dmg)} dmg`) : null));
+    const sl = v.slots.find((x) => x.key === cur), it = sl.item;
+    side.appendChild(h("div", { class: "doll-cur" }, h("b", null, sl.label + ": "), it ? UI.itemTip(h("span", { style: "color:" + I.color(it) }, I.name(it)), it, worn) : h("i", null, cur === "weapon" && v.innate ? `empty (fights with ${v.you ? "your" : "their"} ${v.innate})` : "empty"),
+      it && v.canEdit ? h("button", { "data-act": "loadout-unequip", onclick: () => act(() => X.loadoutUnequip(who, cur)) }, "Unequip to bag") : null));
+    if (!v.canEdit) side.appendChild(h("p", { class: "hint" }, v.why));
+    const pool = X.loadoutPool(who, cur), ul = h("div", { class: "doll-items" });
+    if (v.canEdit && !pool.length) ul.appendChild(h("p", { class: "hint" }, `No ${sl.label.toLowerCase()} items in the bag.`));
+    for (const x of pool) {
+      const row = h("button", { class: "doll-item r-" + x.rarity, "data-uid": x.uid, onclick: () => act(() => X.loadoutEquip(who, cur, x.uid)) }, SP.icon(I.sprite(x), 32),
+        h("span", { class: "di-name", style: "color:" + I.color(x) }, I.name(x)), h("small", null, `${DATA.items.rarities[x.rarity].name} i${x.ilvl} · ${I.weight(x)} kg` + (it ? ` · swaps ${I.name(it)} to the bag` : "")));
+      UI.tipOn(row, () => `<b style="color:${I.color(x)}">${I.name(x)}</b><br>` + I.describe(x).join("<br>"));
+      ul.appendChild(row);
+    }
+    side.appendChild(ul);
+    box.appendChild(side);
+    return box;
+  };
+  // the screen as a modal: Done, Escape or a click / tap outside closes it; the run panels behind redraw after each change
+  G.UI.showLoadout = function (who) {
+    const UI = G.UI, h = UI.h, X = G.Exp;
+    if (!G.state.run || !X.loadout(who)) return;
+    UI.hideTip(); if (UI._itemMenu) UI.closeItemMenu();
+    let open = true;
+    const close = () => { if (!open) return; open = false; document.removeEventListener("keydown", key, true); UI.closeModal(); UI.render(); };
+    const key = (e) => { if (!document.querySelector(".loadout-modal")) { open = false; document.removeEventListener("keydown", key, true); return; }
+      if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(); } };
+    const draw = () => {
+      if (!open) return;
+      const v = G.state.run && X.loadout(who); if (!v) return close();
+      const wrap = h("div", { class: "doll-modal loadout-modal", "data-loadout-open": String(who) }, h("h2", null, v.name + (v.you ? " (you)" : "") + " · gear"),
+        UI.loadoutEl(who, () => { const scr = document.querySelector("#screen"); if (scr && G.state.run) UI.renderExpedition(scr); draw(); }),
+        h("button", { class: "primary", "data-act": "loadout-done", onclick: close }, "Done"));
+      const m = UI.modal(wrap, "doll-modal-wrap"), back = m.parentNode;
+      back.addEventListener("pointerdown", (e) => { if (e.target === back) { e.preventDefault(); close(); } });
+    };
+    document.addEventListener("keydown", key, true);
+    draw();
+  };
   const U = G.Util;
 })(window);
