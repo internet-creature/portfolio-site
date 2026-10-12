@@ -683,6 +683,11 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
       box.appendChild(h("div", { class: "set-row" }, h("label", null, "Tutorial"), tm));
       box.appendChild(h("div", { class: "set-row" }, h("label", null, ""), h("button", { "data-act": "replay-tutorial", onclick: () => { G.Tut.replay(); G.State.save(); tm.value = G.Tut.mode(); UI.toast("Tutorial re-armed: every step shows again."); } }, "Replay tutorial")));
     }
+    // SP-187: a read-only JSON copy of everything the game stores (reference / sample saves, not a load path)
+    if (G.SaveSnap) {
+      box.appendChild(h("h3", null, "Save"));
+      box.appendChild(h("div", { class: "set-row" }, h("label", null, ""), h("button", { "data-act": "export-save", title: "Download a JSON copy of your save (reference only; it can't be loaded back)", onclick: () => { try { UI.toast("Saved " + G.SaveSnap.download()); } catch (e) { UI.toast("Export failed: " + e.message); } } }, "Export save (JSON)")));
+    }
     box.appendChild(h("p", { class: "hint" }, "Audio starts after your first click. Missing sound files are skipped silently."));
     box.appendChild(h("button", { class: "primary", onclick: () => { UI.closeModal(); UI.render(); } }, "Done"));
     UI.modal(box);
