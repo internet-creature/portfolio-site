@@ -174,6 +174,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     });
     if (UI.panel === "zones" || UI.panel === "deploy") stage.classList.add("trapdoor-open");
     scr.appendChild(town);
+    { const obj = G.TutView && G.TutView.objectivesEl && G.TutView.objectivesEl(); if (obj) scr.appendChild(obj); }   // SP-189: tutorial objectives, right column (css: #screen:has(> .tut-obj))
     if (UI.panel) {
       const giver = UI.panel.startsWith("giver:") ? UI.panel.split(":")[1] : null;
       const gUid = UI.panel.startsWith("grunt:") ? UI.panel.slice(6) : null, gr = gUid && G.State.grunt(gUid);
@@ -863,6 +864,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     const lg = h("section", { class: "panel log" }, h("h3", null, "Log"));
     for (const line of r.log.slice(-14).reverse()) lg.appendChild(h("div", null, line));
     side.appendChild(lg);
+    { const obj = G.TutView && G.TutView.objectivesEl && G.TutView.objectivesEl(); if (obj) side.insertBefore(obj, side.firstChild); }   // SP-189: tutorial objectives stack on top of the side column
     layout.appendChild(side);
     scr.appendChild(layout);
   };

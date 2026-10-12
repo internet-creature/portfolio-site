@@ -85,6 +85,21 @@ DATA.tutorial = {
       { id: "t4_graded", target: "[data-act=extract]", when: "extractCheck", text: "Better rolls mean a smoother exit. A bad roll has consequences." }
     ] }
   },
+  // SP-101 slice 1 (SP-189): the desktop objective panel on the right (js/tutorialview.js TV.objectives). Always on
+  // screen at the outpost and on expeditions while the tutorial is on; hidden in battle (the SP-156 squad panel owns
+  // that side), on the phone layout, once the tutorial is done (state.tutorialDone) and when it was skipped (mode
+  // "none"). Read-only: every `done` is a condition over state the game already saves (G.Tut.objConds), nothing new is
+  // stored. Copy is neutral (no guide NPC, DEC-96). The first objective not done is the current one.
+  objectives: {
+    title: "Objectives",
+    list: [
+      { id: "o_deploy",  done: "deployed",    text: "Open the trapdoor, check your squad and supplies, then deploy." },
+      { id: "o_travel",  done: "travelled",   text: "Pick a place on the map and travel there." },
+      { id: "o_fight",   done: "fought",      text: "Get through your first fight." },
+      { id: "o_extract", done: "extracted",   text: "Find a way out and extract with what you're carrying." },
+      { id: "o_body",    done: "bodyClaimed", text: "Recover a body from the cryo pods and bring it home." }
+    ]
+  },
   // A1: Old Marta, by the trapdoor. Human, like Dunn and Ilse. Opening the trapdoor before talking to her opens her first.
   marta: {
     name: "Old Marta", title: "keeps the new ones alive", portrait: "npc_marta", townSprite: "town_marta", hotspot: "marta",

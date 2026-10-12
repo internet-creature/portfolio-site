@@ -50,6 +50,29 @@
     }
     return null;
   };
+  // SP-101 slice 1 (SP-189): the objective panel. Conditions read state the game already keeps (no new save fields).
+  T.objConds = {
+    deployed: (s) => !!s.run || s.runCount > 0,
+    travelled: (s) => (!!s.run && Object.keys(s.run.visited || {}).length > 1) || s.extractions > 0 || s.deaths > 0,
+    fought: (s) => (!!s.run && !!s.run.stats && s.run.stats.battles > 0) || s.extractions > 0,
+    extracted: (s) => s.extractions > 0,
+    bodyClaimed: (s) => !!s.tutorialEnds || !!(s.main && s.main.quests && s.main.quests.m1 === "done")
+  };
+  // shown while the tutorial is on: not finished (tutorialDone) and not skipped (mode "none")
+  T.objectivesOn = function () {
+    const s = G.state, o = D() && D().objectives;
+    return !!(T.on() && s && o && o.list && o.list.length && !s.tutorialDone && T.mode() !== "none");
+  };
+  // [{ id, text, done, current }]; current = the first one not done
+  T.objectives = function () {
+    const s = G.state, o = D() && D().objectives; if (!s || !o) return [];
+    let cur = false;
+    return o.list.map((it) => {
+      const f = T.objConds[it.done], done = !!(f && f(s)), current = !done && !cur;
+      if (current) cur = true;
+      return { id: it.id, text: it.text, done, current };
+    });
+  };
   // "I've got this" + a successful extraction: Marta's one-off line (once per save)
   T.onExtracted = function () {
     const st = T.st(); if (st.mode !== "none" || st.notDead) return null;

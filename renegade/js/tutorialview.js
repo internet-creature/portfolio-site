@@ -155,12 +155,24 @@
     TV.cur.i++;
     if (TV.cur.i >= TV.cur.steps.length) TV.close(); else TV.show();
   };
-  TV.skip = function () { G.Tut.setMode("none"); G.State.save(); TV.close(); G.UI.toast("Tutorial off. Settings → Gameplay → Replay tutorial brings it back."); };
+  TV.skip = function () { G.Tut.setMode("none"); G.State.save(); TV.close(); document.querySelectorAll("[data-tut-obj]").forEach((e) => e.remove());   // SP-189: the objective panel goes with it
+    G.UI.toast("Tutorial off. Settings → Gameplay → Replay tutorial brings it back."); };
   TV.close = function () {
     TV.cur = null; TV.scrolled = null; if (TV.raf) cancelAnimationFrame(TV.raf); TV.raf = 0;
     window.removeEventListener("keydown", TV.onKey, true);
     if (TV.el) TV.el.remove(); TV.el = null;
     setTimeout(TV.check, 0);   // another sequence may be due right away
+  };
+  // SP-101 slice 1 (SP-189): the desktop objective panel on the right (data/tutorial.js objectives, G.Tut.objectives).
+  // js/ui.js puts it in the outpost's right column and at the top of the expedition's side column; never in battle and
+  // never on the phone layout (SP-102). null when it shouldn't show.
+  TV.objectivesEl = function () {
+    if (touch() || !G.Tut || !G.Tut.objectivesOn()) return null;
+    const h = G.UI.h, list = G.Tut.objectives();
+    const ol = h("ol", { class: "tut-obj-list" });
+    for (const o of list) ol.appendChild(h("li", { class: "tut-obj-item" + (o.done ? " done" : "") + (o.current ? " current" : ""), "data-obj": o.id, "data-done": o.done ? "1" : "0" },
+      h("span", { class: "tut-obj-mark", "aria-hidden": "true" }, o.done ? "\u2713" : o.current ? "\u25B8" : "\u25E6"), h("span", { class: "tut-obj-text" }, o.text)));
+    return h("aside", { class: "panel tut-obj", "data-tut-obj": "1", "aria-label": "Tutorial objectives" }, h("h3", null, DATA.tutorial.objectives.title || "Objectives"), ol);
   };
   setInterval(() => { try { TV.check(); } catch (e) { /* never break the game over a tutorial step */ } }, (DATA.tutorial && DATA.tutorial.pollMs) || 400);
 })(window);
