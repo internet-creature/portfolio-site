@@ -4,7 +4,7 @@
 // No WebGL, Graphics: Low, a zone not listed below, or the scene failing to load: the 2D map (js/mapview.js) as before.
 window.DATA = window.DATA || {};
 DATA.forestMap = {
-  enabled: true,
+  enabled: !!(DATA.features && DATA.features.hushwood3dMap),   // shelved Oct 9 (Megan): data/config.js DATA.features.hushwood3dMap
   noModToggle: true,           // Megan (Oct 7, SP-039): negative Map modifiers can't be disabled by the player: the Map card has no toggle
   zones: ["a"],                 // the Hushwood (the forest). Other zones keep the 2D map until they get a scene.
   // render settings (BUILD_NOTES §5: bake once, 0.5x target, 8 fog cards on desktop / 5 on a phone; never device DPR)

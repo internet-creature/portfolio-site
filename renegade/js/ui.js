@@ -849,7 +849,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     r.pouch.forEach((p, i) => { if (p.item) carry.appendChild(UI.itemEl(p.item, () => [{ label: "Take out", act: "take-out", fn: () => { X.fromPouch(i); UI.render(); } }])); else carry.appendChild(h("div", { class: "item-row" }, `${p.n} × ${DATA.items.resources[p.res].name}`, h("button", { onclick: () => { X.fromPouch(i); UI.render(); } }, "Take out"))); });
     side.appendChild(carry);
     // extraction
-    if (area) side.insertBefore(G.Traversal.sideHere(), side.firstChild);   // V2 Area: what's here, nearest first
+    if (area && G.AreaWalk && G.AreaWalk.enabled()) side.insertBefore(G.Traversal.sideHere(), side.firstChild);   // V2 Area: what's here, nearest first
     const ve = v2 && loc ? G.Traversal.sideExtract() : null;
     if (v2 && inSite && loc) { const sw = G.Traversal.sideSweep(); if (sw) side.appendChild(sw); }   // Sweep the area: pick the fight yourself
     if (ve) side.appendChild(ve);
@@ -858,7 +858,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
       const label = UI.extractLabel(ex);
       side.appendChild(h("section", { class: "panel extract" }, h("h3", null, "Extraction point: " + loc.name), open ? h("button", { class: "primary big", "data-act": "extract", disabled: !X.canExtract(), onclick: () => UI.extractClick() }, label)
         : X.wrecked(node) ? h("div", { class: "warn wrecked", "data-note": "wrecked" }, `${DATA.config.extraction.crash.line} ${X.otherExitsNote(node)}`) : h("div", { class: "warn" }, "Closed at this Heat level.")));
-    } else if (v2) { if (!area) side.appendChild(h("section", { class: "panel" }, h("small", null, inSite ? `${TL() ? "Tap" : "Click"} an object to search it. The way you came in takes you back to traversal.` : `${TL() ? "Tap" : "Click"} a place to see what's known about it, then travel there. Walking around inside a place never starts a fight; searching, forcing and noise can.`))); }
+    } else if (v2) { if (!area || !(G.AreaWalk && G.AreaWalk.enabled())) side.appendChild(h("section", { class: "panel" }, h("small", null, inSite ? `${TL() ? "Tap" : "Click"} an object to search it. The way you came in takes you back to traversal.` : `${TL() ? "Tap" : "Click"} a place to see what's known about it, then travel there. Walking around inside a place never starts a fight; searching, forcing and noise can.`))); }
     else side.appendChild(h("section", { class: "panel" }, h("small", null, inSite ? (TL() ? "Tap" : "Click") + " an object to search it. The tooltip shows the time and the disturbance chance. The EXIT you came in by takes you back to the zone map." : `${TL() ? "Tap" : "Click"} a highlighted neighbouring location to move (+${DATA.config.heat.perMove} Heat). ${TL() ? "Tap" : "Click"} where you are to go back inside. The outpost is hidden: extraction is the only way home.`)));
     // log
     const lg = h("section", { class: "panel log" }, h("h3", null, "Log"));

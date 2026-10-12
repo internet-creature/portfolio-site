@@ -14,7 +14,9 @@
   const busy = () => { const r = G.state.run; return !r || !!r.queue.length || !!G.UI.search || !!G.UI.battle; };
 
   // is the location view a walkable V2 Area right now?
-  AW.active = () => !!(G.V2 && G.state.run && G.V2.isAreaMap(G.state.run.loc) && G.Exp.inSite());
+  // shelved Oct 9 (Megan): off, a V2 Area is click-to-use with the squad token jumping to what you used, like the later zones
+  AW.enabled = () => !!(DATA.features && DATA.features.hushwoodWalkMovement);
+  AW.active = () => AW.enabled() && !!(G.V2 && G.state.run && G.V2.isAreaMap(G.state.run.loc) && G.Exp.inSite());
   const verbOf = (a, o) => (a === "search" && o && o.type === "door" ? "Open" : { search: "Search", pick: "Pick the lock of", force: "Force", kick: "Kick", loot: "Loot", go: "Go to", use: "Use", leave: "", extract: "Use", cross: "Crawl through", boop: "Boop", claim: "Claim", examine: "Examine", train: "Train at", spin: "Turn" }[a] || "Use");   // Search / Open / Use / Enter stay distinct (draft §6)
   AW.label = function (o) {
     const acts = G.Exp.objActions(o);

@@ -397,3 +397,20 @@ DATA.config = {
     tickMs: 1000
   }
 };
+
+// Feature flags (Megan, Oct 9 2026: the Hushwood experiments need more time to cook). Read once at load, so they are
+// not in the debug panel's live config. Off: the Hushwood plays like the later zones (2D zone map, standard Areas,
+// click-to-use teleport movement). The code and art behind each flag stay in the repo to iterate on.
+//   hushwood3dMap         SP-131: the 3D forest traversal screen (data/forestmap.js, js/forestmap.js, js/b3d/map3d.js)
+//   hushwoodCustomAreas   the Hushwood art-pack Areas (data/hushwood_areas.js, js/hushwood.js, assets/sprites/areas/hushwood_v1)
+//   hushwoodWalkMovement  SP-032: walking inside a V2 Area and its "Here" list (js/areawalk.js, js/areapath.js)
+// Turn one back on here (true), or for one browser session with ?features=hushwood3dMap,hushwoodCustomAreas,hushwoodWalkMovement
+// in the URL. Node tests: RENEGADE_FEATURES=all (or a comma list) before `node tests/...`.
+DATA.features = Object.assign({ hushwood3dMap: false, hushwoodCustomAreas: false, hushwoodWalkMovement: false }, DATA.features);
+if (DATA.features.all) { delete DATA.features.all; for (const f in DATA.features) DATA.features[f] = true; }
+(function () {
+  let q = null;
+  try { q = typeof location !== "undefined" && location.search ? new URLSearchParams(location.search).get("features") : null; } catch (e) { q = null; }
+  if (!q) return;
+  for (const k of q.split(",").map((s) => s.trim()).filter(Boolean)) if (k === "all") { for (const f in DATA.features) DATA.features[f] = true; } else if (k in DATA.features) DATA.features[k] = true;
+})();
