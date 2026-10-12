@@ -128,7 +128,7 @@
   G.UI.showDoll = function (target) {
     const UI = G.UI, h = UI.h, g = target.grunt;
     UI.hideTip();
-    const draw = () => { const wrap = h("div", { class: "doll-modal" }, h("h2", null, g ? G.Allies.name(g) + " · gear" : "Your gear"), UI.dollEl(target, draw), h("button", { class: "primary", onclick: () => { UI.closeModal(); UI.render(); } }, "Done")); UI.modal(wrap, "doll-modal-wrap"); };
+    const draw = () => { const wrap = h("div", { class: "doll-modal" }, h("h2", null, g ? G.Allies.name(g) + " · gear" : "Your gear"), UI.dollEl(target, () => { draw(); if (G.SettlePanel) G.SettlePanel.refresh(); }), h("button", { class: "primary", onclick: () => { UI.closeModal(); UI.render(); } }, "Done")); UI.modal(wrap, "doll-modal-wrap"); };
     draw();
   };
   // ---------- SP-173 (SP-155 slice 1): the universal loadout screen ----------

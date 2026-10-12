@@ -185,6 +185,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
       def[1](body);
       town.appendChild(pnl);
     }
+    if (G.SettlePanel) G.SettlePanel.mount(scr);   // SP-041: the settlement right column (body, gear, squad, Deploy), under the SP-189 objectives
   };
 
   UI.panelZones = function (el) {
