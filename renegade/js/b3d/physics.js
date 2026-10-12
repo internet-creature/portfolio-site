@@ -38,6 +38,7 @@ export function createPhysics(opts) {
         collisionFilterMask: grp === GROUP.DEBRIS ? GROUP.STATIC | GROUP.RAGDOLL : GROUP.STATIC | GROUP.RAGDOLL | GROUP.DEBRIS });
       b.addShape(new CANNON.Box(new CANNON.Vec3(hx, hy, hz)));
       b.position.set(pos.x, pos.y, pos.z); if (quat) b.quaternion.set(quat.x, quat.y, quat.z, quat.w);
+      b.previousPosition.copy(b.position); b.interpolatedPosition.copy(b.position); b.previousQuaternion.copy(b.quaternion); b.interpolatedQuaternion.copy(b.quaternion);   // SP-140: sync() draws the interpolated pose
       b.linearDamping = opts.damping != null ? opts.damping : 0.05; b.angularDamping = opts.angDamping != null ? opts.angDamping : 0.15;
       b.allowSleep = true; b.sleepSpeedLimit = opts.sleepSpeed || 0.12; b.sleepTimeLimit = 0.5;
       world.addBody(b); dynamics.add(b); return b;
@@ -64,8 +65,11 @@ export function createPhysics(opts) {
     },
     stats() { let awake = 0; for (const b of dynamics) if (b.sleepState !== CANNON.Body.SLEEPING) awake++;
       return { dynamic: dynamics.size, awake, constraints: constraints.size, statics: statics.length, removedBad }; },
-    // copy a body's transform onto an Object3D
-    sync(body, obj) { obj.position.set(body.position.x, body.position.y, body.position.z); obj.quaternion.set(body.quaternion.x, body.quaternion.y, body.quaternion.z, body.quaternion.w); }
+    // copy a body's transform onto an Object3D. SP-140: the INTERPOLATED pose (cannon-es blends the last two fixed 1/60
+    // steps by the leftover time). step() runs whole 1/60 steps, so under the kill cam's 0.2x slow-mo only every 5th frame
+    // took one: drawing body.position made ragdolls, gibs and casings move at ~12 fps in every kill shot (the playtest's
+    // "framerate drops in death animations"). The blend moves them every frame at no extra physics cost.
+    sync(body, obj) { const p = body.interpolatedPosition, q = body.interpolatedQuaternion; obj.position.set(p.x, p.y, p.z); obj.quaternion.set(q.x, q.y, q.z, q.w); }
   };
   return P;
 }

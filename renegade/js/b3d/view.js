@@ -270,7 +270,7 @@ export function mount(container, b, opts, v, prep) {
     const main = x.rag.links.find((l) => l.name === MAIN_PART[plan]) || x.rag.links[0];
     const lastOfSide = !b.units.some((u) => u !== x.u && u.side === x.u.side && alive(u));
     kc.enabled = G.Gfx.killcam();
-    const still = chest(x).clone(), focus = main ? () => new THREE.Vector3(main.body.position.x, main.body.position.y, main.body.position.z) : () => still;   // every death gets its shot (Vixie)
+    const still = chest(x).clone(), focus = main ? () => { const q = main.body.interpolatedPosition; return new THREE.Vector3(q.x, q.y, q.z); } : () => still;   // every death gets its shot (Vixie); SP-140: the camera follows the drawn (interpolated) torso, not the 12 Hz one
     kc.request({ id: x.u.id, name: x.u.name, focus, dir: x.lastDir.clone(), drama: 1 + (x.gore ? 1 : 0) + (lastOfSide ? 2 : 0), x: x.fig.position.x, z: x.fig.position.z, final: !!b.over }, rng);   // a death in the step that ended the fight: the fight-ending blow
   }
   // Vixie (Oct 4), the losing blow: your last body going DOWNED (bleeding out, not dead: no ragdoll) when that ends the fight,
