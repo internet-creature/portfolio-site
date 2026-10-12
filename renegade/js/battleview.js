@@ -19,6 +19,7 @@
     v.dctx.imageSmoothingEnabled = !DATA.sprites.pixelArt;
     wrap.appendChild(hud); wrap.appendChild(canvas); container.appendChild(wrap);
     const bar = document.createElement("div"); bar.className = "ability-bar"; container.appendChild(bar); v.bar = bar; BV.renderBar(v);   // Slice 3 §2
+    v.sqEl = null; BV.renderSquad(v, container);   // SP-156 squad panel
     const bottom = document.createElement("div"); bottom.className = "battle-bottom"; container.appendChild(bottom); v.bottom = bottom;
     const tc = document.createElement("div"); tc.className = "touch-ctl"; container.appendChild(tc); v.touchEl = tc;   // on-screen Pause / Break away (phones only, css/mobile.css)
     v.artPending = !!SP.prepareBattle;
@@ -293,17 +294,10 @@
   BV.renderPause = function (v) {
     const b = v.b, T = G.Tactical; let el = v.pausePanel;
     if (!b.paused) { if (el) el.style.display = "none"; return; }
-    if (!el) { el = v.pausePanel = document.createElement("div"); el.className = "tp-panel"; v.bar.parentNode.insertBefore(el, v.bar.nextSibling); }
+    if (!el) { el = v.pausePanel = document.createElement("div"); el.className = "tp-panel"; const after = v.sqEl && v.sqEl.parentNode === v.bar.parentNode ? v.sqEl : v.bar; v.bar.parentNode.insertBefore(el, after.nextSibling); }   // SP-156: under the squad strip, so its Med kit buttons stay in reach
     el.style.display = ""; el.innerHTML = "";
-    const head = document.createElement("div"); head.className = "tp-head"; head.innerHTML = (TL() ? "<b>TACTICAL PAUSE</b> · tap a ready ability to aim it, tap Break away to queue it, and use carried Med kits on your units; they run in this order when you tap Resume. A Med kit" : "<b>TACTICAL PAUSE</b> · aim ready abilities (1/2), queue Break away (B) and use carried Med kits on your units; they run in this order when you resume (Space). A Med kit") + " channels " + DATA.config.battle.tacticalPause.channelSec.med + " s after the resume, then that unit can't take another for " + G.Tactical.medCooldown(b) + " s."; el.appendChild(head);
-    const items = document.createElement("div"); items.className = "tp-items";
-    for (const it of T.items(b)) {
-      const btn = document.createElement("button"); btn.className = "tp-item" + (b.itemAim && b.itemAim.kind === it.kind ? " on" : ""); btn.dataset.item = it.kind; btn.disabled = !(it.n > 0);
-      btn.appendChild(G.Sprites.icon(it.sprite, 20)); btn.appendChild(document.createTextNode(` Med kit (${it.n})`));
-      btn.onclick = () => { b.aim = null; b.itemAim = b.itemAim && b.itemAim.kind === it.kind ? null : { kind: it.kind }; BV.renderPause(v); BV.updateBar(v); };
-      items.appendChild(btn);
-    }
-    el.appendChild(items);
+    const head = document.createElement("div"); head.className = "tp-head"; head.innerHTML = (TL() ? "<b>TACTICAL PAUSE</b> · tap a ready ability to aim it, tap Break away to queue it, and tap Med kit on a squad row; they run in this order when you tap Resume. A Med kit" : "<b>TACTICAL PAUSE</b> · aim ready abilities (1/2), queue Break away (B) and click Med kit on a squad row; they run in this order when you resume (Space). A Med kit") + " channels " + DATA.config.battle.tacticalPause.channelSec.med + " s after the resume, then that unit can't take another for " + G.Tactical.medCooldown(b) + " s."; el.appendChild(head);
+    // SP-156: the Med kit button (tp-items) moved to the squad panel, one per member (BV.renderSquad)
     const list = document.createElement("div"); list.className = "tp-queue";
     const q = T.queue(b);
     if (!q.length) list.innerHTML = '<span class="hint">Queue empty.</span>';
@@ -314,6 +308,74 @@
       list.appendChild(row);
     });
     el.appendChild(list);
+  };
+  // ---------- SP-156 squad panel: one row per squad member (portrait, name, HP, Use Med kit) ----------
+  // Desktop: beside the arena, in the empty space on its right. Phones and narrow windows: a strip under the ability bar
+  // (the 3D portrait view counts it in its free height), collapsible from its header. Med kits follow G.Tactical's rules.
+  BV.squadUnits = (b) => b.units.filter((u) => u.side === 0 && u.ref);
+  BV.renderSquad = function (v, container) {
+    const el = v.sqEl || (v.sqEl = document.createElement("div")); el.className = "panel squad-panel" + (BV.sqCollapsed ? " collapsed" : ""); el.innerHTML = ""; el.dataset.panel = "battle-squad";
+    if (!el.parentNode && container) container.insertBefore(el, v.bar.nextSibling);
+    const head = document.createElement("h3"); head.className = "sqp-head"; head.textContent = "Squad"; el.appendChild(head);
+    const tog = document.createElement("button"); tog.className = "sqp-toggle"; tog.dataset.act = "squad-toggle"; tog.title = "Show / hide the squad rows";
+    tog.onclick = () => { tog.blur(); BV.sqCollapsed = !BV.sqCollapsed; el.classList.toggle("collapsed", BV.sqCollapsed); tog.textContent = BV.sqCollapsed ? "Show" : "Hide"; };
+    tog.textContent = BV.sqCollapsed ? "Show" : "Hide"; head.appendChild(tog);
+    v.sqRows = [];
+    for (const u of BV.squadUnits(v.b)) {
+      const row = document.createElement("div"); row.className = "sq-row sqp-row"; row.dataset.unit = u.id;
+      const g = u.ref.kind === "grunt" ? u.ref.grunt : null;
+      row.appendChild(g ? G.UI.gruntIcon(g, 20) : SP.icon(u.sprite, 20));
+      const nm = document.createElement("span"); nm.className = "sq-name"; nm.textContent = u.name + (u.rank === "body" ? " (you)" : ""); row.appendChild(nm);
+      const hb = G.UI.bar(1, "#5fd35f", ""); row.appendChild(hb);
+      const mb = document.createElement("button"); mb.className = "sqp-med"; mb.dataset.act = "squad-med";
+      mb.appendChild(SP.icon(DATA.resources.med.sprite, 16)); const ml = document.createElement("span"); mb.appendChild(ml);
+      mb.onclick = () => { mb.blur(); BV.squadMed(v, u); };
+      row.appendChild(mb); el.appendChild(row);
+      v.sqRows.push({ u, row, fill: hb.querySelector(".bar-fill"), label: hb.querySelector(".bar-label"), mb, ml, k: "" });
+    }
+    v.sqT = -1; BV.updateSquad(v, true);
+  };
+  BV.squadMed = function (v, u) {
+    const err = G.Tactical ? G.Tactical.useMed(v.b, u) : "No Med kits here.";
+    if (err) { G.UI.toast(err); G.Sfx.play("sfx_ui_error"); } else G.Sfx.play("sfx_ui_click");
+    if (v.b.paused) BV.renderPause(v);
+    BV.updateSquad(v, true);
+  };
+  BV.updateSquad = function (v, force) {
+    const el = v.sqEl, b = v.b; if (!el) return;
+    const now = performance.now(); if (!force && now - v.sqT < 150) return; v.sqT = now;
+    if (BV.squadUnits(b).length !== v.sqRows.length) return BV.renderSquad(v);   // a member joined mid-fight
+    const T = G.Tactical, n = T ? T.medFree(b) : 0;
+    for (const R of v.sqRows) {
+      const u = R.u, up = u.state === "alive", f = up ? U.clamp(u.hp / Math.max(1, u.maxHp), 0, 1) : 0;
+      const why = T ? T.itemBlock(b, "med", u, true) : "No Med kits here.";
+      const coming = !!(T && why) && (T.queue(b).some((a) => a.kind === "med" && a.u === u) || (u.channel && u.channel.kind === "med") || (u.chQ || []).some((c) => c.kind === "med"));
+      const txt = coming ? "Coming" : u.medCd > 0 && up ? `Med kit ${Math.ceil(u.medCd)}s` : `Med kit (${n})`;
+      const k = [Math.round(f * 200), up ? Math.ceil(u.hp) : u.state, why, txt].join("|"); if (k === R.k) continue; R.k = k;
+      R.fill.style.width = (f * 100) + "%"; R.fill.style.background = f > 0.5 ? "#5fd35f" : f > 0.25 ? "#e0c050" : "#e05050";
+      R.label.textContent = up ? `${Math.ceil(u.hp)}/${Math.round(u.maxHp)}` : u.state === "dead" ? "Dead" : u.state === "fled" ? "Gone" : "Down";
+      R.row.classList.toggle("dead", !up);
+      R.ml.textContent = " " + txt; R.mb.disabled = !!why; R.mb.classList.toggle("queued", !!coming); R.mb.title = why || `Use a Med kit on ${u.name}`;
+    }
+    BV.layoutSquad(v);
+  };
+  // beside the arena when there's room for it on the right (desktop), else the in-flow strip
+  BV.layoutSquad = function (v) {
+    const el = v.sqEl, wrap = v.canvas && v.canvas.closest(".battle-wrap"); if (!el || !wrap) return;
+    const cr = v.canvas.getBoundingClientRect(), wr = wrap.getBoundingClientRect(), room = wr.right - cr.right - 12;
+    const side = !TL() && room >= 190 && cr.width > 0;
+    if (side) {
+      if (el.parentNode !== wrap) wrap.appendChild(el);
+      el.classList.add("side");
+      const l = Math.round(cr.right - wr.left + 10), t = Math.round(cr.top - wr.top), w = Math.min(280, Math.round(room));
+      if (el.style.left !== l + "px") el.style.left = l + "px";
+      if (el.style.top !== t + "px") el.style.top = t + "px";
+      if (el.style.width !== w + "px") el.style.width = w + "px";
+      const mh = Math.round(cr.height) + "px"; if (el.style.maxHeight !== mh) el.style.maxHeight = mh;
+    } else if (el.classList.contains("side") || el.parentNode === wrap) {
+      el.classList.remove("side"); el.style.left = el.style.top = el.style.width = el.style.maxHeight = "";
+      v.bar.parentNode.insertBefore(el, v.bar.nextSibling);
+    }
   };
   BV.itemCancel = function (v) { v.b.itemAim = null; BV.renderPause(v); };
   BV.itemFire = function (v, m) {
@@ -500,6 +562,7 @@
     if (!diceHeld) BV.drainFx(v);   // Break away's "OUT!" / "STUMBLE" float (and anything else from that tick) waits for the die
     if (v.barEls) BV.updateBar(v);
     if (v.touchCancel) BV.updateTouch(v);
+    if (v.sqEl) BV.updateSquad(v);
     BV.updateParticles(v, dt * v.speed * timeScale);   // Slice 4 §A2: effects crawl / freeze with the speed slider (kill slow-mo on top)
     BV.interp(v, () => BV.draw(v));
     if (v.timerEl) v.timerEl.textContent = b.phase === "fight" || b.phase === "over" ? (b.mode === "defense" ? `Hold: ${Math.max(0, Math.ceil(b.surviveSec - b.t))} s` : `${b.t.toFixed(1)} s`) : "";

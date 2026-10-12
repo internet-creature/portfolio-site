@@ -503,10 +503,10 @@ button.promote { background: #6a5a1a; }
   20% { transform: rotate(-360deg); } 23% { transform: rotate(-340deg); } 38% { transform: rotate(-720deg); } 41% { transform: rotate(-700deg); } 58% { transform: rotate(-1080deg) scale(1); }
   68% { transform: rotate(-1080deg) scale(1.35); } 85% { transform: rotate(-1080deg) scale(1.15); opacity: 1; } 100% { transform: rotate(-1080deg) scale(1); opacity: 0; } }
 @keyframes rvBeam { 0%, 62% { transform: scaleX(0); opacity: 0; } 66% { opacity: 1; } 82% { transform: scaleX(1); opacity: 1; height: 6px; } 100% { transform: scaleX(1); opacity: 0; height: 2px; } }
-.rv-opening .battle-hud, .rv-opening .ability-bar, .rv-opening .battle-bottom { animation: rvHud var(--rv-hud-ms, 1300ms) ease-out both; }
+.rv-opening .battle-hud, .rv-opening .ability-bar, .rv-opening .battle-bottom, .rv-opening .squad-panel { animation: rvHud var(--rv-hud-ms, 1300ms) ease-out both; }
 @keyframes rvHud { 0%, 66% { opacity: 0; clip-path: inset(0 50% 0 50%); } 86% { opacity: 1; clip-path: inset(0 0 0 0); } 100% { opacity: 1; clip-path: none; } }
 .rv-open.rv-reduced .rv-lock, .rv-open.rv-reduced .rv-beam { display: none; }
-.rv-opening.rv-reduced-motion .battle-hud, .rv-opening.rv-reduced-motion .ability-bar, .rv-opening.rv-reduced-motion .battle-bottom { animation: rvFade 250ms ease-out both; }
+.rv-opening.rv-reduced-motion .battle-hud, .rv-opening.rv-reduced-motion .ability-bar, .rv-opening.rv-reduced-motion .battle-bottom, .rv-opening.rv-reduced-motion .squad-panel { animation: rvFade 250ms ease-out both; }
 @keyframes rvFade { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .b3d-loading[data-state="ready"] .b3d-ready { animation: none; } }
 .b3d-card { background: #0c0c09e8; border: 1px solid #5a4a2a; padding: 12px 18px; min-width: 240px; font-size: 13px; }
@@ -530,3 +530,29 @@ button.promote { background: #6a5a1a; }
 .sq-row.sq-open { cursor: pointer; border-radius: 3px; padding: 1px 2px; }
 .sq-row.sq-open:hover, .sq-row.sq-open:focus-visible { background: #2c2a1f; outline: 1px solid #5a4a2a; }
 .loadout-stats { margin-bottom: 8px; line-height: 1.5; }
+
+
+/* SP-156 combat squad panel (js/battleview.js BV.renderSquad): beside the arena on desktop, a strip under the ability bar elsewhere */
+.squad-panel { margin: 4px 0 6px; padding: 6px 8px; }
+.battle-wrap:has(> .squad-panel.side) { position: relative; }
+.squad-panel.side { position: absolute; margin: 0; overflow-y: auto; box-sizing: border-box; z-index: 2; }
+.sqp-head { display: flex; justify-content: space-between; align-items: center; margin: 0 0 4px; font-size: 13px; }
+.sqp-toggle { padding: 1px 8px; font-size: 11px; }
+.squad-panel.side .sqp-toggle { display: none; }
+.squad-panel.collapsed .sqp-row { display: none; }
+.squad-panel.collapsed .sqp-head { margin: 0; }
+.sqp-row .bar { min-width: 50px; }
+.sqp-med { flex: none; white-space: nowrap; padding: 2px 6px; font-size: 11px; display: inline-flex; align-items: center; gap: 2px; margin: 0; }
+.sqp-med:disabled { opacity: .45; cursor: default; }
+.sqp-med.queued { outline: 1px solid #ffe080; }
+.squad-panel.side .sqp-row { flex-wrap: wrap; row-gap: 2px; margin: 0 0 8px; }
+.squad-panel.side .sq-name { width: auto; flex: 1 1 0; min-width: 0; }
+.squad-panel.side .sqp-row .bar { order: 3; flex: 1 1 100%; }
+@media (pointer: coarse) {   /* compact, so the 3D portrait view keeps its free height (tests/browser/battle3d.py) */
+  .squad-panel { padding: 3px 8px; margin: 2px 0 4px; }
+  .sqp-head { margin: 0; font-size: 12px; }
+  .squad-panel .sqp-row .sq-name { font-size: 12px; }
+  .squad-panel .sqp-row .sqp-med { min-height: 30px; padding: 0 8px; font-size: 12px; }   /* mobile.css makes .sq-row buttons icon-only (the run's Heal); this one keeps its label */
+  .sqp-toggle { min-height: 26px; padding: 0 10px; margin: 0; }
+  .squad-panel .sqp-row { margin: 1px 0; }
+}

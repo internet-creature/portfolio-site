@@ -52,8 +52,10 @@
   };
   T.label = (a) => (a.kind === "ability" ? a.u.abl[a.i].d.name : a.kind === "escape" ? "Break away" : "Med kit");
   // why an item can't go on this unit (null = ok)
-  T.itemBlock = function (b, kind, u) {
-    if (!b.paused) return "Pause first (Space).";
+  // live (SP-156 squad panel): the Med kit is used mid-fight without pausing; every other rule is the same
+  T.itemBlock = function (b, kind, u, live) {
+    if (!b.paused && !live) return "Pause first (Space).";
+    if (live && !T.canPause(b)) return !T.on() ? "Not in this battle." : b.phase === "place" ? "Once the fight starts." : "The fight is over.";
     if (!u || u.side !== 0) return "Pick one of your squad.";
     if (!alive(u)) return `${u.name} is down.`;
     const r = run(); if (!r) return "No expedition.";
@@ -71,6 +73,15 @@
     const why = T.itemBlock(b, kind, u); if (why) return why;
     const a = { kind, u, order: T.queue(b).length + 1 };
     T.queue(b).push(a); u.queued = (u.queued || 0) + 1; return null;
+  };
+  // SP-156: the squad panel's Use Med kit button. Paused: queued like before (runs on resume). Running: the same
+  // channel starts at once (exactly what a pause, queue and resume would do); the kit still leaves the bag when it lands
+  T.useMed = function (b, u) {
+    if (b.paused) return T.queueItem(b, "med", u);
+    const why = T.itemBlock(b, "med", u, true); if (why) return why;
+    const ch = { kind: "med", t: 0, max: CF().channelSec.med || 1, order: 0 };
+    (u.chQ = u.chQ || []).push(ch); if (!u.channel) u.channel = u.chQ.shift();
+    b.log.push(`${u.name}: Med kit (${U.fmt1(ch.max)} s)`); return null;
   };
   // queue an aimed ability (the view calls this instead of firing while paused); cooldown spent when it fires
   T.queueAbility = function (b, u, i, tgt) {

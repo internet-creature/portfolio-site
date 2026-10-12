@@ -91,6 +91,7 @@ export function mount(container, b, opts, v, prep) {
   wrap.appendChild(hud); wrap.appendChild(stack); container.appendChild(wrap);
   v.canvas = ov; v.ctx = ov.getContext("2d"); v.hud = hud;
   const bar = document.createElement("div"); bar.className = "ability-bar"; container.appendChild(bar); v.bar = bar; BV.renderBar(v);
+  v.sqEl = null; BV.renderSquad(v, container);   // SP-156 squad panel (a strip below in phone portrait, counted in the free height)
   const bottom = document.createElement("div"); bottom.className = "battle-bottom"; container.appendChild(bottom); v.bottom = bottom;
   const tc = document.createElement("div"); tc.className = "touch-ctl"; container.appendChild(tc); v.touchEl = tc;
   BV.renderHud(v);
@@ -124,7 +125,8 @@ export function mount(container, b, opts, v, prep) {
     if (!want) { if (isPortrait) { isPortrait = false; ov.style.height = ""; ov.style.width = ""; if (ov.height !== OH0) { ov.height = OH = OH0; v.H = OH; } } return; }
     isPortrait = true;
     const r = ov.getBoundingClientRect(), tcR = tc.getBoundingClientRect(), fixedTc = tc.offsetParent === null || getComputedStyle(tc).position === "fixed";
-    const below = bar.offsetHeight + bottom.offsetHeight + (fixedTc ? (tcR.height || 0) : 0) + 14;
+    const sq = v.sqEl && v.sqEl.parentNode === container ? v.sqEl.offsetHeight + 10 : 0;
+    const below = bar.offsetHeight + sq + bottom.offsetHeight + (fixedTc ? (tcR.height || 0) : 0) + 14;
     const css = Math.round(Math.max(r.width * 0.62, Math.min(r.width * 2.1, window.innerHeight - r.top - below)));
     if (Math.abs((parseFloat(ov.style.height) || 0) - css) > 1) { ov.style.width = "100%"; ov.style.height = css + "px"; }
     const oh = Math.round(OW * css / Math.max(1, r.width)); if (Math.abs(oh - ov.height) > 2) { ov.height = OH = oh; v.H = OH; }
@@ -372,6 +374,7 @@ export function mount(container, b, opts, v, prep) {
     if (!diceHeld) while (textQ.length) { const e = textQ.shift(); floaters.push({ x: e.x, y: e.y, text: e.text, color: e.color, big: e.big, life: e.big ? 1.6 : 1.0, max: e.big ? 1.6 : 1.0, dx: (rng() - 0.5) * 18, rise: 0, global: e.y <= 3.5 && e.big }); }
     if (v.barEls) BV.updateBar(v);
     if (v.touchCancel) BV.updateTouch(v);
+    if (v.sqEl) BV.updateSquad(v);
     // after the fight the sim has stopped, but its last deaths still fall: ragdolls, debris and blood are cosmetic, so they
     // keep running in real time (at the kill cam's pace during its final shot). The 10/5 playtest: the fight-ending victim
     // froze standing, because everything here ran at the sim's rate, 0 once the battle was over
