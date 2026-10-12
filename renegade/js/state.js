@@ -140,6 +140,7 @@
       loadout: { bodyId: "body_basic", gear: {}, pouch: [], grunts: [] },
       tutorialDone: false, humanOffer: null, runCount: 0, extractions: 0, deaths: 0, lore: [],
       difficulty: DATA.config.difficulty.default, difficultyLocked: false,   // Slice 4 §H: picked on the start screen, locked at Play / the first deploy
+      player: { name: "", gender: null },   // SP-157: the new-game name + gender step (js/title.js); used in dialogue (js/dialogue.js)
       run: null, lastResult: null, settings: St.defaultSettings(), tut: G.Tut ? G.Tut.fresh() : null, main: null, cards: G.Cards ? G.Cards.fresh() : null,
       cosmetics: { unlocked: {} }   // Slice 5 §H: looks unlocked by equipping (js/gruntgear.js)
     };

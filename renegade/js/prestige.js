@@ -36,7 +36,7 @@
   P.homeId = () => { const a = P.act(); return a && a.home && D().artReady[a.home] && (DATA.townArtHomes || {})[a.home] ? a.home : null; };
   // Smudge's carried props (the bunker re-mounts the forest camp's memorial wall): shown if you moved here from that home
   P.cameFrom = (townKey) => peek().history.some((h) => "town_" + h.home === townKey && D().artReady[h.home]);
-  // Pack up and move: a new save in the next act's home, keeping the binder, looks, settings, difficulty, Marta's
+  // Pack up and move: a new save in the next act's home, keeping the binder, looks, settings, difficulty, the advisor's
   // talk (no tutorial replay), the stacked XP bonus and one item. Everything else is a new game.
   P.relocate = function (keepUid) {
     const why = P.gateWhy(); if (why) return { error: why };
@@ -50,7 +50,7 @@
     if (old.cards) { s.cards = old.cards; s.cards.searchedRun = -1; }
     s.cosmetics = old.cosmetics || s.cosmetics; s.settings = old.settings || s.settings; s.lore = old.lore || [];
     s.difficulty = old.difficulty; s.difficultyLocked = old.difficultyLocked;
-    if (old.tut) s.tut = old.tut;   // Marta knows you: Main 1 goes straight to active, no tutorial replay
+    if (old.tut) s.tut = old.tut;   // the advisor knows you: Main 1 goes straight to active, no tutorial replay
     if (keepIt) s.stash.items.push(keepIt);
     if (G.Main) G.Main.st();
     G.log(D().text.done.replace("{home}", next.homeName), "good");

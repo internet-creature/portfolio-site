@@ -40,7 +40,7 @@
   TV.questGiver = (hs) => { const g = Object.keys(DATA.quests.givers).find((k) => DATA.quests.givers[k].hotspot === hs.id); return g || (hs.opens && hs.opens.startsWith("giver:") ? hs.opens.slice(6) : null); };
   TV.questMarker = function (hs) {
     const g = TV.questGiver(hs), bm = G.Buildings && G.Buildings.marker ? G.Buildings.marker(hs) : 0;   // Slice 3 §10b: the Radio's bounties
-    const npc = hs.npc && G.Tut && G.Tut.bang(hs.npc);   // Slice 4 §A1: Old Marta until you've talked to her
+    const npc = hs.npc && G.Tut && G.Tut.bang(hs.npc);   // the advisor (Caine) until you've talked to him
     if ((!g && !bm && !npc) || hs.state !== "active") return null;
     const ids = npc ? ["talk"] : g ? G.Quests.availableAt(g) : Array(bm).fill("bounty"); if (!ids.length) return null;
     const M = DATA.town.questMarker || { px: 32, offsetY: -30 }, [x, y, w, hh] = hs.rect, a = hs.labelAnchor || [x + w / 2, y];

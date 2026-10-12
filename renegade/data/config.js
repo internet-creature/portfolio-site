@@ -42,6 +42,10 @@ DATA.config = {
   unarmed: { dmg: 3, interval: 0.8, range: 1.0, acc: 60 },
   // Slice 4 §H (Megan): difficulty, picked on the start screen for a new save and locked for it. Combat, weapons,
   // enemies, loot and Heat are the same in all three; only the death rules change. Old saves are Hardcore.
+  // SP-157: the new-game name + gender step (js/title.js, after the difficulty). state.player = { name, gender }; dialogue
+  // text uses {name} / {they} / {them} / {their} (js/dialogue.js). Genders map to pronouns: he / she / they.
+  player: { maxName: 16, namePlaceholder: "Your name", hint: "Caine will call you by this name.", needBoth: "Type a name and pick one.",
+    genders: [{ id: "he", label: "Man" }, { id: "she", label: "Woman" }, { id: "they", label: "Nonbinary" }] },
   difficulty: {
     order: ["standard", "hardcore", "ragnarok"],
     default: "hardcore",   // saves from before §H, and a new game made without the start screen (?notitle, tests)

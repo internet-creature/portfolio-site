@@ -24,7 +24,7 @@ DATA.prestige = {
   keep: { items: 1, maxRarity: "purple" },              // [DRAFT] one item, Purple at most (no quest items, no pets)
   text: {
     title: "Relocate the settlement",
-    offer: "[PLACEHOLDER] Marta's been talking about a place further out. Somewhere with walls. You could pack up and start over there.",
+    offer: "[PLACEHOLDER] Caine's been talking about a place further out. Somewhere with walls. You could pack up and start over there.",
     locked: "Finish {main} and extract {n} times to be able to move the settlement ({have}/{n}).",
     keepsLine: "You keep: your card binder, every unlocked look, +{xp}% XP for good, and one item (Purple at most).",
     resetsLine: "You start over: new zone maps, the stockpile back to the start, the starter body, new Grunts, no buildings, quests reset.",

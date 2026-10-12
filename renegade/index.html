@@ -8,7 +8,7 @@
 <title>RENEGADE [working title] — Slice 5</title>
 <!-- SP-100: the 3D battle view's ES modules (js/b3d/, loaded on demand by js/gfx.js) find three.js + cannon-es here -->
 <script type="importmap">
-{"imports": {"three": "./vendor/three-0.185.0/three.module.min.js?v=b5b23b3", "three/addons/": "./vendor/three-0.185.0/addons/", "cannon-es": "./vendor/cannon-es-0.20.0/cannon-es.js?v=b5b23b3", "./js/b3d/map3d.js": "./js/b3d/map3d.js?v=b5b23b3", "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js": "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js?v=b5b23b3", "three/addons/loaders/GLTFLoader.js": "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js?v=b5b23b3", "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js": "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js?v=b5b23b3", "three/addons/utils/SkeletonUtils.js": "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js?v=b5b23b3", "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js": "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js?v=b5b23b3", "three/addons/utils/BufferGeometryUtils.js": "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js?v=b5b23b3", "./js/b3d/view.js": "./js/b3d/view.js?v=b5b23b3", "./js/b3d/scenes/scablands.js": "./js/b3d/scenes/scablands.js?v=b5b23b3", "./js/b3d/world.js": "./js/b3d/world.js?v=b5b23b3", "./js/b3d/scenes/hollis.js": "./js/b3d/scenes/hollis.js?v=b5b23b3", "./js/b3d/scenes/drowned.js": "./js/b3d/scenes/drowned.js?v=b5b23b3", "./js/b3d/scenes/hushwood.js": "./js/b3d/scenes/hushwood.js?v=b5b23b3", "./js/b3d/scenes/greyback.js": "./js/b3d/scenes/greyback.js?v=b5b23b3", "./js/b3d/instancing.js": "./js/b3d/instancing.js?v=b5b23b3", "./js/b3d/figures.js": "./js/b3d/figures.js?v=b5b23b3", "./js/b3d/physics.js": "./js/b3d/physics.js?v=b5b23b3", "./js/b3d/killcam.js": "./js/b3d/killcam.js?v=b5b23b3", "./js/b3d/assets.js": "./js/b3d/assets.js?v=b5b23b3", "./js/b3d/look.js": "./js/b3d/look.js?v=b5b23b3", "./js/b3d/fx.js": "./js/b3d/fx.js?v=b5b23b3", "./vendor/cannon-es-0.20.0/cannon-es.js": "./vendor/cannon-es-0.20.0/cannon-es.js?v=b5b23b3", "./vendor/three-0.185.0/three.module.min.js": "./vendor/three-0.185.0/three.module.min.js?v=b5b23b3", "./vendor/three-0.185.0/three.core.min.js": "./vendor/three-0.185.0/three.core.min.js?v=b5b23b3"}}
+{"imports": {"three": "./vendor/three-0.185.0/three.module.min.js?v=443b8c4", "three/addons/": "./vendor/three-0.185.0/addons/", "cannon-es": "./vendor/cannon-es-0.20.0/cannon-es.js?v=443b8c4", "./js/b3d/map3d.js": "./js/b3d/map3d.js?v=443b8c4", "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js": "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js?v=443b8c4", "three/addons/loaders/GLTFLoader.js": "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js?v=443b8c4", "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js": "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js?v=443b8c4", "three/addons/utils/SkeletonUtils.js": "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js?v=443b8c4", "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js": "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js?v=443b8c4", "three/addons/utils/BufferGeometryUtils.js": "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js?v=443b8c4", "./js/b3d/view.js": "./js/b3d/view.js?v=443b8c4", "./js/b3d/scenes/scablands.js": "./js/b3d/scenes/scablands.js?v=443b8c4", "./js/b3d/world.js": "./js/b3d/world.js?v=443b8c4", "./js/b3d/scenes/hollis.js": "./js/b3d/scenes/hollis.js?v=443b8c4", "./js/b3d/scenes/drowned.js": "./js/b3d/scenes/drowned.js?v=443b8c4", "./js/b3d/scenes/hushwood.js": "./js/b3d/scenes/hushwood.js?v=443b8c4", "./js/b3d/scenes/greyback.js": "./js/b3d/scenes/greyback.js?v=443b8c4", "./js/b3d/instancing.js": "./js/b3d/instancing.js?v=443b8c4", "./js/b3d/figures.js": "./js/b3d/figures.js?v=443b8c4", "./js/b3d/physics.js": "./js/b3d/physics.js?v=443b8c4", "./js/b3d/killcam.js": "./js/b3d/killcam.js?v=443b8c4", "./js/b3d/assets.js": "./js/b3d/assets.js?v=443b8c4", "./js/b3d/look.js": "./js/b3d/look.js?v=443b8c4", "./js/b3d/fx.js": "./js/b3d/fx.js?v=443b8c4", "./vendor/cannon-es-0.20.0/cannon-es.js": "./vendor/cannon-es-0.20.0/cannon-es.js?v=443b8c4", "./vendor/three-0.185.0/three.module.min.js": "./vendor/three-0.185.0/three.module.min.js?v=443b8c4", "./vendor/three-0.185.0/three.core.min.js": "./vendor/three-0.185.0/three.core.min.js?v=443b8c4"}}
 </script>
 </head>
 <body class="entry-open">
@@ -41,7 +41,7 @@ window.entryWatchdog = setTimeout(function () {
   if (!window.Entry) { document.getElementById('entry-status').textContent = 'The start screen could not load. Check your connection and retry.'; document.getElementById('entry-retry').hidden = false; }
 }, 12000);
 </script>
-<script src="js/entry.js?v=b5b23b3" defer onerror="clearTimeout(window.entryWatchdog);document.getElementById('entry-status').textContent='The start screen could not load. Check your connection and retry.';document.getElementById('entry-retry').hidden=false"></script>
+<script src="js/entry.js?v=443b8c4" defer onerror="clearTimeout(window.entryWatchdog);document.getElementById('entry-status').textContent='The start screen could not load. Check your connection and retry.';document.getElementById('entry-retry').hidden=false"></script>
 <div id="app" hidden inert>
   <header id="topbar"></header>
   <main id="screen"></main>
@@ -57,8 +57,9 @@ window.entryWatchdog = setTimeout(function () {
 <link rel="stylesheet" href="css/scenario.css">
 <link rel="stylesheet" href="css/maps.css">
 <link rel="stylesheet" href="css/forest.css">
+<link rel="stylesheet" href="css/dialogue.css">
 <!-- data (all tuning numbers) -->
-<script src="js/build_id.js?v=b5b23b3"></script>
+<script src="js/build_id.js?v=443b8c4"></script>
 <script src="data/config.js"></script>
 <script src="data/resources.js"></script>
 <script src="data/sprites.js"></script>
@@ -91,6 +92,8 @@ window.entryWatchdog = setTimeout(function () {
 <script src="data/perks.js"></script>
 <script src="data/abilities.js"></script>
 <script src="data/tutorial.js"></script>
+<script src="data/dialogue/caine.js"></script>
+<script src="data/dialogue/caine_tour.js"></script>
 <script src="data/barks.js"></script>
 <script src="data/main.js"></script>
 <script src="data/cards.js"></script>
@@ -129,6 +132,7 @@ window.entryWatchdog = setTimeout(function () {
 <script src="js/hushwood.js"></script>
 <script src="js/scouting.js"></script>
 <script src="js/tutorial.js"></script>
+<script src="js/dialogue.js"></script>
 <script src="js/mainquest.js"></script>
 <script src="js/cards.js"></script>
 <script src="js/difficulty.js"></script>
@@ -159,12 +163,13 @@ window.entryWatchdog = setTimeout(function () {
 <script src="js/debug.js"></script>
 <script src="js/touch.js"></script>
 <script src="js/tutorialview.js"></script>
+<script src="js/dialogueview.js"></script>
 <script src="js/cardview.js"></script>
 <script src="js/gruntlook.js"></script>
 <script src="js/title.js"></script>
 <script src="js/scenarioview.js"></script>
 <script src="js/main.js"></script>
 </template>
-<div id="build-stamp" style="position:fixed;right:4px;bottom:3px;z-index:2147483647;font:10px/1.2 monospace;color:#fff;opacity:.45;background:rgba(0,0,0,.35);padding:1px 4px;border-radius:3px;pointer-events:none;user-select:none">build b5b23b3</div>
+<div id="build-stamp" style="position:fixed;right:4px;bottom:3px;z-index:2147483647;font:10px/1.2 monospace;color:#fff;opacity:.45;background:rgba(0,0,0,.35);padding:1px 4px;border-radius:3px;pointer-events:none;user-select:none">build 443b8c4</div>
 </body>
 </html>

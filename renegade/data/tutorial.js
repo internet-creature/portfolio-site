@@ -1,4 +1,4 @@
-// Slice 4 §A: tutorial overlay steps + the intro NPC (Old Marta). Copy is [PLACEHOLDER] (Vixie, slice-4.md; the flavor
+// Slice 4 §A: tutorial overlay steps + the intro NPC (the advisor, Caine). Copy is [PLACEHOLDER] (Vixie, slice-4.md; the flavor
 // pass rewrites it). Engine: js/tutorial.js (state, which step is due; no DOM) + js/tutorialview.js (the overlay).
 //
 // SEQUENCE fields (DATA.tutorial.sequences.<id>):
@@ -7,8 +7,9 @@
 //               "map"          run map, nothing queued          "site"     inside a location view, nothing queued
 //               "battle"       the battle screen, from placement (SP-003); or the fight's first frame. Once the fight
 //                              has started it holds at 0 s until the last step closes
+//               "zones"        the zone picker (the trapdoor opens it; SP-004)
 //               "extract_site" standing on an extraction location with nothing queued (its Extract panel is showing)
-//   modes     Marta's help choices that get it: "full" ("Show me everything"), "tips" ("Just tips when they come up")
+//   modes     the help mode Caine's dialogue sets: "full" ("Show me everything"), "tips" ("Just tips when they come up")
 //   when      optional condition name (G.Tut.conds in js/tutorial.js): "tutorialRun" (Basic-body tutorial still on,
 //             state.tutorialDone false), "extractCheck" (the extraction you're standing on has a skill check)
 //   steps     shown in order, one text box each
@@ -35,7 +36,7 @@
 // SEQUENCE extra: through  a selector clickable through the overlay at every step (T3: Fight!)
 window.DATA = window.DATA || {};
 DATA.tutorial = {
-  enabled: true,      // master switch: false = no overlay steps at all (Marta still talks)
+  enabled: true,      // master switch: false = no overlay steps at all (Caine still talks)
   pollMs: 400,        // how often a due step is looked for (on top of every render)
   dimAlpha: 0.6,      // the dim layer (~60% black)
   ringPadPx: 6,       // padding around the ringed box
@@ -46,7 +47,11 @@ DATA.tutorial = {
       { id: "t1_squad", target: "[data-tut=squad]", text: "This is you, plus two Grunts. They fight for you, and they can die for you." },
       { id: "t1_med",   target: "[data-tut=med]",   text: "Bring {med} Med kits. Heal in or after fights. Out of kits, out of luck." },
       { id: "t1_carry", target: "[data-tut=carry]", text: "Everything you bring and find has weight. Leave room for loot." },
-      { id: "t1_embark", target: "[data-act=deploy]", text: "When you're ready, head down. Marta will be here when you get back. Probably." }
+      { id: "t1_embark", target: "[data-act=deploy]", text: "When you're ready, head down. Caine will be here when you get back." }
+    ] },
+    // SP-004: the zone picker (the trapdoor opens it) on the first visit: ring the Hushwood. Picking it finishes the step.
+    t0_zones: { trigger: "zones", modes: ["full"], steps: [
+      { id: "t0_hushwood", target: "[data-zone=a]", free: true, doneOn: "zone", text: "The Hushwood is the way in. {click} it to get ready for your first run." }
     ] },
     // T2: first time the run map opens
     t2_map: { trigger: "map", modes: ["full", "tips"], steps: [
@@ -100,18 +105,13 @@ DATA.tutorial = {
       { id: "o_body",    done: "bodyClaimed", text: "Recover a body from the cryo pods and bring it home." }
     ]
   },
-  // A1: Old Marta, by the trapdoor. Human, like Dunn and Ilse. Opening the trapdoor before talking to her opens her first.
-  marta: {
-    name: "Old Marta", title: "keeps the new ones alive", portrait: "npc_marta", townSprite: "town_marta", hotspot: "marta",
-    greeting: "Another one out of the pods. I'm Marta. I keep the new ones alive, mostly. How much hand-holding do you want?",   // [PLACEHOLDER] (not in the spec)
-    choices: [
-      { mode: "full", label: "Show me everything." },
-      { mode: "tips", label: "Just tips when they come up." },
-      { mode: "none", label: "I've got this." }
-    ],
-    afterChoice: { full: "Good. Stay close and don't touch anything sharp.", tips: "Fine. I'll shout when it matters.", none: "Suit yourself. The trapdoor's right there." },   // [PLACEHOLDER]
-    talkAgain: "Still breathing? Good. Settings has \"Replay tutorial\" if you want me to walk you through it again.",   // [PLACEHOLDER]
-    // "I've got this" + back from a successful extraction: one-off line (shown once, in the run result)
-    notDeadLine: "Huh. You're not dead. I'm impressed, and a little annoyed."
+  // DEC-96 / SP-157: the advisor, Caine (replaces the old intro NPC). An old, trusted friend of the player, who leads
+  // the settlement. The first visit opens his dialogue (data/dialogue/caine.js, js/dialogue.js); his answers set the
+  // tutorial mode ("Show me around" = full, "I'll take it from here" = none). Portrait / town figure are placeholders.
+  advisor: {
+    id: "caine", name: "Caine", title: "an old friend", portrait: "npc_caine", townSprite: "town_caine", hotspot: "caine", dialogue: "caine",
+    talkAgain: "Still with us, {name}? Settings has \"Replay tutorial\" if you want the tour again.",   // [PLACEHOLDER]
+    // "I'll take it from here" + back from a successful extraction: one-off line (shown once, in the run result)
+    notDeadLine: "[TODO: Caine, relieved you made it back on your own.]"
   }
 };

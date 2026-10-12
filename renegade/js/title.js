@@ -59,7 +59,8 @@
   // Megan (Oct 7): two screens over the camp, both in the bottom third under the fire. 1. Login: the blank, locked
   // Username / Password and a Login button that only moves on (no accounts yet). 2. A new save's difficulty + Play.
   // A save whose difficulty is already locked has no step 2: Login continues straight into the game.
-  T.step = "login";   // "login" | "diff"; kept across an art-retry re-show, back to "login" after Play
+  // SP-157: 3. a new save's name + gender (state.player), after the difficulty; Play is on that step.
+  T.step = "login";   // "login" | "diff" | "who"; kept across an art-retry re-show, back to "login" after Play
   T.loginPanel = function (h) {
     return h("div", { class: "title-panel login", "data-panel": "login" },
       h("div", { class: "title-fields", title: "Accounts are coming later" }, T.field(h, "Username", C().art.labelUser, "text"), T.field(h, "Password", C().art.labelPass, "password")),
@@ -70,7 +71,32 @@
     const h = G.UI.h;
     return h("div", { class: "title-panel diff", "data-panel": "diffstep" }, T.diffPicker(h),
       h("div", { class: "t-diff-side" }, h("div", { class: "title-divider" }),
+        h("button", { class: "title-btn", "data-act": "diff-next", "data-nosfx": "1", onclick: () => T.toWho() }, "NEXT")));
+  };
+  // ---- SP-157: name + gender (DATA.config.player) ----
+  T.who = { name: "", gender: null };
+  T.whoPanel = function () {
+    const h = G.UI.h, P = DATA.config.player;
+    const msg = h("p", { class: "t-who-msg", "aria-live": "polite" }, P.hint);
+    const input = h("input", { type: "text", class: "t-who-name", "data-who": "name", maxlength: String(P.maxName), placeholder: P.namePlaceholder, "aria-label": "Your name", value: T.who.name,
+      oninput: (e) => { T.who.name = e.target.value; }, onkeydown: (e) => { if (e.key === "Enter") { e.preventDefault(); T.play(); } } });
+    const g = h("div", { class: "t-who-genders", role: "radiogroup", "aria-label": "Gender" });
+    const paint = () => { for (const b of g.children) { const on = b.dataset.gender === T.who.gender; b.classList.toggle("sel", on); b.setAttribute("aria-checked", on ? "true" : "false"); } };
+    for (const o of P.genders) g.appendChild(h("button", { class: "t-who-g", "data-gender": o.id, "data-act": "gender-" + o.id, role: "radio", "aria-checked": "false", onclick: () => { T.who.gender = o.id; paint(); } }, o.label));
+    setTimeout(paint, 0); T._whoMsg = msg;
+    return h("div", { class: "title-panel who", "data-panel": "who" },
+      h("div", { class: "t-diff-head" }, "WHO ARE YOU?"), h("div", { class: "title-row" }, h("label", { class: "t-who-label" }, "Name"), input),
+      h("div", { class: "title-row" }, h("label", { class: "t-who-label" }, "Gender"), g), msg,
+      h("div", { class: "t-who-side" }, h("button", { class: "title-btn t-back", "data-act": "who-back", "data-nosfx": "1", onclick: () => T.setStep("diff") }, "BACK"),
         h("button", { class: "title-play art-fallback", "data-act": "play", "data-nosfx": "1", "aria-label": "Play", onclick: () => T.play() }, h("span", { class: "title-play-fallback" }, "PLAY"), h("span", { class: "title-play-art" }))));
+  };
+  T.whoValid = () => { const n = T.who.name.trim(); return n.length > 0 && !!T.who.gender; };
+  T.toWho = function () {
+    if (!T.open) return;
+    if (!T.choice) return T.beforePlay();   // the "pick one" nudge
+    if (G.Sfx && G.Sfx.play) G.Sfx.play("sfx_ui_click");
+    T.setStep("who");
+    const i = document.querySelector("#title .t-who-name"); if (i && i.focus) i.focus({ preventScroll: true });
   };
   T.setStep = function (step) {
     T.step = step; const root = document.getElementById("title"); if (root) root.dataset.step = step;
@@ -109,6 +135,9 @@
   T.beforePlay = function () {
     if (!T.diffPending()) return true;
     if (!T.choice) { if (T._desc) { T._desc.textContent = DATA.config.difficulty.pickHint; T._desc.classList.remove("warn"); void T._desc.offsetWidth; T._desc.classList.add("warn"); } return false; }
+    if (T.step !== "who") { T.toWho(); return false; }
+    if (!T.whoValid()) { if (T._whoMsg) { T._whoMsg.textContent = DATA.config.player.needBoth; T._whoMsg.classList.remove("warn"); void T._whoMsg.offsetWidth; T._whoMsg.classList.add("warn"); } return false; }
+    G.state.player = { name: T.who.name.trim().slice(0, DATA.config.player.maxName), gender: T.who.gender };
     G.Difficulty.set(T.choice); G.Difficulty.lock(); G.State.save(); return true;
   };
   // CSS backgrounds are not document.images: register title art so loading/retry covers them too.
@@ -140,11 +169,11 @@
     v("--t-btn", A.button.normal.file); v("--t-btn-h", A.button.hover.file); v("--t-btn-p", A.button.pressed.file);
     v("--t-snd-on", A.soundOn.file); v("--t-snd-on-h", A.soundOnHover.file); v("--t-snd-off", A.soundOff.file); v("--t-snd-off-h", A.soundOffHover.file); v("--t-tag", A.versionTag.file);
     root.append(h("div", { class: "title-still" }), pre ? pre.canvas : h("canvas", { class: "title-gl" }), h("div", { class: "title-shade" }),
-      h("h1", { class: "title-logo art-fallback", "aria-label": "Renegade" }, h("span", { class: "title-logo-fallback" }, "RENEGADE")), T.loginPanel(h), ...(diff ? [T.panel()] : []),
+      h("h1", { class: "title-logo art-fallback", "aria-label": "Renegade" }, h("span", { class: "title-logo-fallback" }, "RENEGADE")), T.loginPanel(h), ...(diff ? [T.panel(), T.whoPanel()] : []),
       h("div", { class: "title-version", "data-note": "build" }, !diff && G.Difficulty && G.state ? h("img", { class: "title-diff", src: url(DATA.sprites["diff_" + G.Difficulty.id() + "_hud"].file), alt: G.Difficulty.name(), title: "Difficulty: " + G.Difficulty.name() }) : null, T.buildLabel(), G.state && G.Cards && G.Cards.title() ? h("span", { class: "title-cardtitle", "data-card-title": "1" }, "★ " + G.Cards.title()) : null),   // Slice 5 §J
       h("button", { class: "title-sound", "data-act": "title-sound", "data-nosfx": "1", onclick: (e) => { e.stopPropagation(); T.toggleSound(); } }));
     document.body.appendChild(root); document.body.classList.add("title-open");
-    T.keys = (e) => { if (G.Util.typing(e)) return; if ((e.key === "Enter" || e.key === " ") && T.open && !document.querySelector("#modal-root .modal")) { e.preventDefault(); if (T.step === "login") T.login(); else T.play(); } };
+    T.keys = (e) => { if (G.Util.typing(e)) return; if ((e.key === "Enter" || (e.key === " " && T.step !== "who")) && T.open && !document.querySelector("#modal-root .modal")) { e.preventDefault(); if (T.step === "login") T.login(); else if (T.step === "diff") T.toWho(); else T.play(); } };
     window.addEventListener("keydown", T.keys);
     T.tapSync = () => setTimeout(T.syncSound, 50); document.addEventListener("pointerup", T.tapSync, true);
     T.prepareArt(root); T.startScene(root, pre); T.syncSound();

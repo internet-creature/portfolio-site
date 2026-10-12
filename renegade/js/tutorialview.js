@@ -32,11 +32,12 @@
       return out;
     }
     if (UI.panel === "deploy") return ["deploy"];
+    if (UI.panel === "zones") return ["zones"];   // SP-004: the Hushwood ring
     return UI.panel ? [] : ["outpost"];
   };
   TV.holds = () => !!(TV.cur && TV.cur.trigger === "battle");
   TV.check = function () {
-    if (TV.cur || !G.Tut || !G.Tut.on() || !G.state || (G.Title && G.Title.open)) return;   // not under the title screen
+    if (TV.cur || !G.Tut || !G.Tut.on() || !G.state || (G.Title && G.Title.open) || (G.DialogueView && G.DialogueView.open)) return;   // + not under a dialogue (SP-157)   // not under the title screen
     const trig = TV.triggers(); if (!trig.length) return;
     const due = G.Tut.due(trig, ctx()); if (!due) return;
     TV.open(due);

@@ -1,0 +1,17 @@
+/* SP-157: the dialogue box (js/dialogueview.js). Centred toward the bottom; .top when a tour ring would be under it. */
+.dlg { position: fixed; inset: 0; z-index: 9000; pointer-events: none; }
+.dlg .dlg-block { position: fixed; inset: 0; pointer-events: auto; }
+.dlg.talk .dlg-block { background: rgba(0, 0, 0, 0.45); }
+.dlg .dlg-ring { position: fixed; display: none; border: 3px solid #ffd84a; border-radius: 8px; pointer-events: none; box-shadow: 0 0 0 200vmax rgba(0, 0, 0, 0.55), 0 0 16px 4px #ffd84a88; transition: left .15s, top .15s, width .15s, height .15s; }
+.dlg.tour .dlg-ring { display: block; }
+.dlg .dlg-box { position: fixed; left: 50%; transform: translateX(-50%); width: min(640px, calc(100vw - 24px)); box-sizing: border-box; background: #201f18; border: 2px solid #c9a24a; border-radius: 8px; padding: 12px 16px 10px; color: #f0e8d0; pointer-events: auto; box-shadow: 0 6px 24px #000c; }
+.dlg .dlg-box.bottom { bottom: 24px; top: auto; }
+.dlg .dlg-box.top { top: 24px; bottom: auto; }
+.dlg .dlg-speaker { font-weight: bold; color: #ffd84a; margin-bottom: 4px; }
+.dlg .dlg-text { margin: 0 0 10px; line-height: 1.4; white-space: pre-wrap; }
+.dlg .dlg-choices { display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; }
+.dlg .dlg-choices:empty { display: none; }
+.dlg .dlg-choice { text-align: left; min-height: 40px; }
+.dlg .dlg-btns { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
+.dlg .dlg-btns .dlg-skip { margin-right: auto; }
+.dlg .dlg-n { opacity: .7; font-size: 12px; }

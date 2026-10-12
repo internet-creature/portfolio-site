@@ -138,6 +138,8 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     if (UI.battle) return; // battle view owns the screen
     if (s.run) { UI.renderExpedition(scr); if (!UI.search) UI.renderStep(); return; }
     UI.renderOutpost(scr);
+    // SP-157: a new save opens with Caine's dialogue (the first load after the title)
+    if (G.Tut && G.Tut.needsAdvisor() && G.DialogueView && !G.DialogueView.open && !s.lastResult && !s.humanOffer) setTimeout(() => { if (G.Tut.needsAdvisor() && !G.DialogueView.open && !document.querySelector("#modal-root .modal") && !(G.Title && G.Title.open) && !UI.battle && !G.state.run) UI.showAdvisor(); }, 0);
     if (s.lastResult) UI.showRunResult();
     else if (s.humanOffer) UI.showBodyOffer();
     else UI.closeModal();
@@ -151,8 +153,8 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
   };
   UI.openPanel = function (id) {
     if (id === "town") id = null;
-    // Slice 4 §A1: Old Marta stands by the trapdoor; opening it before you've talked to her opens her first
-    if ((id === "zones" || id === "deploy") && G.Tut && G.Tut.needsMarta()) { UI.showMarta(() => UI.openPanel(id)); return; }
+    // DEC-96: Caine stands by the trapdoor; opening it before you've talked to him opens his dialogue first
+    if ((id === "zones" || id === "deploy") && G.Tut && G.Tut.needsAdvisor()) { UI.showAdvisor(() => UI.openPanel(id)); return; }
     UI.panel = id; UI.render();
   };
   UI.renderOutpost = function (scr) {
@@ -169,7 +171,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     const stage = G.TownView.render(town, (opens) => {
       // Slice 3 §10c: clicking the Water Still collects what's waiting (then opens its panel)
       if (opens === "still" && G.Outpost.built("still")) { const got = G.Outpost.collect("still"); if (Object.keys(got).length) { UI.toast("Collected " + G.Buildings.resText(got) + "."); G.Sfx.play("sfx_ui_click"); G.State.save(); } }
-      if (opens === "marta") { UI.showMarta(); return; }   // Slice 4 §A1
+      if (opens === "advisor") { UI.showAdvisor(); return; }   // DEC-96
       UI.openPanel(opens);
     });
     if (UI.panel === "zones" || UI.panel === "deploy") stage.classList.add("trapdoor-open");
@@ -192,7 +194,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     const cards = h("div", { class: "cards zone-cards" });
     for (const z of DATA.zones.order) {
       const d = DATA.zones.list[z], open = G.Zones.unlocked(z);
-      const c = h("div", { class: "card zone-card" + (open ? "" : " disabled"), "data-zone": z, onclick: () => { if (!open) return UI.toast("Find the way in first."); UI.zone = z; UI.openPanel("deploy"); } });
+      const c = h("div", { class: "card zone-card" + (open ? "" : " disabled"), "data-zone": z, onclick: () => { if (!open) return UI.toast("Find the way in first."); UI.zone = z; if (G.TutView) G.TutView.event("zone"); UI.openPanel("deploy"); } });
       if (!open) { c.appendChild(h("div", { class: "bc-name" }, d.lockedLabel || "??? – find the way in")); c.appendChild(h("div", { class: "bc-sub" }, "Somewhere past the Hushwood.")); }
       else {
         const f = G.Zones.knownFacts(z), qs = G.Quests.questsInZone(z).map((id) => G.Quests.def(id).name);
@@ -585,7 +587,6 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     el.appendChild(p);
   };
 
-  // Slice 4 §A1: Old Marta. First talk: her 3 help choices (the tutorial mode). After that: a short line.
   // Slice 4 §B: the Journal (outpost + run top bar): the one main objective, then every accepted side quest with progress
   UI.showJournal = function () {
     const Mn = G.Main, Q = G.Quests, box = h("div", { class: "journal", "data-panel": "journal" }, h("h2", null, "Journal"));
@@ -596,7 +597,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
       box.appendChild(h("div", { class: "jr-main", "data-main": cur }, h("b", null, q.name), h("p", null, q.objective),
         where ? h("p", { class: "hint", "data-where": q.where }, "📍 " + where) : q.where ? h("p", { class: "hint" }, "Location not scouted yet.") : null,
         q.placeholder ? h("p", { class: "hint" }, "More to come.") : null));
-    } else box.appendChild(h("p", { class: "hint" }, Mn && Mn.status("m1") === "locked" ? `Talk to ${DATA.tutorial.marta.name} by the trapdoor.` : "Nothing right now."));
+    } else box.appendChild(h("p", { class: "hint" }, Mn && Mn.status("m1") === "locked" ? `Talk to ${DATA.tutorial.advisor.name} by the trapdoor.` : "Nothing right now."));
     // Slice 5 §I: relocating the settlement, offered once the gate's main quest is done (data/prestige.js)
     if (G.Prestige && DATA.prestige.enabled && G.Prestige.nextAct() && (!DATA.prestige.gate.main || (Mn && Mn.status(DATA.prestige.gate.main) === "done"))) {
       const PT = DATA.prestige.text, why = G.Prestige.gateWhy();
@@ -628,23 +629,16 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
         UI.closeModal(); UI.toast(T.done.replace("{home}", r.act.homeName)); UI.render(); } }, T.confirm),
         h("button", { class: "confirm-btn", onclick: () => UI.closeModal() }, "Not yet"))));
   };
-  UI.showMarta = function (after) {
-    const M = DATA.tutorial.marta, first = G.Tut.needsMarta();
-    const box = h("div", { class: "marta", "data-panel": "marta" }, h("div", { class: "marta-talk" }, SP.icon(M.portrait, 64),
-      h("div", null, h("h2", null, M.name, h("small", null, " · " + M.title)), h("p", null, first ? M.greeting : M.talkAgain))));
-    const questBox = () => G.Main && G.Main.status("m1") === "active" ? h("div", { class: "marta-quest", "data-main": "m1" }, h("b", null, "Main quest: " + DATA.main.quests.m1.name), h("p", { class: "hint" }, DATA.main.quests.m1.objective),
-      h("p", null, `“${DATA.main.martaHint}”`)) : null;   // Slice 4 §B: Marta gives Main 1 with her hint
-    const done = (msg) => { UI.closeModal(); if (msg) UI.toast(`${M.name}: "${msg}"`); UI.render(); if (after) after(); };
-    if (first) {
-      const ch = h("div", { class: "marta-choices" });
-      for (const c of M.choices) ch.appendChild(h("button", { "data-marta-choice": c.mode, onclick: () => {
-        G.Tut.setMode(c.mode); if (G.Main) G.Main.onMartaTalked(); G.State.save();
-        const q = questBox(); if (!q) return done(M.afterChoice[c.mode]);
-        UI.modal(h("div", { class: "marta", "data-panel": "marta" }, h("div", { class: "marta-talk" }, SP.icon(M.portrait, 64), h("div", null, h("h2", null, M.name), h("p", null, M.afterChoice[c.mode]))), q,
-          h("button", { class: "primary", "data-act": "marta-ok", onclick: () => done() }, "Got it")));
-      } }, `“${c.label}”`));
-      box.appendChild(ch);
-    } else { const q = questBox(); if (q) box.appendChild(q); box.appendChild(h("button", { class: "primary", onclick: () => done() }, "Bye")); }
+  // DEC-96 / SP-157: the advisor. First talk: his dialogue (js/dialogueview.js; its answers set the tutorial mode and
+  // give Main 1). After that: a short line, plus Main 1's hint while it's active.
+  UI.showAdvisor = function (after) {
+    const A = DATA.tutorial.advisor;
+    if (G.Tut.needsAdvisor() && G.DialogueView) return G.DialogueView.start(A.dialogue, () => { UI.render(); if (after) after(); });
+    const box = h("div", { class: "marta", "data-panel": "advisor" }, h("div", { class: "marta-talk" }, SP.icon(A.portrait, 64),
+      h("div", null, h("h2", null, A.name, h("small", null, " · " + A.title)), h("p", null, G.Dialogue.text(A.talkAgain)))));
+    if (G.Main && G.Main.status("m1") === "active") box.appendChild(h("div", { class: "marta-quest", "data-main": "m1" }, h("b", null, "Main quest: " + DATA.main.quests.m1.name), h("p", { class: "hint" }, DATA.main.quests.m1.objective),
+      h("p", null, `“${DATA.main.martaHint}”`)));
+    box.appendChild(h("button", { class: "primary", onclick: () => { UI.closeModal(); UI.render(); if (after) after(); } }, "Bye"));
     UI.modal(box);
   };
 
@@ -677,7 +671,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     // Slice 5 §B (Vixie): the physics d20 for out-of-combat checks; off = outcomes at once, no die, no dice sounds
     box.appendChild(h("h3", null, "Dice"));
     box.appendChild(h("div", { class: "set-row" }, h("label", null, h("input", { type: "checkbox", "data-set": "showDice", checked: st.showDice !== false, onchange: (e) => { st.showDice = e.target.checked; G.State.save(); } }), " Show dice rolls")));
-    // Slice 4 §A: tutorial level (Marta's choice) + Replay tutorial (re-arms every step for the next run)
+    // Slice 4 §A: tutorial level (Caine's dialogue) + Replay tutorial (re-arms every step for the next run)
     if (G.Tut) {
       box.appendChild(h("h3", null, "Gameplay"));
       const tm = h("select", { "data-set": "tutorial", onchange: (e) => { G.Tut.setMode(e.target.value); G.State.save(); } });
@@ -702,7 +696,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     const box = h("div");
     if (lr.kind === "extracted") {
       box.appendChild(h("h2", { class: "good" }, "EXTRACTED"));
-      if (lr.marta) box.appendChild(h("p", { class: "marta-line", "data-marta": "not-dead" }, SP.icon(DATA.tutorial.marta.portrait, 24), ` ${DATA.tutorial.marta.name}: "${lr.marta}"`));   // Slice 4 §A1
+      if (lr.advisor) box.appendChild(h("p", { class: "marta-line", "data-advisor": "not-dead" }, SP.icon(DATA.tutorial.advisor.portrait, 24), ` ${DATA.tutorial.advisor.name}: "${G.Dialogue.text(lr.advisor)}"`));   // Slice 4 §A1
       box.appendChild(h("p", null, `Moves ${lr.moves} · final Heat ${lr.heat} · battles ${lr.stats.battles} · kills ${lr.stats.kills}`));
       box.appendChild(h("p", null, "Brought home: " + (lr.items.map((i) => `${i.name} (${DATA.items.rarities[i.rarity].name} i${i.ilvl})`).join(", ") || "no new items")));
       const rs = Object.entries(lr.res).filter(([, n]) => n).map(([k, n]) => `${n} ${DATA.items.resources[k].name}`); if (rs.length) box.appendChild(h("p", null, "Resources: " + rs.join(", ")));

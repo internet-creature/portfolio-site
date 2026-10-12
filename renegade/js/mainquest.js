@@ -21,7 +21,7 @@
   M.complete = function (id) {
     if (M.status(id) === "done") return;
     M.st().quests[id] = "done"; G.log(`Main quest complete: ${M.def(id).name}.`, "good");
-    if (G.Cards && id === DATA.main.order[0]) G.Cards.onQuestDone("marta");   // Slice 4 §D: Marta's card (her first quest is Main 1)
+    if (G.Cards && id === DATA.main.order[0]) G.Cards.onQuestDone(DATA.tutorial.advisor.id);   // Slice 4 §D: the advisor's card (her first quest is Main 1)
     if (M.def(id).next) M.activate(M.def(id).next);
   };
   // the one objective shown in the Journal: the first quest in order that isn't done (null if it's still locked)
@@ -34,7 +34,7 @@
     const seen = node && ((s.everSeen || {})[node.id] || (s.run && s.run.zone === P().zone && G.Exp.visible(node.id)));
     return seen ? `${DATA.zones.list[P().zone].name}: ${DATA.map.locations[q.where].name}` : null;
   };
-  M.onMartaTalked = () => M.activate("m1");   // Marta hands you Main 1 whatever tutorial choice you pick
+  M.onAdvisorTalked = () => M.activate("m1");   // the advisor (Caine) hands you Main 1 whatever tutorial choice you pick
 
   // ---------- the pods room ----------
   M.isPodsSite = (site) => !!site && site.loc === P().loc && (site.zone || "a") === P().zone && (!site.area || !!site.podsArea);   // a V2 Map: only its pods Area (data/mapsv2.js)

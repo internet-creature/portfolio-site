@@ -75,12 +75,12 @@ body.title-open { overflow: hidden; }
 #title .title-fields { display: flex; gap: 16px; }
 #title .title-fields .title-row { flex: 1; min-width: 0; }
 /* Login: Smudge's 9-slice button with DOM text (assets/ui/login/README.md) */
-#title .title-login { display: block; margin: 4px auto 2px; width: 224px; height: 48px; box-sizing: border-box; padding: 0; border: 0 solid transparent;
+#title :is(.title-login, .title-btn) { display: block; margin: 4px auto 2px; width: 224px; height: 48px; box-sizing: border-box; padding: 0; border: 0 solid transparent;
   border-image: var(--t-btn) 10 fill / 20px stretch; background: none; cursor: pointer; font: inherit; font-size: 22px; font-weight: bold; letter-spacing: 3px;
   color: #f8dc5a; text-shadow: 2px 2px 0 #3e1410; image-rendering: pixelated; }
-#title .title-login:hover, #title .title-login:focus-visible { color: #f2efe4; border-image-source: var(--t-btn-h); }
-#title .title-login:active { border-image-source: var(--t-btn-p); }
-#title .title-login:focus { outline: none; }
+#title :is(.title-login, .title-btn):hover, #title :is(.title-login, .title-btn):focus-visible { color: #f2efe4; border-image-source: var(--t-btn-h); }
+#title :is(.title-login, .title-btn):active { border-image-source: var(--t-btn-p); }
+#title :is(.title-login, .title-btn):focus { outline: none; }
 /* difficulty, wide: sigils left, the description and Play right */
 #title .title-panel.diff { display: grid; grid-template-columns: 312px 1fr; column-gap: 20px; grid-template-areas: "head desc" "cols desc" "cols side"; }
 #title .title-panel.diff .t-diffs-wrap { display: contents; }
@@ -132,3 +132,19 @@ body.title-open { overflow: hidden; }
 #title .title-play.art-fallback { background: #322414; border: 1px solid #d4c8a0; color: #f8dc5a; font-size: 20px; font-weight: bold; }
 #title .title-play.art-fallback .title-play-fallback { display: inline; }
 #title .title-play.art-fallback .title-play-art { display: none; }
+/* SP-157: 3. a new save's name + gender, the same short wide panel as login / difficulty */
+#title:not([data-step="who"]) .title-panel.who, #title[data-step="who"] .title-panel.login, #title[data-step="who"] .title-panel.diff { display: none !important; }
+#title .title-panel.who { width: 640px; bottom: clamp(32px, 6vh, 96px); }
+#title.phone .title-panel.who { width: 352px; }
+#title .title-panel.who .title-row { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
+#title .t-who-label { width: 72px; flex: none; color: #f8dc5a; font-weight: bold; letter-spacing: 1px; }
+#title .t-who-name { flex: 1; min-width: 0; height: 36px; box-sizing: border-box; padding: 0 10px; font: inherit; font-size: 18px; color: #f0e8d0; background: #1a140e; border: 2px solid #6a5a3a; border-radius: 3px; }
+#title .t-who-name:focus { outline: none; border-color: #f8dc5a; }
+#title .t-who-genders { display: flex; gap: 8px; flex: 1; }
+#title .t-who-g { flex: 1; height: 36px; font: inherit; font-size: 16px; color: #e8dcc0; background: #2a2016; border: 2px solid #6a5a3a; border-radius: 3px; cursor: pointer; }
+#title .t-who-g:hover { border-color: #b89a5a; }
+#title .t-who-g.sel { color: #f8dc5a; border-color: #f8dc5a; background: #3e2a14; }
+#title .t-who-msg { min-height: 18px; margin: 4px 0; font-size: 14px; color: #c8bca0; text-align: center; }
+#title .t-who-msg.warn { color: #ff9a6a; animation: t-warn .3s; }
+#title .t-who-side { display: flex; align-items: center; justify-content: center; gap: 16px; }
+#title .t-who-side .title-btn { margin: 0; width: 140px; }

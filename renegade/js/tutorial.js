@@ -1,6 +1,6 @@
 // Slice 4 §A: tutorial state + "which step is due" (no DOM; the overlay is js/tutorialview.js). Data: data/tutorial.js.
-// Save: state.tut = { mode: null | "full" | "tips" | "none" (Marta's choice), steps: { stepId: 1 } (one-time flags),
-// talked (spoke to Marta), notDead (her "you're not dead" line was used) }. Wiped with everything else on a new build.
+// Save: state.tut = { mode: null | "full" | "tips" | "none" (set by Caine's dialogue), steps: { stepId: 1 } (one-time flags),
+// talked (spoke to the advisor), notDead (the "you're not dead" line was used) }. Wiped with everything else on a new build.
 (function (root) {
   const G = root.G;
   const T = G.Tut = {};
@@ -14,8 +14,8 @@
   T.replay = function () { const st = T.st(); st.steps = {}; if (!st.mode || st.mode === "none") st.mode = "full"; st.talked = true; };
   T.done = (id) => !!T.st().steps[id];
   T.mark = (id) => { T.st().steps[id] = 1; };
-  T.needsMarta = () => !T.st().talked;        // her "!" and the trapdoor intercept
-  T.bang = (npc) => npc === "marta" && T.needsMarta();
+  T.needsAdvisor = () => !T.st().talked;        // his "!", the first-load dialogue and the trapdoor intercept
+  T.bang = (npc) => npc === D().advisor.id && T.needsAdvisor();
   // named conditions for `when` (sequence or step). ctx: { touch }
   T.conds = {
     tutorialRun: () => !G.state.tutorialDone,
@@ -73,9 +73,9 @@
       return { id: it.id, text: it.text, done, current };
     });
   };
-  // "I've got this" + a successful extraction: Marta's one-off line (once per save)
+  // "I'll take it from here" + a successful extraction: the advisor's one-off line (once per save)
   T.onExtracted = function () {
     const st = T.st(); if (st.mode !== "none" || st.notDead) return null;
-    st.notDead = true; return D().marta.notDeadLine;
+    st.notDead = true; return D().advisor.notDeadLine;
   };
 })(typeof window !== "undefined" ? window : globalThis);
