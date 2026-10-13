@@ -215,7 +215,7 @@ DATA.mapsV2 = {
       // ---- Supplies (boons) ----
       med_stockpile:  { cat: "loot", headline: true, headlineWeight: 2, danger: 0, reveal: { skill: "medicine", level: 10 }, seenOn: "object",
                         name: "Med stockpile", effect: "Increased chance of finding medical supplies.", reward: "Med Supplies turn up far more often, and one crate is full of them.",
-                        resMult: { med: 3 }, object: { type: "crate", name: "Med crate", sprite: "obj_crate", addRes: { med: [2, 4] } } },
+                        resMult: { med: 3 }, object: { type: "crate", name: "Med crate", sprite: "obj_crate", addRes: { med: [2, 2] }, medShift: true } },   // SP-194: 2 med item finds, rarity x3
       food_store:     { cat: "loot", headline: true, headlineWeight: 2, danger: 0, reveal: { skill: "scavenging", level: 10 }, seenOn: "search",
                         name: "Pantry", effect: "Someone stocked up.", reward: "Food turns up far more often.", resMult: { food: 2.5 } },
       fuel_dump:      { cat: "loot", headline: true, danger: 0, reveal: { skill: "scavenging", level: 10 }, seenOn: "object",
@@ -227,7 +227,7 @@ DATA.mapsV2 = {
                         name: "Working well", effect: "Clean water.", reward: "Water turns up three times as often.", resMult: { water: 3 } },
       pharmacy_safe:  { cat: "loot", danger: 0, weight: 1.5, reveal: { skill: "scavenging", level: 15 }, seenOn: "object",
                         name: "Pharmacy safe", effect: "A safe nobody cracked.", reward: "Med Supplies, and a chance of something good.",
-                        object: { type: "safe", name: "Pharmacy safe", sprite: "obj_safe", locked: true, addRes: { med: [4, 6] } } },
+                        object: { type: "safe", name: "Pharmacy safe", sprite: "obj_safe", locked: true, addRes: { med: [2, 2] }, medShift: true, medMinRarity: "yellow" } },   // SP-194: 2 finds, one yellow or better
       supply_closet:  { cat: "loot", danger: 0, weight: 2, reveal: { skill: "scavenging", level: 10 }, seenOn: "object",
                         name: "Untouched supply closet", effect: "One closet nobody has opened yet.", reward: "Extra scrap, cloth and tape in it.",
                         object: { type: "crate", name: "Untouched supply closet", sprite: "obj_locker", bonusRes: 2 } },

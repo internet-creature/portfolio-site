@@ -84,7 +84,7 @@
         else X.floatText(b, tgt, "STABILIZE FAILED" + (b.rollMath ? ` (${Math.round(chance)}%)` : ""), "#c08080");
       } else {
         const amt = tgt.maxHp * d.healPctOfMax / 100 * (ok ? 1 : r.fieldHealFailMult);
-        tgt.hp = Math.min(tgt.maxHp, tgt.hp + amt); u.stats.heals += amt;
+        G.Med.heal(tgt, amt); u.stats.heals += amt;   // SP-194: healing received (Amplifier Ampoule) applies
         X.floatText(b, tgt, (ok ? "+" : "weak heal +") + Math.round(amt) + (b.rollMath ? ` (${Math.round(chance)}%)` : ""), "#60ff90");
         B().fx(b, { t: "sfx", key: "sfx_heal" });
       }

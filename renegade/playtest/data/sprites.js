@@ -46,7 +46,7 @@ DATA.sprites = {
   bloodOnCrit: "fx_blood_spray",     // arterial spurt, oriented along the shot, stamped on crits
   dragOn: "fx_blood_drag",           // smear stamped along the push when a unit is knocked down (Breacher charge) or drops Critical
   acidPoolOn: { projectile: "fx_acid", decal: "fx_acid_pool" },   // where an acid glob lands (hit or miss)
-  healIcon: "item_med_kit",          // shown on Med Supply heal buttons (field heal / critical care)
+  healIcon: "item_med_kit",          // shown on Med Supplies heal buttons (field heal / critical care)
   // ---- units (32x32, 3/4 top-down, facing SOUTH; mirrored for left/right) ----
   // ---- Slice 3 §4 machines + Hunters ----
   enemy_ai_drone:        { file: "units/enemy_ai_drone.png",        shape: "diamond",  color: "#d8d0b0", size: 0.7, anchorY: 0.75, feetY: 0.97, walk: "enemy_ai_drone_strip2", corpse: "corpse_ai_drone", hover: true },

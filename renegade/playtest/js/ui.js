@@ -360,7 +360,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     if (!G.Zones.unlocked(UI.zone)) UI.zone = "a";
     const zd = DATA.zones.list[UI.zone];
     el.appendChild(h("div", { class: "deploy-zone" }, "Zone: ", h("b", null, zd.name), ` (${zd.size}, ${zd.tierLabel}) `, h("button", { onclick: () => UI.openPanel("zones") }, "Change zone")));
-    lo.med = lo.med == null ? Math.min(DATA.config.deploy.defaultMed, s.stash.res.med || 0) : Math.min(lo.med, s.stash.res.med || 0);
+    delete lo.med;   // SP-194: Med Supplies aren't packed any more (the pool rides in the pouch)
     if (!G.State.body(lo.bodyId) || !G.State.bodyReady(G.State.body(lo.bodyId))) { const was = G.State.body(lo.bodyId), rb = s.bodies.find((b) => G.State.bodyReady(b)); if (rb) { if (was) UI.bodyFallbackFrom = was.uid; lo.bodyId = rb.uid; } }
     // the body you had picked is restoring, so the panel fell back to a ready one: say so (until you pick one yourself)
     const fbFrom = UI.bodyFallbackFrom && G.State.body(UI.bodyFallbackFrom);
@@ -427,12 +427,12 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
       pouchSel.appendChild(h("option", { value: "" }, "(empty)"));
       const taken = lo.pouch.filter((p, j) => p && j !== si).map((p) => p.uid).filter(Boolean);
       for (const it of s.stash.items.filter((i) => !G.Items.isQuest(i) && !G.Workbench.isAmmo(i) && G.Items.weight(i) <= room + 1e-9 && !Object.values(lo.gear).includes(i.uid) && !taken.includes(i.uid))) pouchSel.appendChild(h("option", { value: it.uid, selected: curP.uid === it.uid }, `${G.Items.name(it)} (${G.Items.weight(it)} kg)`));
-      for (const k in DATA.resources) { if (DATA.resources[k].hidden || DATA.resources[k].bagOnly) continue; const n = Math.min(s.stash.res[k] || 0, Math.floor((room + 1e-9) / DATA.resources[k].kgPerUnit)); if (n > 0) pouchSel.appendChild(h("option", { value: `res:${k}:${n}`, selected: curP.res === k }, `${n} × ${DATA.resources[k].name}`)); }
+      for (const k in DATA.resources) { if (DATA.resources[k].hidden || DATA.resources[k].bagOnly || DATA.resources[k].pouch) continue; const n = Math.min(s.stash.res[k] || 0, Math.floor((room + 1e-9) / DATA.resources[k].kgPerUnit)); if (n > 0) pouchSel.appendChild(h("option", { value: `res:${k}:${n}`, selected: curP.res === k }, `${n} × ${DATA.resources[k].name}`)); }
       gsec.appendChild(h("div", { class: "gear-row" }, h("span", { class: "slot" }, `Secure Pouch ${slots > 1 ? si + 1 : ""}`), pouchSel, si === 0 ? h("small", null, ` ${slots} slot${slots > 1 ? "s" : ""}, ${pk} kg total — survives death`) : null));
     }
     // updates in place (no full re-render): a blur-triggered re-render would swallow the click on "Start"
-    const medIn = h("input", { type: "number", min: 0, max: s.stash.res.med || 0, value: lo.med, oninput: (e) => { lo.med = U.clamp(+e.target.value || 0, 0, s.stash.res.med || 0); updCarry(); G.State.save(); } });
-    gsec.appendChild(h("div", { class: "gear-row", "data-tut": "med" }, h("span", { class: "slot" }, "Med Supplies"), medIn, h("small", null, ` of ${s.stash.res.med || 0} in the stockpile (${DATA.resources.med.kgPerUnit} kg each, carried in the bag)`)));
+    // SP-194: no Med count to pack: every charge rides in the pouch, weightless, and is never lost
+    gsec.appendChild(h("div", { class: "gear-row", "data-tut": "med" }, h("span", { class: "slot" }, "Med Supplies"), h("span", { class: "med-count", "data-med-charges": String(G.Med.charges()) }, G.Med.readout()), h("small", null, "Always with you in the pouch: weightless, never lost. Each heal spends charges.")));
     // Slice 3 §9 ammo: one type (or none) + how many packs to carry; 1 pack is used at the start of each battle
     { const W = G.Workbench, types = W.ammoTypes().filter((k) => W.ammoCount(k) > 0);
       if (lo.ammo && (!lo.ammo.base || W.ammoCount(lo.ammo.base) <= 0)) lo.ammo = null;
@@ -818,12 +818,16 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
       const go = (e) => { if (e.target.closest("button")) return; if (r.queue.length || UI.search) return UI.toast("Finish what's happening first."); UI.showLoadout(who); };
       row.addEventListener("click", go); row.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(e); } }); return row; };
     sq.appendChild(opener(h("div", { class: "sq-row" }, SP.icon(G.State.bodySprite(body), 22), h("span", { class: "sq-name" }, body.name + " (you)"), bar(r.bodyHp / maxHp, "#5fd35f", `${Math.ceil(r.bodyHp)}/${Math.round(maxHp)}`),
-      h("button", { disabled: !(r.bag.res.med > 0) || r.bodyHp >= maxHp, onclick: () => { UI.toast(X.useMed("body")); UI.render(); } }, healIco(), "Heal")), "body"));
+      h("button", { disabled: !(G.Med.charges() > 0) || r.bodyHp >= maxHp, title: G.Med.charges() > 0 ? "Field heal: 1 Med Supplies charge" : "No Med Supplies charges left.", onclick: () => { UI.toast(X.useMed("body")); UI.render(); } }, healIco(), "Heal")), "body"));
     r.squad.forEach((m, i) => {
       const mx = G.Battle.unitFromGrunt(m.g).maxHp, isCarried = r.carriedCritical.includes(m.g.uid);
       sq.appendChild(opener(h("div", { class: "sq-row" + (m.hp <= 0 ? " dead" : "") }, UI.gruntIcon(m.g, 18), h("span", { class: "sq-name" }, G.Allies.name(m.g)), m.hp > 0 ? bar(m.hp / mx, "#5fd35f", `${Math.ceil(m.hp)}/${Math.round(mx)}`) : h("span", { class: "bad" }, isCarried ? "Critical (carried)" : m.left ? "left behind" : "dead"),
-        m.hp > 0 ? h("button", { disabled: !(r.bag.res.med > 0) || m.hp >= mx, onclick: () => { UI.toast(X.useMed(i)); UI.render(); } }, healIco(), "Heal") : null), i));
+        m.hp > 0 ? h("button", { disabled: !(G.Med.charges() > 0) || m.hp >= mx, title: G.Med.charges() > 0 ? "Field heal: 1 Med Supplies charge" : "No Med Supplies charges left.", onclick: () => { UI.toast(X.useMed(i)); UI.render(); } }, healIco(), "Heal") : null), i));
     });
+    // SP-194: the pouch meds (the charge pool, then the battle-only stacks, greyed out here)
+    { const M = G.Med, kinds = ["pills", "morphine"].concat(Object.keys(DATA.meds.specials).map((id) => "sm:" + id)).filter((k) => M.count(k) > 0);
+      sq.appendChild(h("div", { class: "sq-pouch-meds", "data-med-charges": String(M.charges()) }, h("small", null, `Med Supplies: ${M.charges()} charge${M.charges() === 1 ? "" : "s"}`),
+        ...kinds.map((k) => h("button", { disabled: true, title: DATA.meds.battleOnly, "data-pouch-med": k }, `${M.name(k)} (${M.count(k)})`)))); }
     side.appendChild(put("squad", sq));
     // carry
     const cap = X.capacity(), kg = X.carried(), pct = (kg / cap) * 100;
@@ -1160,19 +1164,19 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     step.items.forEach((it, idx) => box.appendChild(UI.itemEl(it, [{ label: "Take", fn: () => { X.takeItem(step, idx); if (X.containerEmptied(step) && X.current() === step) { X.closeContainer(); if (G.AreaWalk && G.AreaWalk.guard) G.AreaWalk.guard(); } UI.render(); } }], null, Object.values(G.state.run.gear).filter(Boolean))));
     // Slice 3 §6: a Purple / Orange find flashes its name and plays sfx_loot_rare (once per container opening)
     if (step.items.some(G.Items.isRare) && !step.rareSfx) { step.rareSfx = true; G.Sfx.play("sfx_loot_rare"); }
-    for (const k in step.res) box.appendChild(h("div", { class: "item-row" }, SP.icon(DATA.items.resources[k].sprite, 20), ` ${step.res[k]} × ${DATA.items.resources[k].name} (${U.fmt1(step.res[k] * DATA.items.resources[k].kgPerUnit)} kg) `, h("button", { onclick: () => { X.takeRes(step, k); if (X.containerEmptied(step) && X.current() === step) { X.closeContainer(); if (G.AreaWalk && G.AreaWalk.guard) G.AreaWalk.guard(); } UI.render(); } }, "Take")));
+    for (const k in step.res) box.appendChild(h("div", { class: "item-row" }, SP.icon(DATA.items.resources[k].sprite, 20), (k === "med" ? ` Med Supplies: ${step.res[k]} med item${step.res[k] === 1 ? "" : "s"} (straight to your pouch) ` : ` ${step.res[k]} × ${DATA.items.resources[k].name} (${U.fmt1(step.res[k] * DATA.items.resources[k].kgPerUnit)} kg) `), h("button", { onclick: () => { const meds = X.takeRes(step, k); if (meds) for (const l of meds) UI.toast(l); if (X.containerEmptied(step) && X.current() === step) { X.closeContainer(); if (G.AreaWalk && G.AreaWalk.guard) G.AreaWalk.guard(); } UI.render(); } }, "Take")));
     if (!step.items.length && !Object.keys(step.res).length) box.appendChild(h("p", { class: "hint" }, "Empty."));
     if (step.objId) box.appendChild(h("p", { class: "hint" }, "Anything you leave stays here. You can come back for it."));
-    box.appendChild(h("div", { class: "row" }, h("button", { "data-act": "take-all", onclick: () => { X.takeAll(step); if (X.containerEmptied(step) && X.current() === step) { X.closeContainer(); if (G.AreaWalk && G.AreaWalk.guard) G.AreaWalk.guard(); } UI.render(); } }, "Take all"), h("button", { class: "primary", "data-act": "done", onclick: () => { X.closeContainer(); UI.render(); } }, "Done")));
+    box.appendChild(h("div", { class: "row" }, h("button", { "data-act": "take-all", onclick: () => { const meds = X.takeAll(step); if (meds) for (const l of meds) UI.toast(l); if (X.containerEmptied(step) && X.current() === step) { X.closeContainer(); if (G.AreaWalk && G.AreaWalk.guard) G.AreaWalk.guard(); } UI.render(); } }, "Take all"), h("button", { class: "primary", "data-act": "done", onclick: () => { X.closeContainer(); UI.render(); } }, "Done")));
     UI.modal(box, "wide");
   };
 
   UI.stepCritical = function (step) {
-    const r = G.state.run, m = r.squad[step.squadIdx], cc = DATA.bodies.criticalCare, med = r.bag.res.med || 0;
+    const r = G.state.run, m = r.squad[step.squadIdx], cc = DATA.bodies.criticalCare, med = G.Med.charges();
     const box = h("div", null, h("h2", null, `${G.Allies.name(m.g)} is Critical`), h("p", null, "Spend precious Med Supplies, carry them, or leave them."));
     const go = (c) => { const e = G.Exp.resolveCritical(step, c); if (e) UI.fail(e); UI.render(); };
-    box.appendChild(h("button", { disabled: med < cc.healMed, onclick: () => go("heal") }, healIco(), `Heal (${cc.healMed} Med) → ${cc.healHpPct}% HP`));
-    box.appendChild(h("button", { disabled: med < cc.stabilizeMed, onclick: () => go("stabilize") }, `Stabilize (${cc.stabilizeMed} Med) → ${cc.stabilizeHpPct}% HP`));
+    box.appendChild(h("button", { disabled: med < cc.healMed, onclick: () => go("heal") }, healIco(), `Heal (${cc.healMed} Med Supplies charges) → ${cc.healHpPct}% HP`));
+    box.appendChild(h("button", { disabled: med < cc.stabilizeMed, onclick: () => go("stabilize") }, `Stabilize (${cc.stabilizeMed} charge${cc.stabilizeMed === 1 ? "" : "s"}) → ${cc.stabilizeHpPct}% HP`));
     box.appendChild(h("button", { onclick: () => go("carry") }, `Carry (${cc.carryKg} kg; dies if you lose a battle)`));
     box.appendChild(h("button", { onclick: () => go("leave") }, "Leave them"));
     UI.modal(box);

@@ -143,7 +143,7 @@
     const box = h("div", { class: "loot-box v2", "data-loot": step.type }, h("h2", null, title),
       h("p", { class: "loot-carry" }, `Carrying ${U.fmt1(kg)} / ${U.fmt1(cap)} kg (${Math.round(kg / cap * 100)}%). Over 100% slows you in battle; at ${DATA.config.carry.immobileAtPct}% you can't move.`));
     const take = (o, e) => { if (X.current() !== step) return;   // a window for a step that's already gone (render deferred behind a die, a repeat click)
-      const res = V.take(step.site, o.id, e.id, { opKey: "t:" + e.id + ":" + (e.item ? e.item.uid : e.n) }); if (res.dup) return; if (res.error) UI().fail(res.error); else { if (G.Sfx) G.Sfx.play("sfx_ui_click"); if (V.lootEmptied(step)) { TV.hideLoot = null; X.next(); if (G.AreaWalk && G.AreaWalk.guard) G.AreaWalk.guard(); } } UI().render(); };   // SP-144: the last item closes it
+      const res = V.take(step.site, o.id, e.id, { opKey: "t:" + e.id + ":" + (e.item ? e.item.uid : e.n) }); if (res.dup) return; if (res.error) UI().fail(res.error); else { if (res.meds) for (const l of res.meds) UI().toast(l); if (G.Sfx) G.Sfx.play("sfx_ui_click"); if (V.lootEmptied(step)) { TV.hideLoot = null; X.next(); if (G.AreaWalk && G.AreaWalk.guard) G.AreaWalk.guard(); } } UI().render(); };   // SP-144: the last item closes it
     const order = (o) => (o.combat && o.combat.kind === "teammate" ? 0 : o.combat ? 1 : 2);
     let lastGroup = -1;
     for (const o of objs.slice().sort((a, b) => order(a) - order(b))) {
@@ -155,7 +155,7 @@
       const ctx = Object.values(r.gear).filter(Boolean);
       for (const e of es) {
         if (e.item) sec.appendChild(UI().itemEl(e.item, [{ label: "Take", fn: () => take(o, e) }], null, ctx));
-        else { const R = DATA.items.resources[e.res]; sec.appendChild(h("div", { class: "item-row" }, SP.icon(R.sprite, 20), ` ${e.n} × ${R.name} (${U.fmt1(e.n * R.kgPerUnit)} kg) `, h("button", { "data-act": "take", onclick: () => take(o, e) }, "Take"))); }
+        else { const R = DATA.items.resources[e.res]; sec.appendChild(h("div", { class: "item-row" }, SP.icon(R.sprite, 20), (e.res === "med" ? ` Med Supplies: ${e.n} med item${e.n === 1 ? "" : "s"} (straight to your pouch) ` : ` ${e.n} × ${R.name} (${U.fmt1(e.n * R.kgPerUnit)} kg) `), h("button", { "data-act": "take", onclick: () => take(o, e) }, "Take"))); }
       }
       box.appendChild(sec);
     }
@@ -167,6 +167,7 @@
       if (X.current() !== step) return;
       const res = V.takeAll(step.site, objs.map((o) => o.id), "all:" + sid + ":" + left + ":" + U.fmt1(X.carried()));
       if (res.dup) return;
+      for (const l of res.meds || []) UI().toast(l);   // SP-194: each med item found
       if (res.left) UI().toast(res.taken ? `Took ${res.taken}. ${res.left} thing${res.left === 1 ? "" : "s"} didn't fit${res.needKg ? ` (${U.fmt1(res.needKg)} kg more room needed)` : ""}: still ${objs.some((o) => o.combat) ? "on the bodies" : "there"}.` : `Nothing fits: you need ${U.fmt1(res.needKg)} kg more room.`);
       else if (V.lootEmptied(step)) { TV.hideLoot = null; X.next(); if (G.AreaWalk && G.AreaWalk.guard) G.AreaWalk.guard(); }   // SP-144: emptied (loot or spoils, not the extraction one): nothing left to look at
       UI().render(); } }, "Take all that fits"));

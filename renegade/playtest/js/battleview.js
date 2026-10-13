@@ -296,7 +296,7 @@
     if (!b.paused) { if (el) el.style.display = "none"; return; }
     if (!el) { el = v.pausePanel = document.createElement("div"); el.className = "tp-panel"; const after = v.sqEl && v.sqEl.parentNode === v.bar.parentNode ? v.sqEl : v.bar; v.bar.parentNode.insertBefore(el, after.nextSibling); }   // SP-156: under the squad strip, so its Med kit buttons stay in reach
     el.style.display = ""; el.innerHTML = "";
-    const head = document.createElement("div"); head.className = "tp-head"; head.innerHTML = (TL() ? "<b>TACTICAL PAUSE</b> · tap a ready ability to aim it, tap Break away to queue it, and tap Med kit on a squad row; they run in this order when you tap Resume. A Med kit" : "<b>TACTICAL PAUSE</b> · aim ready abilities (1/2), queue Break away (B) and click Med kit on a squad row; they run in this order when you resume (Space). A Med kit") + " channels " + DATA.config.battle.tacticalPause.channelSec.med + " s after the resume, then that unit can't take another for " + G.Tactical.medCooldown(b) + " s."; el.appendChild(head);
+    const head = document.createElement("div"); head.className = "tp-head"; head.innerHTML = (TL() ? "<b>TACTICAL PAUSE</b> · tap a ready ability to aim it, tap Break away to queue it, and tap Med or a pouch med on a squad row; they run in this order when you tap Resume. Med Supplies (1 charge)" : "<b>TACTICAL PAUSE</b> · aim ready abilities (1/2), queue Break away (B) and click Med or a pouch med on a squad row; they run in this order when you resume (Space). Med Supplies (1 charge)") + " channels " + DATA.config.battle.tacticalPause.channelSec.med + " s after the resume, then that unit can't take another for " + G.Tactical.medCooldown(b) + " s. Pain pills and Morphine clear that cooldown (one bottle: " + U.fmt1(G.Med.pillCooldown(b)) + " s between them)."; el.appendChild(head);
     // SP-156: the Med kit button (tp-items) moved to the squad panel, one per member (BV.renderSquad)
     const list = document.createElement("div"); list.className = "tp-queue";
     const q = T.queue(b);
@@ -304,14 +304,14 @@
     q.forEach((a, k) => {
       const row = document.createElement("span"); row.className = "tp-q"; row.dataset.q = k;
       row.appendChild(G.Sprites.icon(qIcon(a), 18)); row.appendChild(document.createTextNode(` ${k + 1}. ${T.label(a)} → ${a.kind === "ability" ? (a.tgt && a.tgt.name ? a.tgt.name : a.tgt ? "the spot" : a.u.name) : a.u.name} `));
-      const x = document.createElement("button"); x.textContent = "×"; x.title = a.kind === "med" ? "Cancel (the kit stays in your bag)" : "Cancel"; x.onclick = () => { T.cancel(b, k); BV.renderPause(v); BV.updateBar(v); }; row.appendChild(x);
+      const x = document.createElement("button"); x.textContent = "×"; x.title = a.kind === "ability" || a.kind === "escape" ? "Cancel" : "Cancel (nothing is spent yet)"; x.onclick = () => { T.cancel(b, k); BV.renderPause(v); BV.updateBar(v); }; row.appendChild(x);
       list.appendChild(row);
     });
     el.appendChild(list);
   };
-  // ---------- SP-156 squad panel: one row per squad member (portrait, name, HP, Use Med kit) ----------
+  // ---------- SP-156 squad panel: one row per squad member (portrait, name, HP, Med Supplies, SP-194 pouch meds) ----------
   // Desktop: beside the arena, in the empty space on its right. Phones and narrow windows: a strip under the ability bar
-  // (the 3D portrait view counts it in its free height), collapsible from its header. Med kits follow G.Tactical's rules.
+  // (the 3D portrait view counts it in its free height), collapsible from its header. Med Supplies and pouch meds follow G.Tactical's rules.
   BV.squadUnits = (b) => b.units.filter((u) => u.side === 0 && u.ref);
   BV.renderSquad = function (v, container) {
     const el = v.sqEl || (v.sqEl = document.createElement("div")); el.className = "panel squad-panel" + (BV.sqCollapsed ? " collapsed" : ""); el.innerHTML = ""; el.dataset.panel = "battle-squad";
@@ -330,13 +330,18 @@
       const mb = document.createElement("button"); mb.className = "sqp-med"; mb.dataset.act = "squad-med";
       mb.appendChild(SP.icon(DATA.resources.med.sprite, 16)); const ml = document.createElement("span"); mb.appendChild(ml);
       mb.onclick = () => { mb.blur(); BV.squadMed(v, u); };
-      row.appendChild(mb); el.appendChild(row);
-      v.sqRows.push({ u, row, fill: hb.querySelector(".bar-fill"), label: hb.querySelector(".bar-label"), mb, ml, k: "" });
+      row.appendChild(mb);
+      // SP-194: one small button per pouch med you hold (Pain pills, Morphine, special meds)
+      const extra = G.Med.battleKinds().map((kind) => { const x = document.createElement("button"); x.className = "sqp-med sqp-pouch"; x.dataset.act = "squad-pouch"; x.dataset.kind = kind;
+        x.onclick = () => { x.blur(); BV.squadMed(v, u, kind); }; row.appendChild(x); return { kind, btn: x }; });
+      el.appendChild(row);
+      v.sqRows.push({ u, row, fill: hb.querySelector(".bar-fill"), label: hb.querySelector(".bar-label"), mb, ml, extra, k: "" });
     }
+    v.sqKinds = G.Med.battleKinds().join(",");
     v.sqT = -1; BV.updateSquad(v, true);
   };
-  BV.squadMed = function (v, u) {
-    const err = G.Tactical ? G.Tactical.useMed(v.b, u) : "No Med kits here.";
+  BV.squadMed = function (v, u, kind) {
+    const err = G.Tactical.useItem(v.b, kind || "med", u);
     if (err) { G.UI.toast(err); G.Sfx.play("sfx_ui_error"); } else G.Sfx.play("sfx_ui_click");
     if (v.b.paused) BV.renderPause(v);
     BV.updateSquad(v, true);
@@ -344,18 +349,20 @@
   BV.updateSquad = function (v, force) {
     const el = v.sqEl, b = v.b; if (!el) return;
     const now = performance.now(); if (!force && now - v.sqT < 150) return; v.sqT = now;
-    if (BV.squadUnits(b).length !== v.sqRows.length) return BV.renderSquad(v);   // a member joined mid-fight
-    const T = G.Tactical, n = T ? T.medFree(b) : 0;
+    if (BV.squadUnits(b).length !== v.sqRows.length || G.Med.battleKinds().join(",") !== v.sqKinds) return BV.renderSquad(v);   // a member joined mid-fight / a pouch stack ran out
+    const T = G.Tactical, n = T.medFree(b);
     for (const R of v.sqRows) {
       const u = R.u, up = u.state === "alive", f = up ? U.clamp(u.hp / Math.max(1, u.maxHp), 0, 1) : 0;
-      const why = T ? T.itemBlock(b, "med", u, true) : "No Med kits here.";
+      const why = T.itemBlock(b, "med", u, true);
       const coming = !!(T && why) && (T.queue(b).some((a) => a.kind === "med" && a.u === u) || (u.channel && u.channel.kind === "med") || (u.chQ || []).some((c) => c.kind === "med"));
-      const txt = coming ? "Coming" : u.medCd > 0 && up ? `Med kit ${Math.ceil(u.medCd)}s` : `Med kit (${n})`;
-      const k = [Math.round(f * 200), up ? Math.ceil(u.hp) : u.state, why, txt].join("|"); if (k === R.k) continue; R.k = k;
+      const txt = coming ? "Coming" : u.medCd > 0 && up ? `Med ${Math.ceil(u.medCd)}s` : `Med (${n})`;
+      const ex = R.extra.map((x) => { const w = T.itemBlock(b, x.kind, u, true); return { x, w, t: `${G.Med.name(x.kind)} (${T.kindFree(b, x.kind)})` }; });
+      const k = [Math.round(f * 200), up ? Math.ceil(u.hp) : u.state, why, txt, ...ex.map((e) => e.w + e.t)].join("|"); if (k === R.k) continue; R.k = k;
+      for (const e of ex) { e.x.btn.textContent = e.t; e.x.btn.disabled = !!e.w; e.x.btn.title = e.w || `${G.Med.name(e.x.kind)} on ${u.name}`; }
       R.fill.style.width = (f * 100) + "%"; R.fill.style.background = f > 0.5 ? "#5fd35f" : f > 0.25 ? "#e0c050" : "#e05050";
       R.label.textContent = up ? `${Math.ceil(u.hp)}/${Math.round(u.maxHp)}` : u.state === "dead" ? "Dead" : u.state === "fled" ? "Gone" : "Down";
       R.row.classList.toggle("dead", !up);
-      R.ml.textContent = " " + txt; R.mb.disabled = !!why; R.mb.classList.toggle("queued", !!coming); R.mb.title = why || `Use a Med kit on ${u.name}`;
+      R.ml.textContent = " " + txt; R.mb.disabled = !!why; R.mb.classList.toggle("queued", !!coming); R.mb.title = why || `Med Supplies on ${u.name} (1 charge)`;
     }
     BV.layoutSquad(v);
   };
@@ -399,7 +406,7 @@
     // channelling units: a bar
     for (const u of b.units) if (u.channel && u.state === "alive") { const c = u.channel, w = px * 1.6, x = u.x * px - w / 2, y = (u.y - lift) * px - px * 1.05;
       ctx.fillStyle = "rgba(0,0,0,.7)"; ctx.fillRect(x, y, w, 6); ctx.fillStyle = "#7ee0ff"; ctx.fillRect(x, y, w * U.clamp(c.t / c.max, 0, 1), 6);
-      ctx.font = "10px sans-serif"; ctx.textAlign = "center"; ctx.lineWidth = 2.5; ctx.strokeStyle = "#000"; const lb = c.kind === "escape" ? "Breaking away" : "Med kit"; ctx.strokeText(lb, u.x * px, y - 3); ctx.fillStyle = "#bfefff"; ctx.fillText(lb, u.x * px, y - 3); }
+      ctx.font = "10px sans-serif"; ctx.textAlign = "center"; ctx.lineWidth = 2.5; ctx.strokeStyle = "#000"; const lb = c.kind === "escape" ? "Breaking away" : "Med Supplies"; ctx.strokeText(lb, u.x * px, y - 3); ctx.fillStyle = "#bfefff"; ctx.fillText(lb, u.x * px, y - 3); }
     // Med kit cooldown (milestone 5): a small timer over each unit that can't take another kit yet
     for (const u of b.units) if (u.side === 0 && u.medCd > 0 && u.state === "alive") {
       const x = u.x * px + px * 0.75, y = (u.y - lift) * px - px * 0.95, rr = 9, f = u.medCd / Math.max(0.01, u.medCdMax || u.medCd);
@@ -487,7 +494,7 @@
     if (w.mag) s += `Fumble per reload: <b>${U.fmt1(G.Battle.fumbleChance(u))}%</b><br>`;
     if (u.spec) s += `<i>${u.spec.name}: ${u.spec.desc}</i><br>`;
     if (u.abl && u.abl.length) s += "Abilities: " + u.abl.map((a) => `${a.d.name} ${a.cd > 0 ? U.fmt1(a.cd) + " s" : "ready"}${a.auto ? "" : " (manual)"}`).join(" · ") + "<br>";
-    const bf = [u.buffs.taunt && "Taunted", u.buffs.armorUp && `+${u.buffs.armorUp.v} Armor`, u.buffs.brace && "Braced", u.buffs.riposte && "Riposte", u.buffs.stagger && "Staggered", u.buffs.marked && `MARKED: +${u.buffs.marked.pct}% damage taken`, u.ventT > 0 && "Venting: +50% damage taken", u.unseen && "Unseen", u.aimT > 0 && `Aiming (${U.fmt1(u.aimT)} s)`, u.cb && (u.cb.phase === "fire" ? "Burst firing" : u.cb.locked ? "Burst: aim locked" : `Burst: aiming (${U.fmt1(u.cb.t)} s)`), u.buffs.sidestep && "Sidestepping", u.buffs.frozen && `Frozen (${U.fmt1(u.buffs.frozen.t)} s)`, u.channel && `Using a Med kit (${U.fmt1(u.channel.max - u.channel.t)} s)`, u.buffs.closeIn && "Close in! +20% AS", u.state === "retreating" && "Retreating", u.buffs.nextHit && `next hit +${u.buffs.nextHit.dmgPct}%`, u.zoneEva && `in smoke +${u.zoneEva} Eva`, u.zoneSlow && `suppressed -${u.zoneSlow}% Move ${u.zoneAcc} Acc`].filter(Boolean);
+    const bf = [u.buffs.taunt && "Taunted", u.buffs.armorUp && `+${u.buffs.armorUp.v} Armor`, u.buffs.brace && "Braced", u.buffs.riposte && "Riposte", u.buffs.stagger && "Staggered", u.buffs.marked && `MARKED: +${u.buffs.marked.pct}% damage taken`, u.ventT > 0 && "Venting: +50% damage taken", u.unseen && "Unseen", u.aimT > 0 && `Aiming (${U.fmt1(u.aimT)} s)`, u.cb && (u.cb.phase === "fire" ? "Burst firing" : u.cb.locked ? "Burst: aim locked" : `Burst: aiming (${U.fmt1(u.cb.t)} s)`), u.buffs.sidestep && "Sidestepping", u.buffs.frozen && `Frozen (${U.fmt1(u.buffs.frozen.t)} s)`, u.channel && `Using Med Supplies (${U.fmt1(u.channel.max - u.channel.t)} s)`, u.buffs.closeIn && "Close in! +20% AS", u.state === "retreating" && "Retreating", u.buffs.nextHit && `next hit +${u.buffs.nextHit.dmgPct}%`, u.zoneEva && `in smoke +${u.zoneEva} Eva`, u.zoneSlow && `suppressed -${u.zoneSlow}% Move ${u.zoneAcc} Acc`].filter(Boolean);
     if (bf.length) s += `<span style="color:#9fd0ff">${bf.join(" · ")}</span><br>`;
     if (u.quirks && u.quirks.length) s += u.quirks.map((q) => DATA.bodies.quirks[q].name).join(", ");
     // Slice 3 §1: each trait and its effect; conditional ones show whether they're on right now

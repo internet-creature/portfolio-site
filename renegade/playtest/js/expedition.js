@@ -174,13 +174,12 @@
     for (const slot in lo.gear || {}) { const it = find(lo.gear[slot]); if (it) { gear[slot] = it; used.add(it.uid); } }
     const FB = CFG().deploy.freeBackpack;
     if (!gear.backpack && FB) { const own = X.ownDefaultPack(); if (own && !used.has(own.uid)) { gear.backpack = own; used.add(own.uid); } else { gear.backpack = { uid: null, base: FB.base, rarity: FB.rarity, ilvl: FB.ilvl, affixes: [] }; freePack = true; } }
-    // Reserve resources in deployment order without changing the stash: pouch slots first, then bag Med.
+    // Reserve resources in deployment order without changing the stash: pouch slots (Med Supplies never leave the pouch, SP-194).
     const pouch = [], res = { ...s.stash.res };
     for (const p of lo.pouch || []) { if (p.uid) { const it = find(p.uid); if (it) { pouch.push({ item: it }); used.add(it.uid); } } else if (p.res && (res[p.res] || 0) >= p.n) { res[p.res] -= p.n; pouch.push({ res: p.res, n: p.n }); } }
-    const med = Math.min(lo.med || 0, res.med || 0);
     const ammo = lo.ammo && lo.ammo.base && lo.ammo.n > 0 && G.Workbench ? { base: lo.ammo.base, n: Math.min(lo.ammo.n, G.Workbench.ammoCount(lo.ammo.base)) } : null;
     const squad = (lo.grunts || []).map((id) => s.grunts.find((x) => x.uid === id)).filter(Boolean).map((g) => ({ g, hp: 1 }));
-    const r = { gear, bag: { items: [], res: med ? { med } : {} }, pouch, carriedCritical: [], ammo: ammo && ammo.n > 0 ? ammo : null, squad };
+    const r = { gear, bag: { items: [], res: {} }, pouch, carriedCritical: [], ammo: ammo && ammo.n > 0 ? ammo : null, squad };
     return { run: r, body, freePack, cap: X.capacity(r, body), kg: X.carried(r), team: squad.reduce((a, m) => a + X.memberCarryKg(m), 0) };
   };
   X.start = function (lo, seed, zone) {
@@ -210,8 +209,6 @@
     // Slice 3 §9: the ammo type picked on the deploy screen and how many packs to carry (1 used per battle)
     let ammo = null;
     if (lo.ammo && lo.ammo.base && lo.ammo.n > 0 && G.Workbench) { const n = G.Workbench.takeAmmo(lo.ammo.base, lo.ammo.n); if (n) ammo = { base: lo.ammo.base, n, used: 0 }; }
-    const med = Math.min(lo.med || 0, s.stash.res.med || 0);
-    if (med) { s.stash.res.med -= med; bag.res.med = med; }
     const squad = [];
     for (const gid of lo.grunts) { const g = s.grunts.find((x) => x.uid === gid); if (g) squad.push({ g, hp: G.Battle.unitFromGrunt(g).maxHp }); }
     const body = G.State.body(lo.bodyId);
@@ -351,9 +348,14 @@
   X.takeItem = function (step, idx) {
     const it = step.items.splice(idx, 1)[0]; if (it) run().bag.items.push(it);
   };
-  X.takeRes = function (step, k) { const r = run(); r.bag.res[k] = (r.bag.res[k] || 0) + step.res[k]; delete step.res[k]; };
+  // SP-194: Med Supplies finds roll named med items into the pouch at once (returns their toast lines)
+  X.takeRes = function (step, k) {
+    const r = run(), n = step.res[k]; delete step.res[k];
+    if (k === "med") return G.Med.lootFinds(n, G.Med.ctxAt(X.node(), step.obj || null));
+    r.bag.res[k] = (r.bag.res[k] || 0) + n; return null;
+  };
   X.containerEmptied = (step) => !step.items.length && !Object.keys(step.res).length;   // SP-144: the legacy container closes after its last take
-  X.takeAll = function (step) { while (step.items.length) X.takeItem(step, 0); for (const k of Object.keys(step.res)) X.takeRes(step, k); };
+  X.takeAll = function (step) { const meds = []; while (step.items.length) X.takeItem(step, 0); for (const k of Object.keys(step.res)) meds.push(...(X.takeRes(step, k) || [])); return meds; };
   X.dropItem = function (uid) { const r = run(); const i = r.bag.items.findIndex((x) => x.uid === uid); if (i >= 0) { const it = r.bag.items.splice(i, 1)[0]; X.log(`Dropped ${G.Items.name(it)}.`); } };
   X.dropRes = function (k, n) { const r = run(); r.bag.res[k] = Math.max(0, (r.bag.res[k] || 0) - n); };
   // set: "main" | "backup" (Slice 5 §E: weapons / shields go to a hand slot of that set, I.autoSlot; key forces one)
@@ -501,21 +503,22 @@
     if (r.bodyHp <= 0) { r.bodyHp = 0; X.die("Died from injuries."); }
   };
 
-  // Out-of-combat Med Supply use: Field heal roll (60 + Medicine/2); fail heals 25%.
+  // Out-of-combat Med Supplies use (1 charge from the pouch, SP-194): Field heal roll (60 + Medicine/2); fail heals 25%.
   X.useMed = function (target) { // target: 'body' | squad index
-    const r = run(); if (!(r.bag.res.med > 0)) return "No Med Supplies in your bag.";
+    const r = run(); if (!(G.Med.charges() > 0)) return "No Med Supplies charges left.";
+    if (target !== "body" && !(r.squad[target] && r.squad[target].hp > 0)) return "They're dead.";
     const R = CFG().rolls;
     const calm = X.body().quirks.includes("heals_cant_fail");
     const chance = calm ? 100 : U.clamp(R.fieldHealBase + G.Skills.level(G.state.mind.skills, "medicine") / R.fieldHealSkillDiv, R.hitMin, R.hitMax);
     const ok = G.rng() * 100 < chance;
-    r.bag.res.med--;
+    G.Med.spend(1);
     G.State.giveXp({ kind: "body", body: X.body() }, "medicine", CFG().leveling.xp.fieldHeal);
     let max, name;
     if (target === "body") { max = X.maxBodyHp(); name = X.body().name; }
     else { const s = r.squad[target]; max = G.Battle.unitFromGrunt(s.g).maxHp; name = G.Allies.name(s.g); }
     const amt = max * CFG().expedition.medHealPct / 100 * (ok ? 1 : R.fieldHealFailMult);
     if (target === "body") r.bodyHp = Math.min(max, r.bodyHp + amt); else { const s = r.squad[target]; if (s.hp <= 0) return "They're dead."; s.hp = Math.min(max, s.hp + amt); }
-    const msg = `Field heal on ${name}: ${ok ? "success" : "fumbled"} (${Math.round(chance)}% chance), +${Math.round(amt)} HP.`;
+    const msg = `Field heal on ${name} (1 Med Supplies charge): ${ok ? "success" : "fumbled"} (${Math.round(chance)}% chance), +${Math.round(amt)} HP.`;
     X.log(msg); G.State.save(); return msg;
   };
 
@@ -572,7 +575,7 @@
       if (!run() || G.state.run !== r) break; // died
       if (e.text) texts.push(e.text);
       if (e.heat) { const got = X.addHeat(e.heat, e.source || (e.heat >= 10 ? "bigEvent" : "event")); if (got || !(G.V2 && G.V2.on())) texts.push(`${e.heat > 0 ? "+" : ""}${e.heat} Heat`); }   // source: data/events.js (V2 approves only SP-034's)
-      if (e.res) { for (const k in e.res) { r.bag.res[k] = (r.bag.res[k] || 0) + e.res[k]; texts.push(`+${e.res[k]} ${DATA.items.resources[k].name}`); } }
+      if (e.res) { for (const k in e.res) { if (DATA.resources[k].pouch) G.state.stash.res[k] = (G.state.stash.res[k] || 0) + e.res[k]; else r.bag.res[k] = (r.bag.res[k] || 0) + e.res[k]; texts.push(`+${e.res[k]} ${DATA.items.resources[k].name}`); } }
       if (e.lore) { if (!G.state.lore.includes(e.lore)) G.state.lore.push(e.lore); texts.push("Lore: " + DATA.lore[e.lore]); }
       if (e.damagePct) X.damageBody(e.damagePct);
       if (e.gruntsJoin) { r.gruntsJoin += e.gruntsJoin; texts.push(`+${e.gruntsJoin} recruit(s) will join if you extract`); }
@@ -871,9 +874,9 @@
   // §9.4 Critical ally choice: heal / stabilize / carry / leave
   X.resolveCritical = function (step, choice) {
     const r = run(), s = r.squad[step.squadIdx], cc = DATA.bodies.criticalCare, max = G.Battle.unitFromGrunt(s.g).maxHp;
-    const med = r.bag.res.med || 0;
-    if (choice === "heal") { if (med < cc.healMed) return "Not enough Med Supplies."; r.bag.res.med -= cc.healMed; s.hp = max * cc.healHpPct / 100; X.log(`${G.Allies.name(s.g)} is back in action.`); }
-    else if (choice === "stabilize") { if (med < cc.stabilizeMed) return "Not enough Med Supplies."; r.bag.res.med -= cc.stabilizeMed; s.hp = max * cc.stabilizeHpPct / 100; X.log(`${G.Allies.name(s.g)} is stabilized.`); if (G.Injuries) G.Injuries.add(s.g, "stabilized"); }   // Slice 3 §10a: stabilized, not healed
+    const med = G.Med.charges();   // SP-194: charges from the pouch
+    if (choice === "heal") { if (med < cc.healMed) return "Not enough Med Supplies charges."; G.Med.spend(cc.healMed); s.hp = max * cc.healHpPct / 100; X.log(`${G.Allies.name(s.g)} is back in action.`); }
+    else if (choice === "stabilize") { if (med < cc.stabilizeMed) return "Not enough Med Supplies charges."; G.Med.spend(cc.stabilizeMed); s.hp = max * cc.stabilizeHpPct / 100; X.log(`${G.Allies.name(s.g)} is stabilized.`); if (G.Injuries) G.Injuries.add(s.g, "stabilized"); }   // Slice 3 §10a: stabilized, not healed
     else if (choice === "carry") { s.hp = 0; s.carried = true; r.carriedCritical.push(s.g.uid); X.log(`You carry ${G.Allies.name(s.g)} (${cc.carryKg} kg).`); }
     else { s.hp = 0; s.left = true; X.log(`You leave ${G.Allies.name(s.g)} behind.`, "bad"); X.addGruntBodies((s.died && s.died.where) || r.loc, [s]); }   // Slice 5 §C: they die here: body + pack
     X.next(); return null;

@@ -683,6 +683,11 @@
       const kg = G.Items.weight(e.item);
       if (!G.Items.isQuest(e.item) && kg > room + 1e-9) return { error: `No room: you need ${U.fmt1(kg - room)} kg more.`, needKg: kg - room };
       opSeen(r, opts.opKey); r.bag.items.push(e.item); e.item = null; e.taken = true;
+    } else if (e.res === "med") {   // SP-194: Med Supplies finds roll named med items straight into the pouch (no pack space)
+      opSeen(r, opts.opKey); const n = e.n; e.n = 0;
+      const lines = G.Med.lootFinds(n, G.Med.ctxAt(X().node(), o));
+      V.ev("take", { site: siteKey, obj: objId, entry: entryId }); if (!opts.noSave) G.State.save();
+      return { ok: true, meds: lines };
     } else {
       const per = DATA.items.resources[e.res].kgPerUnit, want = Math.min(e.n, opts.n || e.n), n = Math.min(want, Math.floor((room + 1e-9) / per));
       if (n <= 0) return { error: `No room: you need ${U.fmt1(per - room)} kg more.`, needKg: per - room };
@@ -695,17 +700,17 @@
   // Take all that fits: complete legal quantities only, at most fitPct of capacity; reports what stays
   V.takeAll = function (siteKey, objIds, opKey) {
     const r = run(); if (!V.on(r)) return { taken: 0, left: 0, needKg: 0 }; if (opKey && r.v2.ops[opKey]) return { dup: true }; opSeen(r, opKey);
-    const site = X().site(siteKey), got = [], left = []; let need = 0;
+    const site = X().site(siteKey), got = [], left = [], meds = []; let need = 0;
     for (const id of objIds) {
       const o = X().obj(id, site); if (!o) continue;
       for (const e of V.left(o)) {
         const res = V.take(siteKey, id, e.id, { limit: "fit", noSave: true });
-        if (res.ok) { got.push(e.id); if (!e.item && e.n > 0) left.push(e.id); }
+        if (res.ok) { got.push(e.id); if (res.meds) meds.push(...res.meds); if (!e.item && e.n > 0) left.push(e.id); }
         else { left.push(e.id); need = Math.max(need, res.needKg || 0); }
       }
     }
     G.State.save();
-    return { taken: got.length, left: left.length, needKg: need };
+    return { taken: got.length, left: left.length, needKg: need, meds };
   };
 
   // the loot panel for one source (a fight's body opens every body of that fight here that still holds something)

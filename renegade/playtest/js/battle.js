@@ -544,7 +544,7 @@
   // ---------- step ----------
   B.step = function (b, dt) {
     if (b.phase !== "fight" || b.over) return;
-    b.t += dt;
+    b.t += dt; G.Med.tickBattle(b, dt);
     const c = C();
     // defense waves
     if (b.mode === "defense" && b.waves.length && b.waveIdx < b.waves.length) {
@@ -566,7 +566,8 @@
       for (const bn of u.burns) { bn.t -= dt; const d = applyDamage(b, bn.src, u, bn.dps * dt, DATA.items.tags.burn.dtype || "kinetic", { silent: true, noIntercept: true, dot: true }); u.stats.burnTaken = (u.stats.burnTaken || 0) + d; if (!alive(u)) break; }
       u.burns = u.burns.filter((x) => x.t > 0);
       if (!alive(u)) continue;
-      if (u.medCd > 0) u.medCd = Math.max(0, u.medCd - dt);   // Med kit cooldown on this unit (combat time)
+      if (u.medCd > 0) u.medCd = Math.max(0, u.medCd - dt);   // the heal cooldown on this unit (combat time)
+      G.Med.tickUnit(b, u, dt);   // SP-194: Morphine, healing received, heals over time
       if (u.side === 0 && G.Escape && G.Escape.stumbling(b)) { if (u.abl) for (const s of u.abl) s.cd = Math.max(0, s.cd - dt); continue; }   // a failed Break away: your units don't act
       if (u.channel && G.Tactical) { if (u.abl) for (const s of u.abl) s.cd = Math.max(0, s.cd - dt); G.Tactical.channelTick(b, u, dt); continue; }   // tactical pause: using an item
       if (u.buffs.knockdown || u.buffs.stagger || u.buffs.frozen) continue;

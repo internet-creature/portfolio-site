@@ -115,11 +115,11 @@
   };
   IP.model = function () { const v = IP.view(); return v === "map" ? IP.mapModel() : IP.zoneModel(); };
 
-  // the status strip: HP, carry kg, Med kits, and the Extract button (enabled when you can get out right here, else
+  // the status strip: HP, carry kg, Med Supplies charges (SP-194: the pouch pool), and the Extract button (enabled when you can get out right here, else
   // disabled with the reason as its tooltip: the authoritative line from G.V2.extractInfo / the legacy extraction point)
   IP.strip = function () {
     const r = run(), X = G.Exp, maxHp = X.maxBodyHp(), cap = X.capacity(), kg = X.carried();
-    const out = { hp: r.bodyHp, maxHp, kg, cap, med: r.bag.res.med || 0, extract: { label: "Extract", can: false, why: "", act: null } };
+    const out = { hp: r.bodyHp, maxHp, kg, cap, med: G.Med.charges(), extract: { label: "Extract", can: false, why: "", act: null } };
     const node = X.node(), loc = G.Map.loc(node), E = out.extract;
     if (V2() && loc && G.V2.inst(r.loc, false)) {
       const I = G.V2.extractInfo(r.loc);
@@ -194,7 +194,7 @@
       h("div", { class: "ifp-stats" },
         h("div", { class: "ifp-stat" }, h("b", null, "HP"), bar(S.hp / S.maxHp, "#5fd35f", `${Math.ceil(S.hp)}/${Math.round(S.maxHp)}`)),
         h("div", { class: "ifp-stat" }, h("b", null, "KG"), bar(S.kg / S.cap / 1.5, S.kg > S.cap ? "#e0a040" : "#6aa0ff", `${G.Util.fmt1(S.kg)}/${G.Util.fmt1(S.cap)}`)),
-        h("div", { class: "ifp-med" }, `${S.med} MED`)), wrap);
+        h("div", { class: "ifp-med", title: "Med Supplies (charges)" }, `${S.med} MED`)), wrap);
   };
 
   // sections: { key: element }, key from IP.routes; acts: strip Extract handlers

@@ -6,13 +6,13 @@
 //   {them} / {their} come from the new-game name + gender step (state.player).
 window.DATA = window.DATA || {}; DATA.dialogue = DATA.dialogue || {};
 // Copy: Vixie's SP-192 building intros and walk-around order, with {name} as the approved temporary address.
-// The copy pass keeps distinctive lines and checks instructions against the current mechanics; no fixed Med kit quantities.
+// The copy pass keeps distinctive lines and checks instructions against the current mechanics; no fixed Med Supplies quantities.
 DATA.dialogue.caine.tour = [
   { id: "hideout",   target: ".town-stage",           speaker: "Caine", text: "Welcome home, {name}. The palisade held while you were away, and the bonfire's still lit. Let me walk you round so you can get your bearings. Everything here answers to you." },   // SP-004 hideout intro
   { id: "stockpile", target: "[data-hs=stockpile]",   speaker: "Caine", text: "The Stockpile. Every bit of Scrap, Cloth, Food and Water you haul home goes here. No cap, and nothing rots. It pays for everything we build." },
   { id: "vault",     target: "[data-hs=vault]",       speaker: "Caine", text: "Your Vault. Every piece of gear you bring home sleeps here. Upgrade it and we'll fit more, and your Secure Pouch gets bigger too." },
   { id: "body_lab",  target: "[data-hs=body_lab]",    speaker: "Caine", text: "The Body Lab, where your spare bodies wait. Choose which one you wear down the Trapdoor. Keep another ready in case you lose it. I'd rather we never needed it." },
-  { id: "stores",    target: "[data-hs=dunn_stores]", speaker: "Caine", text: "Dunn keeps our stores, and he's always got work. Help him out and he'll knock some Food and Water off our building costs. He trades Med kits for Scrap, too." },
+  { id: "stores",    target: "[data-hs=dunn_stores]", speaker: "Caine", text: "Dunn keeps our stores, and he's always got work. Help him out and he'll knock some Food and Water off our building costs. He trades Med Supplies and Pain pills for Scrap, too." },
   { id: "ilse",      target: "[data-hs=ilse_tent]",   speaker: "Caine", text: "Doc Ilse has work for you. Injuries heal on their own after a few runs. Give her an Infirmary and she can treat them sooner." },
   { id: "recruit",   target: "[data-hs=lot_recruit]", speaker: "Caine", text: "Grunts will sign on for Food and Water. Hire them here to fill out your squad. They'll fight for you and some won't come back, so keep a spare or two." },
   { id: "memorial",  target: "[data-hs=memorial]",    speaker: "Caine", text: "The Memorial Wall. Everyone who fell in your service, newest first. We don't forget them, {name}." },

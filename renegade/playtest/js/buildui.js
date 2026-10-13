@@ -42,7 +42,7 @@
   BU.panelWorkbench = function (el) {
     const s = G.state, W = G.Workbench, st = W.st();
     el.appendChild(BU.buildSection("workbench"));
-    if (W.level() < 1) { el.appendChild(h("p", { class: "hint" }, "Once it's built: craft Med kits, ammo packs and gear from the stockpile.")); return; }
+    if (W.level() < 1) { el.appendChild(h("p", { class: "hint" }, "Once it's built: craft Field dressings, ammo packs and gear from the stockpile.")); return; }
     // queue
     const qs = h("section", { class: "panel wb-queue", "data-queue": st.queue.length }, h("h3", null, `Queue ${st.queue.length} / ${W.slots()}`));
     if (!st.queue.length) qs.appendChild(h("p", { class: "hint" }, "Idle. Jobs run one after another and keep running while the game is closed."));
@@ -138,7 +138,7 @@
   };
   BU.badges.infirmary = () => { const J = G.Injuries, b = J.beds(); if (b.length) { const m = Math.min(...b.map((x) => x.until)); return { cls: "timer", text: "✚ " + U.fmtTime(Math.max(0, m - G.now())) }; } const st = O().stored("infirmary"); if (st.med) return { cls: "count", text: `+${st.med} Med` }; return null; };
   BU.giverExtra = function (el, g) { if (g === "ilse" && G.Injuries) BU.panelInfirmary(el); if (G.Quests.shop(g)) BU.panelShop(el, g); };
-  // Megan (milestone 5): Dunn's Stores sells Med kits for Scrap (no town currency yet); SP-047: "(Owned: N)" counts the item, not the Scrap
+  // Megan (milestone 5): Dunn's Stores sells Med Supplies charges and Pain pills (SP-194) for Scrap (no town currency yet); SP-047: "(Owned: N)" counts the item, not the Scrap
   BU.panelShop = function (el, g) {
     const Q = G.Quests, sh = Q.shop(g), res = G.state.stash.res, sec = h("section", { class: "panel shop" }, h("h3", null, "Stores"));
     for (const key in sh) {

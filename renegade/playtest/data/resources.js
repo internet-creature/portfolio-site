@@ -11,7 +11,9 @@ DATA.resources = {
   cloth:       { name: "Cloth",        sprite: "res_cloth",       kgPerUnit: 0.5 },
   electronics: { name: "Electronics",  sprite: "res_electronics", kgPerUnit: 0.5 },
   chemicals:   { name: "Chemicals",    sprite: "res_chemicals",   kgPerUnit: 0.5 },
-  med:         { name: "Med Supplies", sprite: "res_med",         kgPerUnit: 0.3 },
+  med:         { name: "Med Supplies", sprite: "res_med",         kgPerUnit: 0, pouch: true, unit: "charge" },   // SP-194: a pool of charges in the pouch, weightless, never lost
+  pills:       { name: "Pain pills",   sprite: "res_med",         kgPerUnit: 0, pouch: true, hidden: true },   // SP-194: pouch stack, battle only (hidden: never a resource drop, not in the stockpile list)
+  morphine:    { name: "Morphine",     sprite: "res_med",         kgPerUnit: 0, pouch: true, hidden: true },
   // Slice 3 §11: four new resources (biomass was a hidden Slice 2 resource, now dropping).
   // tag: the location tag that doubles this resource's loot-table weight (default: the resource id).
   // heatPerMove: extra Heat per move for every unit carried (Relic Tech: the doc says 2, this slice starts at 1).

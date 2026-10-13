@@ -29,7 +29,6 @@
     const v2 = !!(G.V2 && G.V2.on());   // Maps/Areas/Loot: a V2 run's own wording where a step has it
     let t = touch && v2 && step.textTouchV2 ? step.textTouchV2 : v2 && step.textV2 ? step.textV2 : touch && step.textTouch ? step.textTouch : step.text || "";
     t = t.replace(/\s*\(\{key:([^}]+)\}\)/g, (m, k) => (touch ? "" : ` (${k})`)).replace(/\{key:([^}]+)\}/g, (m, k) => (touch ? "" : k));
-    t = t.replace(/\{med\}/g, () => String(DATA.config.deploy.defaultMed));   // SP-005: the recommended Med kits = the deploy default
     return t.replace(/\{click\}/g, touch ? "Tap" : "Click").replace(/\{clicking\}/g, touch ? "tapping" : "clicking");
   };
   // Steps of a sequence that can show now. ctx: { touch, has(selector) -> bool } (the overlay passes the real DOM)

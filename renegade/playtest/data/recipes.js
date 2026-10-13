@@ -7,7 +7,7 @@ DATA.recipes = {
   quality: { skill: "engineering", dc: 12, critRarity: "blue", baseRarity: "white" },   // d20 + Engineering / 4 vs DC 12; crit (beat by 10+ or a 20) = Blue
   reforgeMinRarity: "blue",
   list: {
-    med_kit:     { name: "Med kit",           tier: 1, cost: { cloth: 2, chemicals: 1, water: 1 },       sec: 30, out: { res: { med: 1 } } },
+    med_kit:     { name: "Field dressings",   tier: 1, cost: { cloth: 2, chemicals: 1, water: 1 },       sec: 30, out: { res: { med: 2 } } },   // SP-194: +2 Med Supplies charges
     handloads:   { name: "Hand-loads",        tier: 1, cost: { scrap: 3, chemicals: 1 },                 sec: 30, out: { ammo: "ammo_handload", n: 3 } },
     pipe_rifle:  { name: "Pipe Rifle",        tier: 1, cost: { scrap: 6, cloth: 1 },                     sec: 45, out: { item: "pipe_rifle", quality: true } },
     scrap_helmet:{ name: "Scrap Helmet",      tier: 1, cost: { scrap: 4, cloth: 1 },                     sec: 45, out: { item: "scrap_helmet", quality: true } },
@@ -17,7 +17,8 @@ DATA.recipes = {
     scav_carbine:{ name: "Scav Carbine",      tier: 2, cost: { scrap: 10, electronics: 3, fuel: 1 },     sec: 90, out: { item: "scav_carbine", quality: true } },
     military_ruck:{ name: "Military Ruck",    tier: 2, cost: { cloth: 8, scrap: 3, fuel: 1 },            sec: 90, out: { item: "military_ruck", quality: true } },
     scav_satchel:{ name: "Scav Satchel",      tier: 2, cost: { cloth: 6, scrap: 2, biomass: 1 },         sec: 90, out: { item: "scav_satchel", quality: true } },
-    biogel:      { name: "Biogel med kits",   tier: 2, cost: { biomass: 1, chemicals: 1, cloth: 1 },     sec: 45, out: { res: { med: 2 } }, needs: { rep: { ilse: 2 } } },
+    biogel:      { name: "Biogel",            tier: 2, cost: { biomass: 1, chemicals: 1, cloth: 1 },     sec: 45, out: { res: { med: 3 } },   // SP-194: +3 charges [DRAFT]
+                 needs: { rep: { ilse: 2 } } },
     // Slice 5 §F: the animal parts [DRAFT]
     cure_fur:    { name: "Cure fur",          tier: 1, cost: { fur: 2 },                                 sec: 20, out: { res: { cloth: 3 } } },
     tooth_loads: { name: "Tooth hand-loads",  tier: 1, cost: { teeth: 3, scrap: 1 },                     sec: 30, out: { ammo: "ammo_handload", n: 3 } },

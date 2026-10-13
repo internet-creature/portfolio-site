@@ -34,7 +34,6 @@ DATA.config = {
     earlyScore: 8,            // ASSUMPTION: after the tutorial (first human body) score jumps to doc's "Early 8-12" low end
     gruntCost: 1,
     startingGrunts: 2,
-    defaultMed: 10,           // SP-005 (Megan, Oct 5): the deploy panel's Med Supplies start at 10 (capped by the stockpile); T1 recommends the same
     tutorialReissueStarterGear: true, // ASSUMPTION: the lost starter pistol (Zip Gun, DATA.items.startingGear) is re-issued while still in the tutorial
     // Vixie (Slice 4): no more free Pipe Rifle for an unarmed deploy. A unit with no weapon fights with bare fists
     // (DATA.config.unarmed); the deploy button asks first ("<Name> is unarmed. Deploy anyway?").
@@ -251,12 +250,12 @@ DATA.config = {
     speedSlider: { min: 0, max: 4, step: 0.05, snaps: [0.25, 1, 2, 4], snapPos: 0.025, curve: 2 },
     slowMoOnKill: 0.35, slowMoSec: 0.25, shakeOnCrit: 4,
     // Tactical pause (Megan, Sep 29): Space / the Pause button freezes the fight. While paused you aim abilities and use
-    // carried Med kits on your units; they queue and run in queue order when you resume. Each item use channels for
-    // channelSec once the fight runs again (the unit does nothing else meanwhile). SP-002: a Med kit leaves the bag
-    // when its heal lands, so a fight that ends mid-channel (or a cancel) keeps it. Med kit: the field heal roll
+    // Med Supplies charges (and SP-194 pouch meds) on your units; they queue and run in queue order when you resume. Each item use channels for
+    // channelSec once the fight runs again (the unit does nothing else meanwhile). SP-002: a Med Supplies charge is spent
+    // when its heal lands, so a fight that ends mid-channel (or a cancel) keeps it. Med Supplies: the field heal roll
     // (Medicine) at the end of the channel.
     tacticalPause: { enabled: true, key: " ", channelSec: { med: 1.5 },   // TODO: special-ammo swaps dropped from the pause (milestone 5)
-      // Megan (milestone 5): after a Med kit is used on a unit, that unit can't take another for
+      // Megan (milestone 5): after Med Supplies are used on a unit, that unit can't take more for
       // max(minSec, baseSec - perMedicine x the user's Medicine level) seconds of combat time (the user = your body)
       medCooldown: { baseSec: 20, perMedicine: 1, minSec: 8 } },
     // Break away (Megan, milestone 5): a repeatable escape check in battle (button / B, or queued in the tactical pause).

@@ -107,7 +107,7 @@ DATA.dialogue.caine = {
       "beats": [
         {
           "speaker": "Caine",
-          "text": "Before you head out, let me show you where we keep the supplies. You'll want Med kits and room for what you find. I'd like to see you come home, {name}."
+          "text": "Before you head out, let me show you where we keep the supplies. Med Supplies ride in your pouch, so save your room for what you find. I'd like to see you come home, {name}."
         }
       ],
       "next": "building_introductions"

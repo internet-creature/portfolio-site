@@ -25,7 +25,7 @@
 //               until an extraction is on the map, then shows by itself
 //   text        the box text (~40 words max). {key:Space} / {key:B} tokens read "Space" / "B" on desktop and are
 //               dropped on phones; {click} reads "Click" / "Tap", {clicking} "clicking" / "tapping"; {med} is the
-//               recommended Med kits (DATA.config.deploy.defaultMed, the deploy panel's default).
+//               Med Supplies (SP-194: a pouch pool of charges, nothing to pack).
 //   textTouch   optional full replacement text on the phone layout
 //   when        optional condition name (as above) for this one step; false = skipped (not flagged)
 //   arrow       optional "up" | "down" | "left" | "right" | "none" (default: auto, points from the box at the ring)
@@ -45,7 +45,7 @@ DATA.tutorial = {
     // controls live there; the trapdoor opens it).
     t1_outpost: { trigger: "deploy", modes: ["full"], steps: [
       { id: "t1_squad", target: "[data-tut=squad]", text: "This is you, plus two Grunts. They fight for you, and they can die for you." },
-      { id: "t1_med",   target: "[data-tut=med]",   text: "Bring {med} Med kits. Heal in or after fights. Out of kits, out of luck." },
+      { id: "t1_med",   target: "[data-tut=med]",   text: "Med Supplies ride in your pouch as charges: nothing to pack, never lost. Each heal spends a charge. Out of charges, out of luck." },
       { id: "t1_carry", target: "[data-tut=carry]", text: "Everything you bring and find has weight. Leave room for loot." },
       { id: "t1_embark", target: "[data-act=deploy]", text: "When you're ready, head down. Caine will be here when you get back." }
     ] },
@@ -77,7 +77,7 @@ DATA.tutorial = {
       // covered most of a portrait screen; the slider alone there
       { id: "t3_speed", target: ".bh-speeds, .bh-pause", targetTouch: ".bh-speeds", text: "Slide to speed the fight up or slow it down (all the way left stops it).",   // [PLACEHOLDER] (the spec only says "ring them"; A2 slider),
         textTouch: "Slide to speed the fight up or slow it down (all the way left stops it). Double-tap the slider for 1x." },
-      { id: "t3_abl", target: ".ability-bar .abl-btn:not(.esc-btn)", fallback: ".bh-pause", fallbackTouch: ".tc-pause", text: "While paused, queue abilities and Med kits. They fire the moment you unpause." },
+      { id: "t3_abl", target: ".ability-bar .abl-btn:not(.esc-btn)", fallback: ".bh-pause", fallbackTouch: ".tc-pause", text: "While paused, queue abilities, Med Supplies and Pain pills (a pill clears a heal cooldown). They fire the moment you unpause." },
       { id: "t3_break", target: ".esc-btn", targetTouch: ".tc-esc", fallback: ".esc-btn", text: "Losing? Break away ({key:B}) to run for it. Not everyone always makes it." },
       // the finish: no Next; you can drag your squad under the box, and Fight! (or Space) closes it and starts the fight
       { id: "t3_fight", target: "[data-act=fight]", free: true, doneOn: "fight", text: "Drag your units around the grid to set them up. Then press Fight! ({key:Space}) to start.",
