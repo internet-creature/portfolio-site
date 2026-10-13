@@ -80,7 +80,9 @@
   X.itemLevel = function (node) {
     const L = CFG().loot, r = run();
     const hl = G.V2 && G.V2.on() ? 0 : Math.floor(r.heat / L.heatPerIlvl);   // V2: no passive Heat reward scaling
-    return Math.max(1, (L.ilvlByTier[node.tier] || 1) + r.moves * L.ilvlPerDepth + hl + G.rng.int(-L.ilvlVariance, L.ilvlVariance));
+    const il = Math.max(1, (L.ilvlByTier[node.tier] || 1) + r.moves * L.ilvlPerDepth + hl + G.rng.int(-L.ilvlVariance, L.ilvlVariance));
+    const z = (node.id && G.Zones.zoneOf(node.id)) || r.zone || "a", R = (L.ilvlRangeByZone || {})[z];   // SP-145: the area's range
+    return R ? Math.min(R[1], Math.max(R[0], il)) : il;
   };
   X.rarityBonus = () => X.heatTier().lootBonus + G.Skills.level(G.state.mind.skills, "scavenging") * CFG().loot.scavengingRarityPerLevel + G.Perks.rarityBonus()   // + Scavenger's Eye (Slice 3 §3)
     + (G.V2 && G.V2.on() && run() && run().loc ? G.V2.lootRarityBonus(run().loc) : 0);   // Maps/Areas/Loot: danger pips pay (design §1)

@@ -396,6 +396,12 @@ DATA.config = {
     ilvlPerDepth: 1,
     heatPerIlvl: 20,
     ilvlVariance: 2,
+    // SP-145: drop item level stays inside its zone's range (after tier, depth and variance), so a long late-game run in
+    // the Hushwood can't roll level 16-17 drops. Character level never feeds it. [PLACEHOLDER] ranges, balanced through
+    // playtest (SP-159). Megan (Oct 13): the special-source bonuses are ALLOWED past this cap: Hunter bodies (+ilvlPlus),
+    // the Armoury locker's piece (+2) and rival packs (cap + ilvlCapPlus) add on top of the clamped value (js/site.js, js/rivals.js).
+    // Megan (Oct 13): the Greyback Hills (greyback) and the Drowned Suburbs (b) are 3-13.
+    ilvlRangeByZone: { a: [1, 10], greyback: [3, 13], b: [3, 13], hollis: [8, 18], scablands: [12, 22] },
     statScalePerIlvl: 0.06,
     scavengingRarityPerLevel: 0.5,  // +% rarity roll per Scavenging level (ASSUMPTION on magnitude)
     enforceRequirements: false,     // weapon reqs are [PROPOSAL]; shown but not enforced by default
