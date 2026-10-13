@@ -17,7 +17,11 @@
     if (t.type === "turnin") { b.res = t.res; b.n = t.n; }
     if (t.type === "scout") { const c = R.scoutTargets(); if (!c.length) return null; const p = rng.pick(c); b.zone = p.zone; b.nid = p.nid; b.n = 1; }
     const W = D().reward, rw = {}; rw[rng.pick(W.common)] = rng.int(W.min, W.max);
-    if (hot) for (const k in W.hot) rw[k] = (rw[k] || 0) + W.hot[k]; else { const e = rng.pick(W.extra); rw[e] = (rw[e] || 0) + W.extraN; }
+    // SP-143: a template can name its own extra (machines pay Electronics, not Fuel / Biomass)
+    // Megan (Oct 13, PR #40): a hot bounty's bonus (W.hot, 2 Data Shards) comes ON TOP of a template's own extra
+    // (machines still pay Electronics when hot); a template without its own extra keeps hot replacing the generic one
+    if (hot) for (const k in W.hot) rw[k] = (rw[k] || 0) + W.hot[k];
+    if (!hot || t.extra) { const e = rng.pick(t.extra || W.extra); rw[e] = (rw[e] || 0) + (t.extraN || W.extraN); }
     b.reward = rw;
     return b;
   };
@@ -55,7 +59,8 @@
   R.anyTakeable = () => R.built() && R.open().length > 0 && R.active().length < D().maxActive;
   R.pay = function (b) {
     for (const k in b.reward) G.state.stash.res[k] = (G.state.stash.res[k] || 0) + b.reward[k];
-    b.status = "paid"; G.log(`Bounty paid: ${U.resText ? U.resText(b.reward) : Object.entries(b.reward).map(([k, n]) => n + " " + DATA.resources[k].name).join(", ")}.`, "good");
+    b.status = "paid"; R.drop(b);   // SP-137: a paid bounty leaves the board as soon as it pays out
+    G.log(`Bounty paid: ${U.resText ? U.resText(b.reward) : Object.entries(b.reward).map(([k, n]) => n + " " + DATA.resources[k].name).join(", ")}.`, "good");
     if (G.Sfx && G.Sfx.play) G.Sfx.play("sfx_radio");
   };
   // turn-in bounties: pay from the stockpile at the board
@@ -73,7 +78,9 @@
   };
   // scout: reach it, then extract (expedition extractSuccess)
   R.onExtract = function (run) { const done = []; for (const b of R.active()) if (b.type === "scout" && run.visited[b.nid]) { b.progress = 1; R.pay(b); done.push(b); } return done; };
-  R.clearPaid = () => { const st = R.st(); st.board.list = st.board.list.filter((b) => b.status !== "paid"); };
+  R.drop = (b) => { const l = R.st().board.list, i = l.indexOf(b); if (i >= 0) l.splice(i, 1); };
+  // SP-137: also cleans paid bounties left on the board by older builds (runs on the outpost tick, so on load)
+  R.clearPaid = () => { const st = R.st(), n = st.board.list.length; st.board.list = st.board.list.filter((b) => b.status !== "paid"); return st.board.list.length !== n; };
   // ---- decode (Data Shards → lore fragment + Lore XP) ----
   R.nextFragment = () => D().decode.fragments.find((f) => !G.state.lore.includes(f)) || null;
   R.canDecode = function () {
@@ -101,5 +108,5 @@
   };
   // after every run (X.endRun) and when the Radio is built: refresh the board if it's due
   R.onRunEnd = () => { if (R.built()) R.refresh(false); };
-  if (G.Outpost) G.Outpost.tickHooks.push(() => { if (R.built() && R.st().board.made == null) { R.refresh(true); return true; } return false; });
+  if (G.Outpost) G.Outpost.tickHooks.push(() => { if (R.built() && R.st().board.made == null) { R.refresh(true); return true; } return R.clearPaid(); });
 })(typeof window !== "undefined" ? window : globalThis);

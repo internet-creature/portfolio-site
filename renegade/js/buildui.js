@@ -160,7 +160,6 @@
     row.appendChild(h("div", { class: "hint" }, "Reward: " + resText(b.reward) + (b.status === "active" ? prog : "")));
     if (b.status === "open") { const why = R.canTake(b.uid); row.appendChild(h("button", { class: "primary", "data-act": "bounty-take", disabled: !!why, title: why || "", onclick: () => { const e = R.take(b.uid); if (e) UI.fail(e); else G.Sfx.play("sfx_radio"); G.State.save(); UI.render(); } }, "Take bounty")); }
     if (b.status === "active" && b.type === "turnin") { const why = R.canTurnIn(b.uid); row.appendChild(h("button", { class: "primary", "data-act": "bounty-turnin", disabled: !!why, title: why || "", onclick: () => { const e = R.turnIn(b.uid); if (e) UI.fail(e); else UI.toast("Bounty paid: " + resText(b.reward) + "."); G.State.save(); UI.render(); } }, "Turn in")); }
-    if (b.status === "paid") row.appendChild(h("small", { class: "good" }, "Paid."));
     return row;
   };
   BU.panelRadio = function (el) {
@@ -182,7 +181,7 @@
     el.appendChild(h("section", { class: "panel radio-intel" }, h("h3", null, "Rival sightings"), h("p", { class: "hint" }, G.Rivals && G.Rivals.intelText ? G.Rivals.intelText() : "Nothing on the air.")));
     if (o.effects("radio").fogReveal) el.appendChild(h("p", { class: "hint" }, `L2: the fog lifts ${o.effects("radio").fogReveal} ring further around the insertion point at the start of every run.`));
   };
-  BU.badges.radio = () => { const n = G.Radio.active().length; return n ? { cls: "count", text: `${n} bounty` + (n > 1 ? "s" : "") } : null; };
+  BU.badges.radio = () => { const n = G.Radio.active().length; return n ? { cls: "count", text: (n > 1 ? `${n} bounties` : `${n} bounty`) } : null; };
   // yellow "!" over the Radio while a bounty can be taken (same marker as the quest givers)
   BU.marker = (hs) => (hs.building === "radio" && G.Radio && G.Radio.anyTakeable() ? G.Radio.open().length : 0);
 
