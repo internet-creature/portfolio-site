@@ -350,6 +350,7 @@
     const it = step.items.splice(idx, 1)[0]; if (it) run().bag.items.push(it);
   };
   X.takeRes = function (step, k) { const r = run(); r.bag.res[k] = (r.bag.res[k] || 0) + step.res[k]; delete step.res[k]; };
+  X.containerEmptied = (step) => !step.items.length && !Object.keys(step.res).length;   // SP-144: the legacy container closes after its last take
   X.takeAll = function (step) { while (step.items.length) X.takeItem(step, 0); for (const k of Object.keys(step.res)) X.takeRes(step, k); };
   X.dropItem = function (uid) { const r = run(); const i = r.bag.items.findIndex((x) => x.uid === uid); if (i >= 0) { const it = r.bag.items.splice(i, 1)[0]; X.log(`Dropped ${G.Items.name(it)}.`); } };
   X.dropRes = function (k, n) { const r = run(); r.bag.res[k] = Math.max(0, (r.bag.res[k] || 0) - n); };

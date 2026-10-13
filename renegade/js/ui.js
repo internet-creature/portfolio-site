@@ -1148,13 +1148,13 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     if (step.blocked) { box.appendChild(h("p", { class: "bad" }, "You couldn't get it open.")); box.appendChild(h("button", { class: "primary", onclick: () => { X.closeContainer(); UI.render(); } }, "Move on")); return UI.modal(box); }
     const cap = X.capacity(), kg = X.carried();
     box.appendChild(h("p", null, `Carrying ${U.fmt1(kg)} / ${U.fmt1(cap)} kg (${Math.round(kg / cap * 100)}%). Over 100% slows you in battle; at 150% you can't move.`));
-    step.items.forEach((it, idx) => box.appendChild(UI.itemEl(it, [{ label: "Take", fn: () => { X.takeItem(step, idx); UI.render(); } }], null, Object.values(G.state.run.gear).filter(Boolean))));
+    step.items.forEach((it, idx) => box.appendChild(UI.itemEl(it, [{ label: "Take", fn: () => { X.takeItem(step, idx); if (X.containerEmptied(step) && X.current() === step) { X.closeContainer(); if (G.AreaWalk && G.AreaWalk.guard) G.AreaWalk.guard(); } UI.render(); } }], null, Object.values(G.state.run.gear).filter(Boolean))));
     // Slice 3 §6: a Purple / Orange find flashes its name and plays sfx_loot_rare (once per container opening)
     if (step.items.some(G.Items.isRare) && !step.rareSfx) { step.rareSfx = true; G.Sfx.play("sfx_loot_rare"); }
-    for (const k in step.res) box.appendChild(h("div", { class: "item-row" }, SP.icon(DATA.items.resources[k].sprite, 20), ` ${step.res[k]} × ${DATA.items.resources[k].name} (${U.fmt1(step.res[k] * DATA.items.resources[k].kgPerUnit)} kg) `, h("button", { onclick: () => { X.takeRes(step, k); UI.render(); } }, "Take")));
+    for (const k in step.res) box.appendChild(h("div", { class: "item-row" }, SP.icon(DATA.items.resources[k].sprite, 20), ` ${step.res[k]} × ${DATA.items.resources[k].name} (${U.fmt1(step.res[k] * DATA.items.resources[k].kgPerUnit)} kg) `, h("button", { onclick: () => { X.takeRes(step, k); if (X.containerEmptied(step) && X.current() === step) { X.closeContainer(); if (G.AreaWalk && G.AreaWalk.guard) G.AreaWalk.guard(); } UI.render(); } }, "Take")));
     if (!step.items.length && !Object.keys(step.res).length) box.appendChild(h("p", { class: "hint" }, "Empty."));
     if (step.objId) box.appendChild(h("p", { class: "hint" }, "Anything you leave stays here. You can come back for it."));
-    box.appendChild(h("div", { class: "row" }, h("button", { "data-act": "take-all", onclick: () => { X.takeAll(step); UI.render(); } }, "Take all"), h("button", { class: "primary", "data-act": "done", onclick: () => { X.closeContainer(); UI.render(); } }, "Done")));
+    box.appendChild(h("div", { class: "row" }, h("button", { "data-act": "take-all", onclick: () => { X.takeAll(step); if (X.containerEmptied(step) && X.current() === step) { X.closeContainer(); if (G.AreaWalk && G.AreaWalk.guard) G.AreaWalk.guard(); } UI.render(); } }, "Take all"), h("button", { class: "primary", "data-act": "done", onclick: () => { X.closeContainer(); UI.render(); } }, "Done")));
     UI.modal(box, "wide");
   };
 

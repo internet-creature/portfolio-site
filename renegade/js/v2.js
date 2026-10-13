@@ -655,6 +655,9 @@
   };
   V.left = (o) => (o && o.loot ? o.loot.filter((e) => (e.item ? 1 : e.n) > 0) : []);
   V.hasLoot = (o) => V.left(o).length > 0;
+  // SP-144: a loot / spoils window with nothing left closes itself after a take (not the extraction one, which needs Finish)
+  V.stepObjs = (step) => { const site = X().site(step.site); if (!site) return []; return step.type === "spoils" ? V.sources(site, step.enc) : (step.objs || []).map((id) => X().obj(id, site)).filter(Boolean); };
+  V.lootEmptied = (step) => !!step && !step.finish && (step.type === "loot" || step.type === "spoils") && V.stepObjs(step).every((o) => !V.hasLoot(o));
   V.entryKg = (e) => (e.item ? G.Items.weight(e.item) : e.n * DATA.items.resources[e.res].kgPerUnit);
   V.sources = (site, enc) => site.objects.filter((o) => o.combat && o.combat.enc === enc);
   // can kg more be carried? limit: "fit" (Take all: <= fitPct) or "take" (a single Take: short of the immobile line)

@@ -142,7 +142,8 @@
     const title = step.type === "spoils" ? (step.finish ? "You held it! Take what you want, then go" : "Spoils") : U.copy(step.title || "Loot");
     const box = h("div", { class: "loot-box v2", "data-loot": step.type }, h("h2", null, title),
       h("p", { class: "loot-carry" }, `Carrying ${U.fmt1(kg)} / ${U.fmt1(cap)} kg (${Math.round(kg / cap * 100)}%). Over 100% slows you in battle; at ${DATA.config.carry.immobileAtPct}% you can't move.`));
-    const take = (o, e) => { const res = V.take(step.site, o.id, e.id, { opKey: "t:" + e.id + ":" + (e.item ? e.item.uid : e.n) }); if (res.error) UI().fail(res.error); else if (G.Sfx) G.Sfx.play("sfx_ui_click"); UI().render(); };
+    const take = (o, e) => { if (X.current() !== step) return;   // a window for a step that's already gone (render deferred behind a die, a repeat click)
+      const res = V.take(step.site, o.id, e.id, { opKey: "t:" + e.id + ":" + (e.item ? e.item.uid : e.n) }); if (res.dup) return; if (res.error) UI().fail(res.error); else { if (G.Sfx) G.Sfx.play("sfx_ui_click"); if (V.lootEmptied(step)) { TV.hideLoot = null; X.next(); if (G.AreaWalk && G.AreaWalk.guard) G.AreaWalk.guard(); } } UI().render(); };   // SP-144: the last item closes it
     const order = (o) => (o.combat && o.combat.kind === "teammate" ? 0 : o.combat ? 1 : 2);
     let lastGroup = -1;
     for (const o of objs.slice().sort((a, b) => order(a) - order(b))) {
@@ -163,10 +164,11 @@
     box.appendChild(h("p", { class: "hint" }, objs.some((o) => o.combat) ? T().lootLeave : "Anything you leave stays here. You can come back for it."));
     const row = h("div", { class: "row loot-acts" });
     if (left) row.appendChild(h("button", { "data-act": "take-all", onclick: () => {
+      if (X.current() !== step) return;
       const res = V.takeAll(step.site, objs.map((o) => o.id), "all:" + sid + ":" + left + ":" + U.fmt1(X.carried()));
       if (res.dup) return;
       if (res.left) UI().toast(res.taken ? `Took ${res.taken}. ${res.left} thing${res.left === 1 ? "" : "s"} didn't fit${res.needKg ? ` (${U.fmt1(res.needKg)} kg more room needed)` : ""}: still ${objs.some((o) => o.combat) ? "on the bodies" : "there"}.` : `Nothing fits: you need ${U.fmt1(res.needKg)} kg more room.`);
-      else if (step.type === "loot") X.next();   // emptied: nothing left to look at
+      else if (V.lootEmptied(step)) { TV.hideLoot = null; X.next(); if (G.AreaWalk && G.AreaWalk.guard) G.AreaWalk.guard(); }   // SP-144: emptied (loot or spoils, not the extraction one): nothing left to look at
       UI().render(); } }, "Take all that fits"));
     if (left) row.appendChild(h("button", { "data-act": "manage", title: "Drop or equip things from your bag (side panel), then come back", onclick: () => { TV.hideLoot = sid; UI().render(); } }, "Manage inventory"));
     if (step.finish) row.appendChild(h("button", { class: "primary", "data-act": "finish-extraction", onclick: () => { const res = G.V2.finishExtraction(); if (res.error) UI().fail(res.error); UI().render(); } }, T().finishExtraction + (left ? " (leave the rest)" : "")));
