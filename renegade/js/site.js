@@ -324,7 +324,7 @@
     if (o.kind === "event" || o.kind === "survivor") return o.done ? "Already dealt with." : null;
     if (o.kind === "grate" || o.kind === "exit") return null;
     if (o.kind === "decor") return null;   // Slice 5 §G: scenery (examine only)
-    if (o.kind === "extract") { const node = X.node(site.nid); return X.extractionOpen(node) ? null : X.wrecked(node) ? `${CFG().extraction.crash.line} ${X.otherExitsNote(node)}` : "Closed at this Heat level."; }   // Slice 5 §D
+    if (o.kind === "extract") { const node = X.node(site.nid); return X.extractionOpen(node) ? null : X.wrecked(node) ? `${X.crashLine(node)} ${X.otherExitsNote(node)}` : "Closed at this Heat level."; }   // Slice 5 §D
     if (o.kind === "mural") return null;   // Slice 4 §B pods room
     if (X.trainDef(o)) return X.trainedNow(o) ? "Done for this run." : null;   // Slice 5 §F
     if (o.kind === "wheel") { const d = site.pods && X.obj(site.pods.door, site); return d && !d.sealed ? "Set. The door is open." : null; }

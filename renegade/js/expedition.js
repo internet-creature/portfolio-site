@@ -932,13 +932,24 @@
   // Slice 5 §A: a Bad Fail crashes the truck: Heat spike, closed for the rest of the run, no re-roll. (A later "enemies
   // hear loud noises" system can read run.wrecked[nid].loud; nothing listens yet.)
   X.crash = function (node, ex, roll) {
-    const r = run(), C = CFG().extraction.crash, heat = ex.crashHeat != null ? ex.crashHeat : ex.failHeat;
+    const r = run(), C0 = CFG().extraction.crash, loc = node.loc, C = Object.assign({}, C0, (C0.byLoc || {})[loc] || {}), heat = ex.crashHeat != null ? ex.crashHeat : ex.failHeat;   // SP-141: per-location text
     r.wrecked = r.wrecked || {}; r.wrecked[node.id] = { moves: r.moves, loud: true };
     const got = X.addHeat(heat, "extract"), ht = G.V2 && G.V2.on() ? (got ? ` +${got} Heat.` : "") : ` +${heat} Heat.`;   // V2: not an approved source
     const way = X.otherExitsNote(node);
     X.log(`${C.log}${ht} ${G.Map.loc(node).name} is closed for this run. ${way}`, "bad");
+    const hurt = C.hurtPct ? X.crashHurt(C.hurtPct) : null, hurtText = hurt ? ` ${hurt.name} takes ${hurt.dmg} damage.` : "";   // SP-141
+    if (hurt) X.log(`${hurt.name} is badly hurt in the crash: -${hurt.dmg} HP.`, "bad");
     G.State.save();
-    return { ok: false, crash: true, roll, text: `${roll.text} — ${C.line}${ht} ${way}`, line: C.line, sfx: C.sfx, heat: G.V2 && G.V2.on() ? got : heat };
+    return { ok: false, crash: true, roll, text: `${roll.text} — ${C.line}${hurtText}${ht} ${way}`, line: C.line, sfx: C.sfx, heat: G.V2 && G.V2.on() ? got : heat, hurt };
+  };
+  X.crashLine = (node) => { const C = CFG().extraction.crash; return ((C.byLoc || {})[node.loc] || {}).line || C.line; };   // SP-141: the wrecked exit's own line
+  // SP-141: one random party member (the body or a living Grunt / ally) loses pct% of max HP, never below 1 HP (no death here)
+  X.crashHurt = function (pct) {
+    const r = run(), opts = [{ name: G.State.bodyTitle(X.body()), max: X.maxBodyHp(), get: () => r.bodyHp, set: (v) => { r.bodyHp = v; } }];
+    for (const m of r.squad || []) if (m.hp > 0) opts.push({ name: G.Allies.name(m.g), max: G.Battle.unitFromGrunt(m.g).maxHp, get: () => m.hp, set: (v) => { m.hp = v; } });
+    const pool = opts.filter((x) => x.get() > 1); if (!pool.length) return null;   // only someone who can actually lose HP (never "takes 0 damage")
+    const o = G.rng.pick(pool), dmg = Math.max(1, Math.min(Math.round(o.max * pct / 100), o.get() - 1));
+    o.set(o.get() - dmg); return { name: o.name, dmg };
   };
   // Vixie (Hex beginning pass): a crashed exit names the other ways out still open in this zone, but only the ones the
   // player has discovered on the map (named there: in sight this run, or seen before when fog persists; an unfound secret

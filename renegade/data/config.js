@@ -293,7 +293,12 @@ DATA.config = {
       sfx: "sfx_truck_crash_1",      // Smudge d41333a (sfx_truck_crash_2 is the registered spare take)
       line: "The truck's wrecked.",  // [PLACEHOLDER] the flash line
       lineMs: 2600,
-      log: "The engine screams, the truck lurches into a tree and dies for good. The whole wood heard that."   // [PLACEHOLDER]
+      log: "The engine screams, the truck lurches into a tree and dies for good. The whole wood heard that.",   // [PLACEHOLDER]
+      // SP-141: per-location overrides of line / log, plus a random party member (body or living Grunt) hurt in the crash.
+      // hurtPct: % of that member's max HP lost, never below 1 HP [PLACEHOLDER amount for Vixie / Megan]
+      byLoc: {
+        ho_helipad: { line: "The helicopter's down.", log: "The rotor clips the roof edge and the helicopter slams back onto the pad. Everyone's thrown around, and the whole block heard it.", hurtPct: 60 }   // [PLACEHOLDER] text
+      }
     }
   },
 
