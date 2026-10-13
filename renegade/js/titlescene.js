@@ -132,7 +132,8 @@
   TS.stars = function (n) { const rng = G.Util.makeRng(77), out = []; for (let i = 0; i < n; i++) { const g = () => Math.sqrt(-2 * Math.log(rng() || 1e-9)) * Math.cos(2 * Math.PI * rng()); const v = norm([g(), g(), g()]); if (v[1] > 0.12) out.push(v); } return out; };
   // camera at time t (the 70 s drift + bob); portrait = the phone framing
   TS.camera = function (S, t, portrait) {
-    const K = S.camera, th = K.arc_rad * Math.sin(2 * Math.PI * t / K.period_s), h = K.height + K.bob_m * Math.sin(2 * Math.PI * t / K.bob_period_s);
+    const SKC = !portrait && CFG() && CFG().sky && CFG().sky.on ? CFG().sky.camera : null;   // login sky B3: landscape framing
+    const K = SKC ? Object.assign({}, S.camera, SKC) : S.camera, th = K.arc_rad * Math.sin(2 * Math.PI * t / K.period_s), h = K.height + K.bob_m * Math.sin(2 * Math.PI * t / K.bob_period_s);
     const eye = [K.radius * Math.sin(th), h, K.radius * Math.cos(th)], tgt = [-Math.sin(th) * K.look_ahead, portrait ? K.target_y_portrait : K.target_y, -Math.cos(th) * K.look_ahead];
     const fwd = norm(sub(tgt, eye)), right = norm(cross(fwd, [0, 1, 0])), up = cross(right, fwd);
     return { eye, fwd, right, up, f: 1 / Math.tan((portrait ? K.vfov_portrait : K.vfov_landscape) * Math.PI / 360), near: K.near, far: K.far };
@@ -194,6 +195,48 @@ void main() {
   if (ang < 2.6) { c = cMoon; float lx = dot(D, uR) - dot(uMoon, uR), ly = dot(D, uU) - dot(uMoon, uU); if (lx * 0.7 - ly * 0.7 > 0.018) c = cShade; }
   gl_FragColor = vec4(c / 255.0, 1.0);
 }`;
+  // login sky B3: the world-locked panorama + crisp beacons + the streak (pano px space; nearest, no glow)
+  const PANO_FS = `
+precision mediump float;
+uniform vec3 uF; uniform vec3 uR; uniform vec3 uU; uniform float uAsp; uniform float uFf;
+uniform sampler2D uPano; uniform vec4 uPI; uniform vec4 uBc[4]; uniform vec3 uBCol;
+uniform vec4 uSk; uniform vec2 uSkL; uniform vec3 uSC[5]; uniform float uYaw;
+varying vec2 vP;
+void main() {
+  vec3 D = normalize(uF + vP.x * uAsp / uFf * uR + vP.y / uFf * uU);
+  float az = degrees(atan(D.x, -D.z)) + uYaw, el = degrees(asin(clamp(D.y, -1.0, 1.0)));
+  vec2 q = floor(vec2((az - uPI.z) * uPI.y, (uPI.w - el) * uPI.y));
+  vec4 t = texture2D(uPano, (clamp(q, vec2(0.0), uPI.xx * vec2(1.0, 0.5) - 1.0) + 0.5) / vec2(uPI.x, uPI.x * 0.5));
+  vec3 c = t.rgb;
+  if (uSkL.x > 0.0 && t.a > 0.998) {
+    vec2 p = q + 0.5 - uSk.xy; float al = -dot(p, uSk.zw), pe = abs(p.x * uSk.w - p.y * uSk.z);
+    if (al >= 0.0 && al <= uSkL.x && pe < 0.6) { float k = al / uSkL.x; bool skip = k > 0.65 && mod(floor(al), 2.0) > 0.5;
+      if (!skip) { c = k < 0.12 ? uSC[0] : k < 0.3 ? uSC[1] : k < 0.5 ? uSC[2] : k < 0.75 ? uSC[3] : uSC[4]; } }
+  }
+  for (int i = 0; i < 4; i++) { vec4 b = uBc[i]; if (b.w > 0.5 && q.x >= floor(b.x) && q.x < floor(b.x) + b.z && q.y >= floor(b.y) && q.y < floor(b.y) + b.z) c = uBCol; }
+  gl_FragColor = vec4(c, 1.0);
+}`;
+  // v3: the planetoid (flat-shaded low-poly sphere, point-sampled plate texture, dithered ramp, crisp beacons)
+  const PL_VS = `attribute vec3 aL; attribute vec3 aN; uniform mat4 uVP; uniform vec3 uC; uniform float uRad; uniform mat3 uB;
+varying vec3 vL; varying vec3 vN; void main() { vL = aL; vN = uB * aN; gl_Position = uVP * vec4(uC + uB * aL * uRad, 1.0); }`;
+  const PL_FS = `
+precision mediump float;
+uniform sampler2D uT; uniform vec3 uLt; uniform float uLs; uniform vec3 uRim; uniform vec3 uView; uniform mat3 uB2; uniform float uBayer[16]; uniform vec3 uRamp[6]; uniform vec3 uBelt[2]; uniform vec4 uBk[4]; uniform vec3 uBCol;
+varying vec3 vL; varying vec3 vN;
+float bayer() { int x = int(mod(gl_FragCoord.x - 0.5, 4.0)), y = int(mod(gl_FragCoord.y - 0.5, 4.0)); int k = y * 4 + x; float b = 0.0;
+  for (int i = 0; i < 16; i++) { if (i == k) b = uBayer[i]; } return b; }
+void main() {
+  vec3 p = normalize(vL); float lat = asin(clamp(p.y, -1.0, 1.0)), lon = atan(p.x, p.z);
+  vec4 t = texture2D(uT, vec2(lon / 6.2831853 + 0.5, 0.5 - lat / 3.1415927));
+  float lam = clamp(dot(normalize(vN), uLt), 0.0, 1.0);
+  float idx = floor(lam * uLs + bayer() * 0.9 - 0.3) + floor(t.r * 2.55 + 0.5) - 1.0 - (t.g > 0.5 ? 1.0 : 0.0);
+  idx = clamp(idx, 0.0, 5.0); vec3 c = uRamp[0];
+  for (int i = 1; i < 6; i++) { if (float(i) == idx) c = uRamp[i]; }
+  if (t.b > 0.9 && lam < 0.3 && mod(floor((lon + 3.1415927) * 57.29578 / 7.0), 3.0) < 0.5) c = lam < 0.1 ? uBelt[0] : uBelt[1];   // belt lights only on the night side
+  if (dot(uB2 * p, uView) < 0.16 && idx < 2.0) c = uRim;   // faint rim so the dark limb separates from the sky
+  for (int i = 0; i < 4; i++) { vec4 b = uBk[i]; if (b.w > 0.5 && dot(p, normalize(b.xyz)) > cos(0.0105 * b.w + 0.004)) c = uBCol; }
+  gl_FragColor = vec4(c, 1.0);
+}`;
   const PT_VS = `attribute vec3 aPos; attribute vec3 aCol; uniform mat4 uVP; uniform vec3 uEye; uniform float uPull; varying vec3 vC;
 void main() { vC = aCol; vec3 p = aPos + normalize(uEye - aPos) * uPull; gl_Position = uVP * vec4(p, 1.0); gl_PointSize = 1.0; }`;
   const PT_FS = `precision mediump float; varying vec3 vC; void main() { gl_FragColor = vec4(vC / 255.0, 1.0); }`;
@@ -239,18 +282,93 @@ void main() { vC = aCol; vec3 p = aPos + normalize(uEye - aPos) * uPull; gl_Posi
     const flames = ["flame_outer", "flame_mid", "flame_core", "flame_tip"].map((n) => mesh.MID[n]), flick = ["screen", "torch"].map((n) => mesh.MID[n]);
     const stars = TS.stars(C.stars), ember = FX.ember.map(hex), owl = hex(FX.owl_eye), starC = hex(SK.star), starB = hex(SK.star_bright);
     const state = { gl, raf: 0, last: 0, t: 0, stop: false, frames: 0, mesh };
+    // login sky B3: load the panorama; until it arrives (or if it fails) the old procedural sky draws
+    const SKY = C.sky && C.sky.on ? C.sky : null, sky = { tex: null, prog: null, beacons: [], streak: null, next: 0 };
+    if (SKY) {
+      try { sky.prog = prog(gl, SKY_VS, PANO_FS); } catch (e) { sky.prog = null; }
+      const rnd = (r) => r[0] + Math.random() * (r[1] - r[0]);
+      sky.beacons = SKY.beacons.map((b) => ({ x: b[0], y: b[1], s: b[2], next: rnd(SKY.beaconFirstMs) / 1000 }));
+      sky.next = rnd(SKY.streak.firstMs) / 1000; sky.rnd = rnd;
+      const img = new Image();
+      img.onload = () => { if (state.stop || !sky.prog) return; const tx = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tx); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+        for (const k of [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER]) gl.texParameteri(gl.TEXTURE_2D, k, gl.NEAREST);
+        for (const k of [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T]) gl.texParameteri(gl.TEXTURE_2D, k, gl.CLAMP_TO_EDGE); sky.tex = tx; state.skyReady = true; };
+      img.src = ((root.DATA && DATA.sprites && DATA.sprites.basePath) || "assets/") + SKY.pano.file;
+    }
+    // v3 planetoid: geometry (flat normals), texture, program
+    const PLC = SKY && SKY.planetoid, pl = { prog: null, tex: null, n: 0 };
+    if (PLC) {
+      try { pl.prog = prog(gl, PL_VS, PL_FS); } catch (e) { pl.prog = null; }
+      const [nu, nv] = PLC.seg, P = (i, j) => { const th = (i / nu) * 2 * Math.PI, ph = Math.PI / 2 - (j / nv) * Math.PI; return [Math.cos(ph) * Math.sin(th), Math.sin(ph), Math.cos(ph) * Math.cos(th)]; };
+      const pos = [], nrm = [];
+      const tri = (a, b, c) => { const n = norm(cross(sub(b, a), sub(c, a))), m = norm(add(add(a, b), c)), nn = dot(n, m) < 0 ? mul(n, -1) : n; pos.push(...a, ...b, ...c); nrm.push(...nn, ...nn, ...nn); };
+      for (let j = 0; j < nv; j++) for (let i = 0; i < nu; i++) { const a = P(i, j), b = P(i + 1, j), c = P(i + 1, j + 1), d = P(i, j + 1);
+        if (j > 0) tri(a, b, c); if (j < nv - 1) tri(a, c, d); }
+      pl.n = pos.length / 3; pl.tris = pl.n / 3; pl.bp = buf(new Float32Array(pos)); pl.bn = buf(new Float32Array(nrm)); state.planetoidTris = pl.tris;
+      const im = new Image();
+      im.onload = () => { if (state.stop || !pl.prog) return; const tx = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tx); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, im);
+        for (const k of [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER]) gl.texParameteri(gl.TEXTURE_2D, k, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); pl.tex = tx; };
+      im.src = ((root.DATA && DATA.sprites && DATA.sprites.basePath) || "assets/") + PLC.tex.file;
+    }
+    const planetoidPass = (cam, VP, tSec, bc) => {
+      const ax = PLC.axis, fr = PLC.front, bx = norm(cross(ax, fr)), s = tSec * PLC.spinDegPerMin / 60 * Math.PI / 180, cs = Math.cos(s), sn = Math.sin(s);
+      const X = sub(mul(bx, cs), mul(fr, sn)), Z = add(mul(bx, sn), mul(fr, cs));
+      const C = add(cam.eye, mul(PLC.dir, PLC.dist)), R = PLC.dist * Math.sin(PLC.angRad);
+      gl.useProgram(pl.prog); gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS);
+      for (const [nm, b] of [["aL", pl.bp], ["aN", pl.bn]]) { const l = gl.getAttribLocation(pl.prog, nm); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, 3, gl.FLOAT, false, 0, 0); }
+      gl.uniformMatrix4fv(U(pl.prog, "uVP"), false, VP); gl.uniform3fv(U(pl.prog, "uC"), C); gl.uniform1f(U(pl.prog, "uRad"), R);
+      gl.uniformMatrix3fv(U(pl.prog, "uB"), false, new Float32Array([...X, ...ax, ...Z])); gl.uniform3fv(U(pl.prog, "uLt"), norm(PLC.light)); gl.uniform1f(U(pl.prog, "uLs"), PLC.litScale || 5); gl.uniform3fv(U(pl.prog, "uRim"), hex(PLC.rim || "#120a0a").map((v) => v / 255)); gl.uniform3fv(U(pl.prog, "uView"), mul(PLC.dir, -1)); gl.uniformMatrix3fv(U(pl.prog, "uB2"), false, new Float32Array([...X, ...ax, ...Z]));
+      gl.uniform1fv(U(pl.prog, "uBayer"), TS.BAYER);
+      gl.uniform3fv(U(pl.prog, "uRamp"), [].concat(...PLC.ramp.map((h) => hex(h).map((v) => v / 255)))); gl.uniform3fv(U(pl.prog, "uBelt"), [].concat(...PLC.belt.map((h) => hex(h).map((v) => v / 255))));
+      const bk = new Float32Array(16); PLC.beacons.forEach((b, i) => { if (i < 4) bk.set([b[0], b[1], b[2], bc[i * 4 + 3] > 0.5 ? b[3] : 0], i * 4); });
+      gl.uniform4fv(U(pl.prog, "uBk"), bk); gl.uniform3fv(U(pl.prog, "uBCol"), hex(SKY.beaconColour).map((v) => v / 255));
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, pl.tex); gl.uniform1i(U(pl.prog, "uT"), 0);
+      gl.drawArrays(gl.TRIANGLES, 0, pl.n);
+      for (const nm of ["aL", "aN"]) gl.disableVertexAttribArray(gl.getAttribLocation(pl.prog, nm));
+    };
+    const skyPass = (cam, asp, tSec) => {
+      const P = SKY.pano, st = SKY.streak; gl.useProgram(sky.prog);
+      gl.bindBuffer(gl.ARRAY_BUFFER, B.sky); const la = gl.getAttribLocation(sky.prog, "aP"); gl.enableVertexAttribArray(la); gl.vertexAttribPointer(la, 2, gl.FLOAT, false, 0, 0);
+      gl.uniform3fv(U(sky.prog, "uF"), cam.fwd); gl.uniform3fv(U(sky.prog, "uR"), cam.right); gl.uniform3fv(U(sky.prog, "uU"), cam.up); gl.uniform1f(U(sky.prog, "uAsp"), asp); gl.uniform1f(U(sky.prog, "uFf"), cam.f);
+      gl.uniform4f(U(sky.prog, "uPI"), P.w, P.pxPerDeg, P.az0, P.el1);
+      // the sky is infinitely far: 100% of the camera rotation, 0% of its translation (sampled by world direction).
+      // To stop dither shimmer, the sky camera's yaw/pitch snap to whole native pixels (trees and sky stay within 1 px).
+      const pxDeg = canvas.height / (2 * Math.atan(1 / cam.f) * 180 / Math.PI), snap = (a) => Math.round(a * 180 / Math.PI * pxDeg) / pxDeg * Math.PI / 180;
+      const yaw = snap(Math.atan2(cam.fwd[0], -cam.fwd[2])), pit = snap(Math.asin(Math.max(-1, Math.min(1, cam.fwd[1]))));
+      const sf = [Math.cos(pit) * Math.sin(yaw), Math.sin(pit), -Math.cos(pit) * Math.cos(yaw)], sr = norm(cross(sf, [0, 1, 0])), su = cross(sr, sf);
+      gl.uniform3fv(U(sky.prog, "uF"), sf); gl.uniform3fv(U(sky.prog, "uR"), sr); gl.uniform3fv(U(sky.prog, "uU"), su);
+      gl.uniform1f(U(sky.prog, "uYaw"), 0);
+      // beacons: one short blink, then a fresh random wait
+      const bc = new Float32Array(16);
+      sky.beacons.forEach((b, i) => { if (tSec > b.next + SKY.beaconOnMs / 1000) b.next = tSec + sky.rnd(SKY.beaconWaitMs) / 1000; bc.set([b.x, b.y, b.s, tSec >= b.next ? 1 : 0], i * 4); });
+      gl.uniform4fv(U(sky.prog, "uBc"), PLC ? new Float32Array(16) : bc); sky.bc = bc; gl.uniform3fv(U(sky.prog, "uBCol"), hex(SKY.beaconColour).map((v) => v / 255));
+      // the streak: a steady glide, tail grows in over the first 15% and shrinks over the last 10%
+      if (!sky.streak && tSec >= sky.next) { const a = sky.rnd(st.angleDeg) * Math.PI / 180, dir = Math.random() < 0.5 ? 1 : -1;
+        sky.streak = { t0: tSec, dur: sky.rnd(st.durMs) / 1000, x: sky.rnd(st.startX), y: sky.rnd(st.startY), dx: Math.cos(a) * dir, dy: Math.sin(a), len: sky.rnd(st.lenPx) }; }
+      let sk = [0, 0, 1, 0], sl = 0;
+      if (sky.streak) { const k = sky.streak, u = (tSec - k.t0) / k.dur;
+        if (u > 1) { sky.streak = null; sky.next = tSec + sky.rnd(st.waitMs) / 1000; }
+        else { sk = [k.x + k.dx * k.len * u, k.y + k.dy * k.len * u, k.dx, k.dy]; sl = st.tailPx * Math.min(1, u / 0.15) * Math.min(1, (1 - u) / 0.1 + 0.2); } }
+      gl.uniform4fv(U(sky.prog, "uSk"), sk); gl.uniform2f(U(sky.prog, "uSkL"), sl, 0);
+      gl.uniform3fv(U(sky.prog, "uSC"), [].concat(...st.colours.map((h) => hex(h).map((v) => v / 255))));
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, sky.tex); gl.uniform1i(U(sky.prog, "uPano"), 0);
+      gl.drawArrays(gl.TRIANGLES, 0, 3); gl.disableVertexAttribArray(la);
+    };
     const draw = (tSec) => {
       const W = canvas.width, H = canvas.height, portrait = H > W, cam = TS.camera(S, tSec, portrait), asp = W / H, VP = mat4VP(cam, asp);
       gl.viewport(0, 0, W, H); gl.clearColor(0.047, 0.051, 0.063, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      // sky
-      gl.disable(gl.DEPTH_TEST); gl.useProgram(ps); gl.bindBuffer(gl.ARRAY_BUFFER, B.sky); const la = gl.getAttribLocation(ps, "aP"); gl.enableVertexAttribArray(la); gl.vertexAttribPointer(la, 2, gl.FLOAT, false, 0, 0);
+      // sky (login sky B3: the panorama in landscape once loaded, else the procedural sky as before)
+      const usePano = !!(SKY && sky.tex && !portrait);
+      gl.disable(gl.DEPTH_TEST);
+      if (usePano) { skyPass(cam, asp, tSec); if (pl.prog && pl.tex) planetoidPass(cam, VP, tSec, sky.bc); gl.disable(gl.DEPTH_TEST); } else { gl.useProgram(ps); gl.bindBuffer(gl.ARRAY_BUFFER, B.sky); const la = gl.getAttribLocation(ps, "aP"); gl.enableVertexAttribArray(la); gl.vertexAttribPointer(la, 2, gl.FLOAT, false, 0, 0);
       gl.uniform3fv(U(ps, "uF"), cam.fwd); gl.uniform3fv(U(ps, "uR"), cam.right); gl.uniform3fv(U(ps, "uU"), cam.up); gl.uniform1f(U(ps, "uAsp"), asp); gl.uniform1f(U(ps, "uFf"), cam.f); gl.uniform3fv(U(ps, "uMoon"), moon);
       gl.uniform1fv(U(ps, "uBayer"), TS.BAYER); for (const [u, k] of [["cZen", "zenith"], ["cUp", "upper"], ["cMid", "mid"], ["cHor", "horizon"], ["cMoon", "moon"], ["cShade", "moon_shade"], ["cHalo", "moon_halo"]]) gl.uniform3fv(U(ps, u), hex(SK[k]));
-      gl.drawArrays(gl.TRIANGLES, 0, 3); gl.disableVertexAttribArray(la);
+      gl.drawArrays(gl.TRIANGLES, 0, 3); gl.disableVertexAttribArray(la); }
       // stars (behind everything: drawn at 200 m with the depth test on, so the hills and trees cover them)
       gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS);
       const pts = [];
-      stars.forEach((s, k) => { const ang = Math.acos(Math.max(-1, Math.min(1, dot(s, moon)))) * 180 / Math.PI; if (ang < 9) return; const c = k % 7 === 0 ? starB : starC; pts.push(cam.eye[0] + s[0] * 200, cam.eye[1] + s[1] * 200, cam.eye[2] + s[2] * 200, c[0], c[1], c[2]); });
+      if (!usePano) stars.forEach((s, k) => { const ang = Math.acos(Math.max(-1, Math.min(1, dot(s, moon)))) * 180 / Math.PI; if (ang < 9) return; const c = k % 7 === 0 ? starB : starC; pts.push(cam.eye[0] + s[0] * 200, cam.eye[1] + s[1] * 200, cam.eye[2] + s[2] * 200, c[0], c[1], c[2]); });
       const nStars = pts.length / 6;
       // the scene
       gl.useProgram(p);
