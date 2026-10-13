@@ -8,10 +8,11 @@ DATA.config = {
   // Megan, for now: a new build (window.BUILD_ID from js/build_id.js, the commit hash in packaged builds) wipes the saved
   // progression once, so every build starts at the introduction. Set resetOnNewBuild: false to keep saves across builds.
   // BUILD_ID "dev" (running from the repo) never resets.
+  ifPanel: { enabled: true },   // SP-200: the in-run riveted-steel right panel (minimap, status strip, tabs; js/ifpanel.js). false = the old scrolling column. Desktop only.
   save: { resetOnNewBuild: true, buildIdKey: "renegade_build_id" },
   // Slice 3 §2 / §8: player settings (Settings panel, saved with the game). Audio defaults are in data/audio.js.
   // aimMode: "slowmo" (the battle runs at abilities.aimTimeScale while you aim) | "pause" (open question 1: both work)
-  settings: { aimMode: "slowmo", showDice: true },   // showDice: Slice 5 §B "Show dice rolls" (off: outcomes show at once, no die, no dice sounds)
+  settings: { aimMode: "slowmo", showDice: true, textTabLabels: false },   // showDice: Slice 5 §B "Show dice rolls" (off: outcomes show at once, no die, no dice sounds)
   // Slice 3 §12: world restocking (replaces expedition.restockEachRun). Sites persist between runs in state.world.sites.
   // A site is picked over once you search an object there or win a battle there (restock level 0). The level rises one
   // step per run (any run, any zone): runsBySize runs to 100%. First entry of a later run: each searched object refills

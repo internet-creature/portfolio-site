@@ -799,14 +799,16 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     const side = h("div", { class: "exp-side" });
     // heat
     const t = X.heatTier();
-    if (v2) { const hs = G.Traversal.heat(r, bar); if (hs) side.appendChild(hs); }   // SP-034: hidden while low, no passive effects
+    const ifp = !!(G.IfPanel && G.IfPanel.enabled()), secs = {};   // SP-200: each section is also filed by tab (js/ifpanel.js IP.routes)
+    const put = (k, el) => { if (!el) return el; (secs[k] = secs[k] || []).push(el); return el; };
+    if (v2) { const hs = put("heat", G.Traversal.heat(r, bar)); if (hs) side.appendChild(hs); }   // SP-034: hidden while low, no passive effects
     else {
     const heat = h("section", { class: "panel", "data-tut": "heat" }, h("h3", null, `Heat ${r.heat} — ${t.name}`), bar(r.heat / DATA.config.heat.max, t.color, `${r.heat}/100`));
     const marks = h("div", { class: "heat-marks" }); for (const th of DATA.config.heat.thresholds) marks.appendChild(th.min >= 80 ? h("span", { class: "hm-end", style: `right:${100 - th.min}%` }, th.name + "|") : h("span", { style: `left:${th.min}%` }, "|" + th.name));   // Slice 5: a label near the end reads leftward from its tick (Manhunt at 90 overflowed the side panel)
     heat.appendChild(marks);
     { const rh = X.carriedResHeat(); heat.appendChild(h("small", { class: "heat-move", "data-heat-move": String(DATA.config.heat.perMove + rh) }, `Each move: +${DATA.config.heat.perMove}` + (rh ? ` · Relic Tech: +${rh} (+${DATA.resources.relic.heatPerMove} per unit carried)` : "") + " Heat")); heat.appendChild(h("br")); }
     heat.appendChild(h("small", null, `Enemy budget ×${t.budgetMult} · loot rarity +${t.lootBonus}%` + (G.Perks.rarityBonus() ? ` (+${G.Perks.rarityBonus()}% Scavenger's Eye)` : "") + (t.hostileBonus ? ` · hostiles +${t.hostileBonus}%` : "") + (t.closeExtractions ? ` · ${t.closeExtractions >= 99 ? "only one extraction open" : t.closeExtractions + " extraction(s) closed"}` : "") + (t.forcedBattle ? " · strike team intercepts at next location" : "")));
-    side.appendChild(heat);
+    side.appendChild(put("heat", heat));
     }
     // squad
     const body = X.body(), maxHp = X.maxBodyHp();
@@ -822,7 +824,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
       sq.appendChild(opener(h("div", { class: "sq-row" + (m.hp <= 0 ? " dead" : "") }, UI.gruntIcon(m.g, 18), h("span", { class: "sq-name" }, G.Allies.name(m.g)), m.hp > 0 ? bar(m.hp / mx, "#5fd35f", `${Math.ceil(m.hp)}/${Math.round(mx)}`) : h("span", { class: "bad" }, isCarried ? "Critical (carried)" : m.left ? "left behind" : "dead"),
         m.hp > 0 ? h("button", { disabled: !(r.bag.res.med > 0) || m.hp >= mx, onclick: () => { UI.toast(X.useMed(i)); UI.render(); } }, healIco(), "Heal") : null), i));
     });
-    side.appendChild(sq);
+    side.appendChild(put("squad", sq));
     // carry
     const cap = X.capacity(), kg = X.carried(), pct = (kg / cap) * 100;
     const carry = h("section", { class: "panel" }, h("h3", null, `Carry ${U.fmt1(kg)} / ${U.fmt1(cap)} kg`, G.Perks.carryKg() ? h("small", { class: "hint" }, ` (incl. Mule +${G.Perks.carryKg()} kg)`) : null), bar(pct / 150, pct >= 150 ? "#e04040" : pct > 100 ? "#e0a040" : "#6aa0ff", `${Math.round(pct)}%`));
@@ -842,12 +844,12 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
       h("span", { class: "item-acts" }, h("button", { onclick: () => { const e = X.resToPouch(k); if (e) UI.fail(e); UI.render(); } }, "Pouch"), h("button", { onclick: () => { X.dropRes(k, 1); UI.render(); } }, "Drop 1"))));
     carry.appendChild(h("h4", null, `Secure Pouch (${r.pouch.length}/${G.Outpost.pouchSlots()}, max ${G.Outpost.pouchMaxKg()} kg — survives death)`));
     r.pouch.forEach((p, i) => { if (p.item) carry.appendChild(UI.itemEl(p.item, () => [{ label: "Take out", act: "take-out", fn: () => { X.fromPouch(i); UI.render(); } }])); else carry.appendChild(h("div", { class: "item-row" }, `${p.n} × ${DATA.items.resources[p.res].name}`, h("button", { onclick: () => { X.fromPouch(i); UI.render(); } }, "Take out"))); });
-    side.appendChild(carry);
+    side.appendChild(put("carry", carry));
     // extraction
-    if (area && G.AreaWalk && G.AreaWalk.enabled()) side.insertBefore(G.Traversal.sideHere(), side.firstChild);   // V2 Area: what's here, nearest first
+    if (area && G.AreaWalk && G.AreaWalk.enabled()) side.insertBefore(put("here", G.Traversal.sideHere()), side.firstChild);   // V2 Area: what's here, nearest first
     const ve = v2 && loc ? G.Traversal.sideExtract() : null;
-    if (v2 && inSite && loc) { const sw = G.Traversal.sideSweep(); if (sw) side.appendChild(sw); }   // Sweep the area: pick the fight yourself
-    if (ve) side.appendChild(ve);
+    if (v2 && inSite && loc) { const sw = put("sweep", G.Traversal.sideSweep()); if (sw) side.appendChild(sw); }   // Sweep the area: pick the fight yourself
+    if (ve) side.appendChild(put("extract", ve));
     else if (loc && loc.extraction) {
       const ex = X.extractionDef(node), open = X.extractionOpen(node);
       const label = UI.extractLabel(ex);
@@ -855,12 +857,19 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
         : X.wrecked(node) ? h("div", { class: "warn wrecked", "data-note": "wrecked" }, `${X.crashLine(node)} ${X.otherExitsNote(node)}`) : h("div", { class: "warn" }, "Closed at this Heat level.")));
     } else if (v2) { if (!area || !(G.AreaWalk && G.AreaWalk.enabled())) side.appendChild(h("section", { class: "panel" }, h("small", null, inSite ? `${TL() ? "Tap" : "Click"} an object to search it. The way you came in takes you back to traversal.` : `${TL() ? "Tap" : "Click"} a place to see what's known about it, then travel there. Walking around inside a place never starts a fight; searching, forcing and noise can.`))); }
     else side.appendChild(h("section", { class: "panel" }, h("small", null, inSite ? (TL() ? "Tap" : "Click") + " an object to search it. The tooltip shows the time and the disturbance chance. The EXIT you came in by takes you back to the zone map." : `${TL() ? "Tap" : "Click"} a highlighted neighbouring location to move (+${DATA.config.heat.perMove} Heat). ${TL() ? "Tap" : "Click"} where you are to go back inside. The outpost is hidden: extraction is the only way home.`)));
+    { const last = side.lastChild; if (last && !Object.values(secs).some((a) => a.includes(last))) put(last.classList.contains("extract") ? "extract" : "hint", last); }   // SP-200: the legacy extraction point / the hint line
     // log
     const lg = h("section", { class: "panel log" }, h("h3", null, "Log"));
     for (const line of r.log.slice(-14).reverse()) lg.appendChild(h("div", null, line));
-    side.appendChild(lg);
-    { const obj = G.TutView && G.TutView.objectivesEl && G.TutView.objectivesEl(); if (obj) side.insertBefore(obj, side.firstChild); }   // SP-189: tutorial objectives stack on top of the side column
-    layout.appendChild(side);
+    side.appendChild(put("log", lg));
+    { const obj = put("obj", G.TutView && G.TutView.objectivesEl && G.TutView.objectivesEl()); if (obj) side.insertBefore(obj, side.firstChild); }   // SP-189: tutorial objectives stack on top of the side column (SP-200 panel: the Map tab)
+    if (ifp) {   // SP-200: the riveted-steel panel replaces the scrolling column on desktop; the frame wraps the play window too
+      if (secs.log) { secs.log[0].innerHTML = ""; secs.log[0].appendChild(h("h3", null, "Log")); for (const line of r.log.slice().reverse()) secs.log[0].appendChild(h("div", null, line)); }   // the Log tab scrolls, so it gets every line
+      const acts = { extract: () => G.Traversal.extract(), legacy: () => UI.extractClick(),
+        escape: () => { const res = G.V2.useEscape(r.loc); if (res.error) UI.fail(res.error); else UI.toast(res.text); UI.render(); } };
+      layout.classList.add("ifp-frame");
+      layout.appendChild(G.IfPanel.el(h, bar, secs, acts));
+    } else layout.appendChild(side);
     scr.appendChild(layout);
   };
 
