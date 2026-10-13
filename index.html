@@ -6,12 +6,12 @@
 <title>internetcreature OS</title>
 <link rel="icon" type="image/png" href="favicon.png" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-<meta name="description" content="welcome to internetcreature OS" />
+<meta name="description" content="Megan’s personal corner of the internet — founder of Internet Creature Studios, writer, and creator. Explore current and past projects in internetcreature OS." />
 <meta name="theme-color" content="#b9b8e8" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://internetcreature.dev/" />
 <meta property="og:title" content="internetcreature OS" />
-<meta property="og:description" content="welcome to internetcreature OS" />
+<meta property="og:description" content="Megan’s personal corner of the internet — founder of Internet Creature Studios, writer, and creator. Explore current and past projects in internetcreature OS." />
 <meta property="og:image" content="https://internetcreature.dev/dain.jpg" />
 <meta name="twitter:card" content="summary" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -301,6 +301,29 @@
     margin-top: 24px; text-align: center;
     font-weight: 600; font-style: italic; color: #5f5167;
   }
+  /* Native disclosures keep each flavor in the note, with keyboard support. */
+  .flavors { margin: 12px 0; }
+  .flavor + .flavor { margin-top: 8px; }
+  .flavor summary {
+    width: fit-content; max-width: 100%; min-height: 44px;
+    padding: 9px 13px; border-radius: 18px;
+    border: 1px solid rgba(121,199,141,0.5);
+    background: #e1f3dc; color: var(--text);
+    font-size: 14px; font-weight: 700; line-height: 1.5;
+    cursor: pointer; overflow-wrap: anywhere; list-style-position: inside;
+    touch-action: manipulation;
+  }
+  .flavor:nth-child(2) summary { background: #e5f2fb; border-color: #c2deef; }
+  .flavor:nth-child(3) summary { background: #f1e5f8; border-color: #dcc8ed; }
+  .flavor summary:hover { filter: brightness(1.02); }
+  .flavor summary:focus-visible {
+    outline: 2px solid #6a3a5c; outline-offset: 3px;
+  }
+  .flavor-bubble {
+    margin-top: 8px; padding: 12px 16px;
+    border-radius: 16px; border: 1px solid #d5e5d0;
+    background: rgba(255,255,255,0.7); overflow-wrap: anywhere;
+  }
   /* welcome.txt splits into its own scroll region + a fixed dock below it,
      so the action bar can never overlap the body text at any size */
   .window-body:has(> .welcome-shell) { overflow: hidden; display: flex; flex-direction: column; }
@@ -356,6 +379,7 @@
   .wx-hello .sub {
     font-size: 12px; font-weight: 400; letter-spacing: 0.01em; color: #58a86c;
     text-shadow: 0 0 6px rgba(142,240,162,0.25);
+    min-width: 0; overflow-wrap: anywhere;
   }
 
   .cols {
@@ -837,46 +861,39 @@
     scroll.className = 'welcome-scroll';
     const wrap = document.createElement('div');
     wrap.className = 'doc';
-    wrap.innerHTML =
-      '<div class="doc-eyebrow">internetcreature os \u00b7 start here</div>' +
-      '<div class="doc-title">welcome to my little corner of the internet 🦌🩷</div>' +
-      '<p>hi! i’m Megan. online, i usually go by Dain.</p>' +
-      '<p>i’m a software engineer, creator, extremely curious internet creature, and someone who gets very excited about the ways technology can help people live happier, healthier, more connected lives while also respecting our planet.</p>' +
-      '<p>this is where i share things i’m building, ideas i’m thinking about, and whatever else has managed to occupy my brain lately.</p>' +
-      '<div class="doc-sec">what i care about</div>' +
-      '<p>a lot of my work and thinking comes back to the same question:</p>' +
-      '<p><em>how can we use technology to make being a person a little easier?</em></p>' +
-      '<p>i’m especially interested in artificial intelligence, not just as a productivity tool, but as something that can help people understand themselves, learn, create, communicate, and connect with other people.</p>' +
-      '<p>ai is so incredibly powerful, and has a ton of risks because of that. i think it deserves both excitement and caution. but when i look at what it could become, i mostly feel hopeful.</p>' +
-      '<p>i want to help push it toward things that actually improve people’s lives.</p>' +
-      '<div class="doc-sec">why this is personal to me</div>' +
-      '<p>i’m autistic, i have adhd, and i’m trans, so for a lot of my life i felt like i was doing many ordinary parts of being human on hard mode.</p>' +
-      '<p>understanding people. organizing my thoughts. starting things. explaining what was going on inside my head. finding people i really connected with.</p>' +
-      '<p>technology has always helped me bridge some of those gaps, but ai has been different.</p>' +
-      '<p>it has helped me turn tangled thoughts into words, learn without feeling embarrassed about what i don’t know, get unstuck when my brain refuses to cooperate, explore who i am, and turn ideas into real things much faster than i ever could before.</p>' +
-      '<p>that experience changed the way i think about software.</p>' +
-      '<p>the best technology doesn’t just make us more productive. it can make us feel more capable.</p>' +
-      '<div class="doc-sec">what i believe</div>' +
-      '<p>i don’t think technology should replace the messy, wonderful parts of being human.</p>' +
-      '<p>i want more human connection, not less of it. more creativity. more curiosity. more time for the people and things we care about.</p>' +
-      '<p>i’m interested in building tools that support those things.</p>' +
-      '<p>humans are wonderfully fallible little animals. we have biases, blind spots, limited attention, limited energy, and only so many hours in a day. the systems we build inherit a lot of those limitations.</p>' +
-      '<p>i think ai gives us an unusual opportunity to rethink some of those systems from the ground up.</p>' +
-      '<p>not by handing everything over to machines, but by building better tools for people.</p>' +
-      '<div class="doc-sec">what i want to make</div>' +
-      '<p>for a long time, i thought of myself mostly as an engineer.</p>' +
-      '<p>i’m realizing that “creator” fits me much better.</p>' +
-      '<p>software is one medium, but i want to make all kinds of things.</p>' +
-      '<p>i want to build strange little tools that genuinely help people. i want to write. make videos. tell stories. experiment with new interfaces. build communities. make things that are useful, warm, funny, thoughtful, or simply delightful to interact with.</p>' +
-      '<p>i especially love the fuzzy space between engineering, design, psychology, and human behavior, where the interesting question isn’t just <em>“does this work?”</em> but <em>“what does it feel like to use?”</em></p>' +
-      '<p>and increasingly, i want to make things in public, share what i learn, and collaborate with people who are just as excited about making the world a little better.</p>' +
-      '<p class="mission-note">that’s really the goal: leave this weird little planet better than i found it 🌱</p>';
+    wrap.innerHTML = `
+      <div class="doc-eyebrow">internetcreature os · start here</div>
+      <div class="doc-title">hi! welcome :3</div>
+      <p>my name is Megan! I’m the creator of this site and the founder of Internet Creature Studios, my own independent dev studio.</p>
+      <p>here you’ll find my current and past projects, and hopefully have some fun interacting with the page and exploring what I’ve been making!</p>
+      <p>The software I’m most excited to create comes in three flavors:</p>
+      <div class="flavors">
+        <details class="flavor">
+          <summary>Software for public good</summary>
+          <div class="flavor-bubble"><p>I want to build tools that help people live happier, healthier lives while respecting our planet.</p></div>
+        </details>
+        <details class="flavor">
+          <summary>Software that makes human communication and connection easier, richer, and deeper</summary>
+          <div class="flavor-bubble"><p>That second one is especially personal to me. As an autistic person, communication and connection haven’t always come easily, and I care deeply about making them easier for others too.</p></div>
+        </details>
+        <details class="flavor">
+          <summary>Software as a form of art</summary>
+          <div class="flavor-bubble"><p>Art-focused projects will be a large part of the studio’s early work, while the other two areas need more time and care.</p></div>
+        </details>
+      </div>
+      <p>Internet Creature Studios is my home for all of these ideas: tools, apps, games, and whatever else I find myself cooking up!</p>
+      <p>For most of my professional career, I was a software engineer specializing in backend infrastructure. I got to work with extremely smart and talented people, and I feel very privileged to have the experience that I do.</p>
+      <p>Over time, though, I realized that the day-to-day coding, debugging, and testing could leave me deeply drained. What consistently excited me was the bigger picture: strategy, creative direction, and figuring out what we should build and why.</p>
+      <p>I tried to move toward that kind of work in my last role, especially after finally beginning to understand my own health struggles. Finding a role that fit both my strengths and my needs was difficult.</p>
+      <p>Now, with AI tools as my constant collaborators, I feel more ready than ever to turn my ideas into software that can make a meaningful difference in the world. I use AI assistance heavily in my work, and I know people have different feelings about that. For me personally, it has genuinely unlocked so much of my creative potential!!</p>
+      <p>I’m constantly putting my own creativity, intelligence, and personal direction into what I make. Every project reflects my tastes, experiences, and the things I care about. Having more help building things has given me more room to express all of that.</p>
+      <p>And I can’t wait to get the tools, apps, and games I’m creating into your hands! :3</p>`;
     scroll.appendChild(wrap);
 
     const actions = document.createElement('div');
     actions.className = 'welcome-actions';
     actions.innerHTML =
-      '<button class="wa-btn sage" data-open="willowden" title="an ADHD planning companion &amp; focus coach \u2014 the next chapter of chordial">\ud83c\udf43 explore willowden</button>' +
+      '<button class="wa-btn sage" data-open="studio" title="my independent dev studio and current projects">✦ explore the studio</button>' +
       '<button class="wa-btn sky" data-open="contact" title="twitter + email inside!">\u2709\ufe0f contact me</button>';
     actions.querySelectorAll('.wa-btn').forEach(b => {
       const key = b.dataset.open;
@@ -895,7 +912,7 @@
     shell.innerHTML =
       '<div class="wx-hello">' +
         '<span class="wordmark">megan<span class="cursor">_</span></span>' +
-        '<span class="sub">internet creature&nbsp; // making things online</span>' +
+        '<span class="sub">internet creature&nbsp; // studio founder</span>' +
       '</div>' +
       '<div class="cols">' +
         '<div class="col yt">' +
@@ -922,16 +939,16 @@
           '</span>' +
         '</div>' +
         '<div class="col wd">' +
-          '<button class="col-trigger" data-open="willowden" aria-label="open willowden"></button>' +
+          '<button class="col-trigger" data-open="studio" aria-label="open Internet Creature Studios"></button>' +
           '<span class="inner">' +
-            '<span class="art"><img class="wd-art" alt="" src="willowden-icon.png"/></span>' +
-            '<span class="label">willowden</span>' +
+            '<span class="art"><img class="wd-art" alt="" src="studio-icon.svg"/></span>' +
+            '<span class="label">studio</span>' +
             '<span class="desc">' +
-              '<span class="desc-head">an ADHD planning companion</span>' +
+              '<span class="desc-head">Internet Creature Studios</span>' +
               '<span class="desc-tree">' +
-                '<span>a companion who sits with you while you work</span>' +
-                '<span>a cast of helpers, each with a different role</span>' +
-                '<span>the next chapter of chordial</span>' +
+                '<span>my independent dev studio</span>' +
+                '<span>currently building RENEGADE</span>' +
+                '<span>browser tactics / roguelite · in development</span>' +
               '</span>' +
             '</span>' +
             '<span class="arrow">↓</span>' +
@@ -1113,6 +1130,21 @@
     launcher:    { icon: '🦌', title: 'welcome.exe',          bg: '#0e0a13', width: 'min(600px, calc(100% - 24px))', pinned: true, render( ){ return makeLauncher(); } },
     welcome:     { icon: '🌱', title: 'about_me.txt',         bg: '#f3f9ee', width: 'min(660px, calc(100% - 24px))', render( ){ return makeWelcome(); } },
     youtube:     { icon: '▶️', title: 'youtube',              bg: '#fdeee0', render( ){ return makeYoutube(); } },
+    studio:      { icon: '✦', title: 'studio.txt',           bg: '#f3f4ea', width: 'min(660px, calc(100% - 24px))', render( ){ return makeProjectDoc({
+      title: 'Internet Creature Studios', eyebrow: 'current work',
+      body:
+        '<p>Internet Creature Studios is my independent dev studio, and my main creative home right now. ' +
+        'I’m its founder, making tools, apps, games, and other things I want to see in the world.</p>' +
+        '<div class="doc-sec">currently building: RENEGADE</div>' +
+        '<p><strong>RENEGADE</strong> is a browser tactics / roguelite set in the universe of my ' +
+        '<a href="#dormant">novel</a>. It’s currently in development.</p>' +
+        '<div class="doc-sec">other work in development</div>' +
+        '<p><strong>IDOL – Voice Trainer</strong> and <strong>hoardbird</strong> are other projects I’m developing.</p>' +
+        '<div class="doc-sec">earlier projects</div>' +
+        '<p><a href="#willowden">willowden</a> is on break. Its predecessor, ' +
+        '<a href="#chordial">chordial</a>, and the other things I’ve made are still here to explore.</p>',
+      tags: ['independent studio', 'in development'],
+    }); } },
     willowden:   { icon: '🍃', title: 'willowden',            bg: '#f3f4ea', width: 'min(660px, calc(100% - 24px))', render( ){ return makeProjectDoc({
       title: 'willowden', brandTitle: true, titleClass: 'wd',
       body:
@@ -1122,18 +1154,18 @@
         '<p>it helps you both <strong>set</strong> goals and <strong>work toward</strong> them: life runs in ' +
         'small themed cycles, work happens in tiny focus blocks, and stopping early still <strong>banks</strong> ' +
         'the minutes — because starting was the achievement. no streaks, anywhere, ever.</p>' +
-        '<p>willowden is being built in a private repository right now, growing out of everything its ' +
-        'predecessor taught me.</p>' +
+        '<p>willowden is on break while I focus on <a href="#studio">Internet Creature Studios</a>. ' +
+        'This is the project’s story so far.</p>' +
         '<div class="doc-sec">its roots: chordial</div>' +
         '<p><span class="brand">chordial</span> is the working name and the proving ground — the mvp i built ' +
-        'for myself and use on my actual work every day. the body double, the focus blocks that bank, the ' +
+        'for myself. the body double, the focus blocks that bank, the ' +
         'cast of helpers: they were all born there, and its code is public.</p>' +
         '<a class="doc-link" href="https://github.com/internet-creature/chordial-mvp" target="_blank" rel="noopener">' +
         '<span class="gh">🔗</span> view chordial on github</a>' +
         '<p>you can read more about the mvp in <a href="#chordial">its own window</a>, or watch its live ' +
         'focus view running in <a href="#focus">focus.exe</a>.</p>',
-      tags: ['ADHD', 'desktop app', 'in development'],
-      note: 'willowden 1.0 is under construction in a private repository 🌿',
+      tags: ['ADHD', 'desktop app', 'on break'],
+      note: 'on break 🌿',
     }); } },
     chordial:    { icon: '💬', title: 'chordial',             bg: '#fdeaf3', render( ){ return makeProjectDoc({
       title: 'chordial', brandTitle: true,
@@ -1146,9 +1178,9 @@
         'parts are <strong>starting</strong>, <strong>staying</strong>, and <strong>coming back</strong> — ' +
         'so those are what chordial is built around: one-tap focus blocks, time that banks instead of ' +
         'punishing wandering attention, and gentle nudges that naturally quiet as your habits grow steadier.</p>' +
-        '<p>i’m building it by myself, mostly because i wanted this thing to exist for me. i use it on ' +
-        'my actual work every day!</p>' +
-        '<p>chordial was the beginning — its next chapter is <a href="#willowden"><span class="brand wd">willowden</span></a>.</p>',
+        '<p>i built it by myself, mostly because i wanted this thing to exist for me.</p>' +
+        '<p>chordial was the beginning — its next chapter became <a href="#willowden"><span class="brand wd">willowden</span></a>, which is currently on break.</p>',
+      tags: ['earlier project'],
     }); } },
     focus:       { icon: '🍅', title: 'focus.exe',            bg: '#171310', width: 'min(720px, calc(100% - 24px))', render( ){ return makeFocus(); } },
     'chaos-cube':{ icon: '🎴', title: 'chaos-commander-cube', bg: '#fdf6df', render( ){ return makeProjectDoc({
@@ -1167,7 +1199,7 @@
     'dain-img':  { icon: '🖼️', title: 'dain.jpg',             bg: '#fdeee0', render( ){ return makeImageViewer({ src: 'dain.jpg', alt: 'dain — character art', credit: 'Pricklepants', url: 'https://bsky.app/profile/pricklepants.bsky.social' }); } },
     contact:     { icon: '✉️', title: 'contact',              bg: '#e9f5fe', render( ){ return makeContact(); } },
   };
-  const DESKTOP_ICONS = ['launcher', 'welcome', 'youtube', 'willowden', 'chordial', 'focus', 'chaos-cube', 'dormant', 'dain-img', 'contact'];
+  const DESKTOP_ICONS = ['launcher', 'welcome', 'youtube', 'studio', 'willowden', 'chordial', 'focus', 'chaos-cube', 'dormant', 'dain-img', 'contact'];
 
   const desk    = document.getElementById('desktop');
   const tasksEl = document.getElementById('tasks');
