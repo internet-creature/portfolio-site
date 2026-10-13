@@ -10,10 +10,10 @@ DATA.radio = {
   templates: {
     kill_outlaws:   { type: "kill", family: "outlaws",  n: 6, text: "Outlaws are bleeding the roads in {zone}. Put down {n}." },
     kill_beasts:    { type: "kill", family: "beasts",   n: 8, text: "Something's breeding out in {zone}. Thin them out: {n} Bio-beasts." },
-    kill_machines:  { type: "kill", family: "machines", n: 4, extra: ["electronics"], extraN: 1, text: "Old machines woke up in {zone}. Scrap {n} of them." },
+    kill_machines:  { type: "kill", family: "machines", n: 4, extra: ["electronics"], extraN: 3, text: "Old machines woke up in {zone}. Scrap {n} of them." },
     turnin_fuel:    { type: "turnin", res: "fuel",    n: 10, text: "Somebody needs to keep a generator running. Bring {n} Fuel." },
     turnin_biomass: { type: "turnin", res: "biomass", n: 6,  text: "A grower wants feedstock. {n} Biomass, no questions." },
-    // SP-143: extra / extraN override reward.extra for that template. kill_machines pays 1 Electronics [PLACEHOLDER amount]
+    // SP-143: extra / extraN override reward.extra for that template. kill_machines pays 3 Electronics (one recipe's worth; the Fuel it replaces is 2 kg, 3 Electronics are 1.5 kg) [DRAFT]
     scout:          { type: "scout", text: "Nobody's been to {loc} ({zone}) in a while. Go look and get back out." }
   },
   reward: { common: ["food", "water", "scrap", "cloth", "electronics", "chemicals"], min: 5, max: 10, extra: ["fuel", "biomass"], extraN: 1, hot: { data_shards: 2 } },

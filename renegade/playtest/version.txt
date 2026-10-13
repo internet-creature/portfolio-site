@@ -1,7 +1,7 @@
 channel=playtest
 version=0.0.1
 epoch=1
-sha=fce460f
-commit=fce460feeec225cdf16d0eb25b00fb3017554e2a
-built=2026-10-13T20:00:08.709Z
+sha=527e667
+commit=527e6673cbdb8e51d7ed79e61142cfcb4bea7d0c
+built=2026-10-13T22:29:58.522Z
 indexable=no

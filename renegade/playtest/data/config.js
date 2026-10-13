@@ -304,7 +304,7 @@ DATA.config = {
       lineMs: 2600,
       log: "The engine screams, the truck lurches into a tree and dies for good. The whole wood heard that.",   // [PLACEHOLDER]
       // SP-141: per-location overrides of line / log, plus a random party member (body or living Grunt) hurt in the crash.
-      // hurtPct: % of that member's max HP lost, never below 1 HP [PLACEHOLDER amount for Vixie / Megan]
+      // hurtPct: % of that member's max HP lost, never below 1 HP [DRAFT] (60: "critical", over twice the worst event Bad Fail, 25%)
       byLoc: {
         ho_helipad: { line: "The helicopter's down.", log: "The rotor clips the roof edge and the helicopter slams back onto the pad. Everyone's thrown around, and the whole block heard it.", hurtPct: 60 }   // [PLACEHOLDER] text
       }
@@ -409,8 +409,9 @@ DATA.config = {
     // the Hushwood can't roll level 16-17 drops. Character level never feeds it. [PLACEHOLDER] ranges, balanced through
     // playtest (SP-159). Megan (Oct 13): the special-source bonuses are ALLOWED past this cap: Hunter bodies (+ilvlPlus),
     // the Armoury locker's piece (+2) and rival packs (cap + ilvlCapPlus) add on top of the clamped value (js/site.js, js/rivals.js).
-    // Megan (Oct 13): the Greyback Hills (greyback) and the Drowned Suburbs (b) are 3-13.
-    ilvlRangeByZone: { a: [1, 10], greyback: [3, 13], b: [3, 13], hollis: [8, 18], scablands: [12, 22] },
+    // Megan (Oct 13): the Greyback Hills (greyback) and the Drowned Suburbs (b) are 3-13. The later zones follow the same shape
+    // from ilvlByTier: base - 1 to base + 9 (Hollis tier 4: 11-21, Scablands tier 5: 15-25) [DRAFT].
+    ilvlRangeByZone: { a: [1, 10], greyback: [3, 13], b: [3, 13], hollis: [11, 21], scablands: [15, 25] },
     statScalePerIlvl: 0.06,
     scavengingRarityPerLevel: 0.5,  // +% rarity roll per Scavenging level (ASSUMPTION on magnitude)
     enforceRequirements: false,     // weapon reqs are [PROPOSAL]; shown but not enforced by default

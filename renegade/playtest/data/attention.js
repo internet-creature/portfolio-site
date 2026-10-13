@@ -41,7 +41,7 @@ DATA.attention = {
   // (index = level after this fill; past the end: the last entry).
   // Notoriety (Megan, Oct 7): a separate level per Map, +1 every fightsPerNotoriety Attention fights (bar fills) on that
   // Map; it never goes down unless something specifically modifies it; a new expedition resets it.
-  fightsPerNotoriety: 3,      // PLACEHOLDER (SP-132)
+  fightsPerNotoriety: 2,      // [DRAFT] (SP-132) level 1 shows on a busy Map; extraUnitsByNotoriety adds nothing until level 2
   patrol: { budgetMult: 1, extraUnitsByNotoriety: [0, 0, 1, 1, 2, 2, 3] },   // PLACEHOLDER (SP-132)
 
   // After an Attention fight is won: the bar goes back to 0 and the NEXT battle on that Map shows its escalation.
