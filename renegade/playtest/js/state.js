@@ -1,0 +1,416 @@
+// Save state, bodies, grunts, XP routing, timers, local save.
+(function (root) {
+  const G = root.G, U = G.Util, S = G.Skills;
+  const St = G.State = {};
+  G.state = null;
+
+  const BODY_SKILLS = () => Object.keys(DATA.skills).filter((k) => DATA.skills[k].kind === "body");
+  const MIND_SKILLS = () => Object.keys(DATA.skills).filter((k) => DATA.skills[k].kind === "mind");
+  St.BODY_SKILLS = BODY_SKILLS; St.MIND_SKILLS = MIND_SKILLS;
+
+  St.makeBasicBody = function () {
+    const d = DATA.bodies.basicBody;
+    const skills = {};
+    for (const k of BODY_SKILLS()) skills[k] = S.make(d.skills[k] || 1);
+    return { uid: "body_basic", name: d.name, past: "a level-1 husk", family: "basic", cls: null, spec: null, quirks: [], skills, bodyXp: 0, restoreUntil: 0 };
+  };
+
+  St.rollHumanBody = function (rng, cls) {
+    const H = DATA.bodies.humanRoll, C = DATA.bodies.classes;
+    cls = cls || rng.pick(H.classPool);
+    const spec = rng.pick(C[cls].specialties);
+    const sp = DATA.bodies.specialties[spec];
+    const skills = {};
+    const cap = DATA.bodies.families.human.skillCap;
+    for (const k of BODY_SKILLS()) {
+      const base = sp.skills[k] || 1;
+      const v = base > 1 ? base + rng.int(-H.skillVariance, H.skillVariance) : 1;
+      skills[k] = S.make(U.clamp(v, 1, cap));
+    }
+    const nq = rng.int(H.quirksPerBody[0], H.quirksPerBody[1]);
+    const quirks = rng.shuffle(Object.keys(DATA.bodies.quirks).slice()).slice(0, nq);
+    return { uid: U.uid("body"), name: rng.pick(H.names), past: rng.pick(H.pasts), family: "human", cls, spec, quirks, skills, bodyXp: 0, restoreUntil: 0 };
+  };
+
+  St.rollHumanOffer = function (rng) {
+    const H = DATA.bodies.humanRoll;
+    const n = rng.int(H.offerCount[0], H.offerCount[1]);
+    const classes = rng.shuffle(H.classPool.slice());
+    const out = [];
+    for (let i = 0; i < n; i++) out.push(St.rollHumanBody(rng, H.distinctClasses ? classes[i % classes.length] : null));
+    // Doc Ilse L2 perk (Slice 2 §9): a Medic is guaranteed in the next human body pick (one-shot)
+    if (G.Quests && G.Quests.consumeMedicPick() && !out.some((b) => b.cls === "medic")) out[out.length - 1] = St.rollHumanBody(rng, "medic");
+    return out;
+  };
+
+  // Grunt record (Megan's playtest, extended in Slice 3 §1): stable uid, "First Last" name (DATA.bodies.grunt.names +
+  // DATA.allies.surnames, renameable), nickname (shown First "Nick" Last), 2 traits, history (newest first, 10 lines),
+  // runs / extractions / kills, gear { weapon, gear } (a Veteran: weapon / head / body / pack) equipped from the stash.
+  // Dead allies move to state.fallenGrunts with dead: true (never deleted): the Memorial Wall lists them.
+  St.pickGruntName = function (rng) {
+    const s = G.state, names = DATA.bodies.grunt.names || ["Grunt"], sur = (DATA.allies && DATA.allies.surnames) || [];
+    const used = new Set(((s && s.grunts) || []).concat((s && s.fallenGrunts) || [], (s && s.recruitCands) || []).map((g) => g.name));
+    const usedFirst = new Set([...used].map((n) => n.split(" ")[0]));
+    const firsts = names.filter((n) => !usedFirst.has(n)), first = rng.pick(firsts.length ? firsts : names);
+    if (!sur.length) return first;
+    for (let i = 0; i < 20; i++) { const n = first + " " + rng.pick(sur); if (!used.has(n)) return n; }
+    return first + " " + rng.pick(sur) + " " + rng.int(2, 99);
+  };
+  // opts: { noNegative (default: while the tutorial is on, its free Grunts never roll a negative trait), candidate }
+  St.makeGrunt = function (rng, tpl, opts) {
+    tpl = tpl || DATA.bodies.grunt; opts = opts || {};
+    const skills = {};
+    for (const k in tpl.skills) skills[k] = S.make(tpl.skills[k]);
+    const g = { uid: U.uid("grunt"), name: (tpl.rank === "core" ? tpl.name : tpl.petKey ? rng.pick(tpl.names) : St.pickGruntName(rng)), rank: tpl.rank || "grunt", tplKey: tpl === DATA.bodies.coreAllyTest ? "core" : tpl.petKey ? "pet" : "grunt",
+             weapon: rng.pick(tpl.weapons), skills, hp: null, runs: 0, extractions: 0, kills: 0, history: [], s3: true };
+    const noNeg = opts.noNegative != null ? opts.noNegative : !!(DATA.allies.tutorialNoNegative && G.state && !G.state.tutorialDone);
+    g.traits = G.Allies.rollTraits(rng, DATA.allies.recruitTraits, { noNegative: noNeg });
+    if (tpl.petKey) g.petKey = tpl.petKey;   // Slice 5 §F: a pet keeps its own natural weapon, no gear
+    else if (tpl.rank !== "core" && DATA.config.grunts.innateWeapon) g.weapon = DATA.config.grunts.innateWeapon;   // Slice 4 §F: a new Grunt has just a shiv (the rng.pick above still runs, so rolls don't move)
+    if (opts.candidate) g.candidate = true; else G.Allies.log(g, "recruited", "Recruited.");
+    return St.repairGrunt(g, G.state ? G.state.runCount : 0);
+  };
+  St.repairGrunt = function (g, run) {
+    g.nickname = g.nickname || null; g.traits = g.traits || []; g.history = g.history || [{ run: run || 0, what: "recruited", text: `Run ${run || 0}: Recruited.` }];
+    g.gear = g.gear || St.emptyGear(g); if (G.GruntGear) G.GruntGear.migrate(g); g.dead = !!g.dead; g.tplKey = g.tplKey || (g.rank === "core" ? "core" : "grunt");
+    g.runs = g.runs || 0; g.extractions = g.extractions || 0; g.kills = g.kills || 0;
+    return g;
+  };
+  St.grunt = (uid) => G.state.grunts.find((g) => g.uid === uid);
+  St.renameGrunt = function (uid, name) {
+    const g = St.grunt(uid); if (!g) return "No such Grunt.";
+    name = String(name || "").replace(/\s+/g, " ").trim().slice(0, DATA.config.grunts.nameMaxLen);
+    if (!name) return "A name can't be empty.";
+    const from = g.name; g.name = name; G.Allies.log(g, "renamed", `Renamed (was ${from}).`, { from }); St.save(); return null;
+  };
+  // equip slots: a Grunt has config.grunts.slots (weapon + one gear slot), a Veteran DATA.allies.veteran.slots
+  St.gruntSlots = (g) => (g && g.tplKey === "pet" ? {} : g && g.tplKey === "veteran" ? DATA.allies.veteran.slots : DATA.config.grunts.slots);   // Slice 5 §F: pets: none
+  St.emptyGear = (g) => { const o = {}; for (const k in St.gruntSlots(g)) o[k] = null; return o; };
+  St.gruntSlotOk = (slot, item, g) => (St.gruntSlots(g)[slot] || []).includes(G.Items.base(item.base).slot);
+  St.gruntPack = (g) => St.gruntItems(g).find((it) => G.Items.base(it.base).slot === "backpack") || null;
+  // equip a stash item on a Grunt / Veteran (slot from St.gruntSlots), or itemUid null to unequip (back to the stash). Outpost only.
+  St.equipGrunt = function (uid, slot, itemUid) {
+    const s = G.state, g = St.grunt(uid); if (!g) return "No such Grunt.";
+    if (s.run) return "Equip Grunts at the outpost, not during a run.";
+    if (!St.gruntSlots(g)[slot]) return "Unknown slot.";
+    let it = null;
+    if (itemUid) {
+      it = s.stash.items.find((i) => i.uid === itemUid); if (!it) return "That item isn't in the stash.";
+      if (G.Items.isQuest(it) || !St.gruntSlotOk(slot, it, g)) return `${G.Allies.rankName(g)}s can't use that in the ${slot} slot.`;
+      if (G.Items.isHandItem(it)) { const fit = G.Items.handFit(slot, it, (k) => g.gear[k] || null); if (fit.why) return fit.why; for (const k of fit.clear) { s.stash.items.push(g.gear[k]); g.gear[k] = null; } }   // Slice 5 §E: sets
+      s.stash.items.splice(s.stash.items.indexOf(it), 1);
+      for (const k in s.loadout.gear) if (s.loadout.gear[k] === itemUid) delete s.loadout.gear[k];
+    }
+    if (g.gear[slot]) s.stash.items.push(g.gear[slot]);
+    g.gear[slot] = it; if (it && G.GruntGear) St.cosUnlocked = G.GruntGear.noteEquip(it);   // Slice 5 §H: equipping once unlocks the look
+    St.save(); return null;
+  };
+  // the body's deploy loadout (items stay in the stash until you deploy). One item instance sits in ONE slot: picking it
+  // for a second slot moves it there (the newer pick wins, like hand conflicts). Pocket's bug: it used to fill both
+  St.equipBody = function (slot, itemUid) {
+    const s = G.state, lo = s.loadout, I = G.Items; lo.gear = lo.gear || {}; St.cosUnlocked = null;
+    const x = itemUid ? s.stash.items.find((i) => i.uid === itemUid) : null; if (itemUid && !x) return "That item isn't in the stash.";
+    if (x) {
+      const get = (k) => (k !== slot && lo.gear[k] === itemUid) || !lo.gear[k] ? null : s.stash.items.find((i) => i.uid === lo.gear[k]) || null;   // as if it had already left its old slot
+      if (I.isHandItem(x)) { const fit = I.handFit(slot, x, get); if (fit.why) return fit.why; for (const k of fit.clear) delete lo.gear[k]; }   // Slice 5 §E
+      for (const k in lo.gear) if (k !== slot && lo.gear[k] === itemUid) delete lo.gear[k];
+      lo.gear[slot] = itemUid;
+      if ((lo.pouch || []).some((p) => p && p.uid === itemUid)) lo.pouch = lo.pouch.filter((p) => !p || p.uid !== itemUid);
+      if (G.GruntGear) St.cosUnlocked = G.GruntGear.noteEquip(x);   // Slice 5 §H
+    } else delete lo.gear[slot];
+    St.save(); return null;
+  };
+  St.gruntItems = (g) => Object.values((g && g.gear) || {}).filter(Boolean);
+  // template: Grunt, Veteran (the Grunt template with DATA.allies.veteran over it) or the debug core ally
+  St.gruntTpl = (g) => (g.tplKey === "pet" ? Object.assign({}, DATA.bodies.grunt, DATA.allies.pets[g.petKey] || {}) : g.tplKey === "core" ? DATA.bodies.coreAllyTest : g.tplKey === "veteran" ? Object.assign({}, DATA.bodies.grunt, DATA.allies.veteran) : DATA.bodies.grunt);
+
+  St.defaultSettings = () => Object.assign({}, DATA.audio.defaults, DATA.config.settings);
+  St.newGame = function (seed) {
+    seed = seed == null ? U.randomSeed() : seed >>> 0;
+    const rng = U.makeRng(seed);
+    const mind = { skills: {} };
+    for (const k of MIND_SKILLS()) mind.skills[k] = S.make(DATA.startingMind[k] || 1);
+    const s = {
+      version: DATA.config.version, seed, created: Date.now(),
+      maps: null, world: { hollow_creek: "pending", sites: {} }, everSeen: {}, locFlags: {},
+      zonesUnlocked: {}, passages: {}, secrets: {}, quests: null, buildings: null, journal: [],
+      mind, lifetimeXp: 0,
+      bodies: [St.makeBasicBody()],
+      grunts: [], fallenGrunts: [], perks: {}, stash: { items: [], res: U.clone(DATA.items.startingStash.resources) },
+      loadout: { bodyId: "body_basic", gear: {}, pouch: [], grunts: [] },
+      tutorialDone: false, humanOffer: null, runCount: 0, extractions: 0, deaths: 0, lore: [],
+      difficulty: DATA.config.difficulty.default, difficultyLocked: false,   // Slice 4 §H: picked on the start screen, locked at Play / the first deploy
+      player: { name: "", gender: null },   // SP-157: the new-game name + gender step (js/title.js); used in dialogue (js/dialogue.js)
+      run: null, lastResult: null, settings: St.defaultSettings(), tut: G.Tut ? G.Tut.fresh() : null, main: null, cards: G.Cards ? G.Cards.fresh() : null,
+      cosmetics: { unlocked: {} }   // Slice 5 §H: looks unlocked by equipping (js/gruntgear.js)
+    };
+    if (G.Main) { const prev = G.state; G.state = s; G.Main.st(); G.state = prev; }   // Slice 4 §B: main quests + the pods solution
+    { const prev = G.state; G.state = s; for (let i = 0; i < DATA.config.deploy.startingGrunts; i++) s.grunts.push(St.makeGrunt(rng)); G.state = prev; }
+    if (G.GruntGear) s.grunts.forEach((g, i) => G.GruntGear.giveStartKit(g, i));   // Slice 4 §F: Grunt 1 Pipe Rifle, Grunt 2 Rust Machete
+    for (const k in DATA.resources) if (!DATA.resources[k].hidden && !DATA.resources[k].bagOnly && s.stash.res[k] == null) s.stash.res[k] = 0;   // every stockpile resource shows (Slice 3: 11)
+    const sg = DATA.items.startingGear;
+    for (const slot in sg) { const it = G.Items.make(sg[slot].base, sg[slot].rarity, sg[slot].ilvl, rng); s.stash.items.push(it); s.loadout.gear[slot] = it.uid; }
+    for (const it of DATA.items.startingStash.items) s.stash.items.push(G.Items.make(it.base, it.rarity, it.ilvl, rng));
+    s.maps = G.Zones.buildAll(seed);
+    for (const z of DATA.zones.order) if (DATA.zones.list[z].startUnlocked) s.zonesUnlocked[z] = true;
+    s.quests = G.Quests.freshState();
+    s.buildings = G.Outpost.freshState();
+    G.state = s;
+    s.loadout.grunts = s.grunts.slice(0, DATA.config.deploy.startingGrunts).map((g) => g.uid);
+    if (G.Main) G.Main.clampAnnex(s);   // Vixie: the annex sits in rows 2-3 while Main 1 isn't done
+    return s;
+  };
+
+  St.deployScore = () => (G.state.tutorialDone ? DATA.config.deploy.earlyScore : DATA.config.deploy.tutorialScore) + (G.Perks ? G.Perks.deployScore() : 0);   // + Squad Leader
+  St.body = (uid) => G.state.bodies.find((b) => b.uid === uid);
+  St.bodyCost = (b) => DATA.bodies.families[b.family].deployCost;
+  St.bodyReady = (b) => !b.restoreUntil || b.restoreUntil <= G.now();
+  St.bodySprite = (b) => (b.cls ? DATA.bodies.classes[b.cls].sprite : DATA.bodies.basicBody.sprite);
+  St.bodyTitle = (b) => b.cls ? `${b.name}, ${b.past} — ${DATA.bodies.classes[b.cls].name} / ${DATA.bodies.specialties[b.spec].name}` : b.name;
+
+  St.restoreMs = function (b) {
+    const fam = DATA.bodies.families[b.family];
+    if (!fam.restoreBaseSec) return 0;
+    const R = DATA.config.restore;
+    const trans = Math.min(R.transferenceMaxPct, S.level(G.state.mind.skills, "transference") * R.transferencePctPerLevel);
+    return fam.restoreBaseSec * 1000 * (1 + S.bodyLevel(b) / 50) * R.bodyLabMult * (1 - trans / 100);
+  };
+
+  // --- XP routing. ref: {kind:'body', body} | {kind:'grunt', grunt} | null (enemies)
+  // Every gain emits G.XP events (floating "+N XP (Skill)" labels, Slice 2 §10): the skill, and for the worn body
+  // also the Body and Character XP it adds (derived), plus gold level-up labels.
+  St.giveXp = function (ref, skillId, amount) {
+    if (!ref || !amount || !DATA.skills[skillId]) return;
+    if (G.Prestige) { const pm = G.Prestige.xpMult(); if (pm !== 1) amount = Math.round(amount * pm); }   // Slice 5 §I: the relocation XP bonus
+    const def = DATA.skills[skillId];
+    const s = G.state, E = G.XP ? G.XP.emit : () => {};
+    const charBefore = S.charLevel(s);
+    const charAfter = () => { const c = S.charLevel(s); if (c > charBefore) { E({ levelUp: `Character ${c}!` }); if (G.Perks) G.Perks.checkReady(charBefore); } };
+    if (def.kind === "mind") {
+      if (ref.kind !== "body") return; // only the consciousness has mind skills
+      const got = amount * DATA.config.leveling.mindXpSourceMult;
+      const up = S.addXp({ name: "You", skills: s.mind.skills, cap: 99 }, skillId, amount);
+      s.lifetimeXp += got;
+      E({ label: def.name, n: got }); if (up) E({ levelUp: `${def.name} ${s.mind.skills[skillId].lvl}!` });
+      E({ label: "Character", n: got, derived: true }); charAfter();
+      return;
+    }
+    if (ref.kind === "body") {
+      const b = ref.body, fam = DATA.bodies.families[b.family], bl = S.bodyLevel(b);
+      const up = S.addXp({ name: b.name, skills: b.skills, cap: fam.skillCap, xpMult: fam.xpMult }, skillId, amount);
+      b.bodyXp = (b.bodyXp || 0) + amount; s.lifetimeXp += amount;
+      E({ label: def.name, n: amount }); if (up) E({ levelUp: `${def.name} ${b.skills[skillId].lvl}!` });
+      E({ label: "Body", n: amount, derived: true }); if (S.bodyLevel(b) > bl) E({ levelUp: `Body ${S.bodyLevel(b)}!` });
+      E({ label: "Character", n: amount, derived: true }); charAfter();
+    } else if (ref.kind === "grunt") {
+      const g = ref.grunt;
+      if (!g.skills[skillId]) return; // grunts only level the few skills they have
+      const up = S.addXp({ name: g.name, skills: g.skills, cap: 20 }, skillId, amount);
+      E({ label: def.name, n: amount }); if (up) E({ levelUp: `${def.name} ${g.skills[skillId].lvl}!` });
+    }
+  };
+
+  St.skillOf = function (ref, skillId) {
+    const def = DATA.skills[skillId];
+    if (!ref) return 1;
+    if (def.kind === "mind") return ref.kind === "body" ? S.level(G.state.mind.skills, skillId) : 0;
+    if (ref.kind === "body") return S.level(ref.body.skills, skillId);
+    if (ref.kind === "grunt") return S.level(ref.grunt.skills, skillId);
+    return 1;
+  };
+
+  // --- save / load
+  // SP-096 scenario links: a sandbox session (St.sandbox set by js/scenario.js before anything reads storage) keeps its
+  // whole save under renegade_sandbox_* keys. Every storage access goes through St.key() + St.store, and in a sandbox the
+  // store refuses any write or removal of a key outside that namespace, so the real save, tuning and build id can't change.
+  // A playable build published by .github/workflows/publish-playable.yml (docs/deploy-own-server.md) sets
+  // window.RENEGADE_STORAGE_NS in its js/build_id.js (e.g. "renegade_b_hex_test_"): that build keeps its save, tuning,
+  // build id and sandbox under that prefix only and can never read, wipe or write the main game's keys on the same origin.
+  // The main game (no namespace) keeps the real keys exactly as before.
+  const NS = typeof root.RENEGADE_STORAGE_NS === "string" && /^renegade_[a-z0-9_]+_$/.test(root.RENEGADE_STORAGE_NS) ? root.RENEGADE_STORAGE_NS : null;
+  St.NS = NS;
+  St.SANDBOX_PREFIX = (NS || "renegade_") + "sandbox_";
+  St.sandbox = null;
+  St.key = function (kind) {
+    const sb = !!St.sandbox, c = DATA.config, P = sb ? St.SANDBOX_PREFIX : NS;
+    if (kind === "save") return P ? P + "save" : c.saveKey;
+    if (kind === "unreadable") return P ? P + "save_unreadable" : c.saveKey + "_unreadable";
+    if (kind === "tuning") return P ? P + "tuning" : c.overridesKey;
+    if (kind === "build") return NS ? NS + "build_id" : (c.save || {}).buildIdKey;
+    if (kind === "gfx") return P ? P + "gfx" : "renegade_gfx";   // SP-100 graphics prefs (js/gfx.js): outside the save, kept by a build wipe
+    throw new Error("unknown storage key kind " + kind);
+  };
+  const LS = () => root.localStorage;
+  const guard = (op, k) => {
+    const P = St.sandbox ? St.SANDBOX_PREFIX : NS;
+    if (P && String(k).indexOf(P) !== 0) { console.error("[storage] refused " + op + " of \"" + k + "\": " + (St.sandbox ? "a scenario sandbox" : "this build") + " only writes " + P + "* keys"); return false; }
+    return true;
+  };
+  St.store = {
+    get: (k) => LS().getItem(k),
+    set: (k, v) => { if (!guard("write", k)) return false; LS().setItem(k, v); return true; },
+    remove: (k) => { if (!guard("removal", k)) return false; LS().removeItem(k); return true; },
+  };
+  St.save = function () {
+    if (St.sandbox && St.sandbox.exiting) return;   // Exit sandbox has cleared the sandbox keys: the unload save must not put them back
+    try { St.store.set(St.key("save"), JSON.stringify({ s: G.state, clockOffset: G.clockOffset })); } catch (e) { /* storage may be unavailable */ }
+  };
+  // Maps/Areas/Loot (V2): a consequential transition (an extraction) saves first and refuses to go on if it couldn't,
+  // instead of pretending it worked. true = written.
+  St.trySave = function () {
+    if (St.sandbox && St.sandbox.exiting) return true;
+    try { return St.store.set(St.key("save"), JSON.stringify({ s: G.state, clockOffset: G.clockOffset })) !== false; } catch (e) { return false; }
+  };
+  // Load: current saves as-is; Slice 1 saves (version 1) are migrated; anything else (unknown / corrupt) is set aside
+  // and a new game starts with a notice. St.loadNotice explains what happened (shown once by the UI).
+  St.loadNotice = null;
+  // New build → wipe progression (config.save.resetOnNewBuild). Runs once per build: the build id is stored under its own
+  // key, so later loads in the same build keep the save. Wipes every key the game stores (save, set-aside save, tuning).
+  St.buildNotice = null;
+  St.checkBuild = function () {
+    const cfg = DATA.config.save || {}, id = String((typeof window !== "undefined" && window.BUILD_ID) || "dev");
+    const token = G.Release.wipeToken(id);   // SP-195: per channel (playtest: the build id; public: the 0.0.x version; stable: the save epoch)
+    if (id === "dev") return false;
+    if (St.sandbox) return false;   // SP-096: a scenario sandbox never reads or writes the build id (the real save's wipe stays for the real game)
+    let stored = null; try { stored = St.store.get(St.key("build")); } catch (e) { return false; }
+    let wiped = false;
+    if (cfg.resetOnNewBuild && stored !== token) {
+      const keys = [St.key("save"), St.key("unreadable"), St.key("tuning")];
+      try { wiped = keys.some((k) => St.store.get(k) != null); for (const k of keys) St.store.remove(k); } catch (e) {}
+      if (wiped) St.buildNotice = (G.Release.channel() !== "playtest" && G.Release.channel() !== "dev" ? "New version (" + G.Release.label() + ")" : "New build (" + id + ")") + ": progress reset.";
+    }
+    try { St.store.set(St.key("build"), token); } catch (e) {}
+    return wiped;
+  };
+  St.load = function () {
+    let raw = null;
+    try { raw = St.store.get(St.key("save")); } catch (e) { return false; }
+    if (!raw) return false;
+    try {
+      const o = JSON.parse(raw);
+      if (!o || !o.s) throw new Error("no state");
+      let st = o.s;
+      if (st.version === 1) { st = St.migrate(st); St.loadNotice = "Your Slice 1 save was carried over to Slice 2" + (St.migrateNotes.length ? ": " + St.migrateNotes.join(" ") : "."); }
+      if (st.version === 2) { st = St.migrate3(st); St.loadNotice = (St.loadNotice ? St.loadNotice + " " : "") + "Your save was carried over to Slice 3: locations now remember what you searched (every place starts fully stocked)."; }
+      if (st.version === 4) { st = St.migrate5(st); St.loadNotice = St.renameNotice(st); }
+      if (st.version < DATA.config.version) throw new Error("it's from an older build (save version " + st.version + "; The Scablands reshaped the map in version 4)");   // Slice 5 §G (Vixie): a wipe, not a migration
+      if (st.version !== DATA.config.version) throw new Error("unknown save version " + st.version);
+      St.repair(st);
+      G.state = st; G.clockOffset = o.clockOffset || 0;
+      return true;
+    } catch (e) {
+      try { St.store.set(St.key("unreadable"), raw); } catch (e2) {}
+      St.loadNotice = "Your old save couldn't be read (" + e.message + "), so a new save was started. The old data was kept under \"" + St.key("unreadable") + "\".";
+      return false;
+    }
+  };
+
+  // Slice 1 (version 1) -> Slice 2 (version 2). Keeps: bodies, Grunts, mind skills, stash items, resources
+  // (circuits -> electronics, biomass kept but hidden), lore, world state, counters, tutorial progress.
+  // An expedition in progress is rolled back to its start (the snapshot Slice 1 took at deploy). Zone A is
+  // regenerated from the same seed (Slice 2 adds fixed Pump Station / Rail Yard slots), so map memory resets.
+  St.migrateNotes = [];
+  St.migrate = function (old) {
+    St.migrateNotes = [];
+    let s = old;
+    if (s.run && s.run.snapshot) { try { s = JSON.parse(s.run.snapshot); St.migrateNotes.push("the expedition in progress was rolled back to its start."); } catch (e) { s.run = null; } }
+    s.run = null;
+    const res = s.stash && s.stash.res ? s.stash.res : {};
+    for (const from in DATA.resourceRenames) if (res[from] != null) { const to = DATA.resourceRenames[from]; res[to] = (res[to] || 0) + res[from]; delete res[from]; }
+    s.stash.res = res;
+    for (const p of (s.loadout && s.loadout.pouch) || []) if (p.res && DATA.resourceRenames[p.res]) p.res = DATA.resourceRenames[p.res];
+    s.maps = G.Zones.buildAll(s.seed >>> 0);
+    delete s.map;
+    s.everSeen = {};
+    St.migrateNotes.push("Circuits became Electronics, and The Scablands was re-surveyed for Slice 2 (map memory reset).");
+    s.version = 2;
+    return s;
+  };
+
+  // Slice 2 (version 2) -> Slice 3 (version 3): sites move from the run into the world state. Every place starts fresh
+  // (100% stocked); an expedition in progress keeps the sites it has built this run.
+  St.migrate3 = function (s) {
+    s.world = s.world || { hollow_creek: "pending" };
+    s.world.sites = {};
+    if (s.run && s.run.sites) { for (const nid in s.run.sites) { const site = s.run.sites[nid]; site.enteredRun = s.runCount; site.pickedOver = false; site.restock = 0; s.world.sites[nid] = site; } delete s.run.sites; }
+    s.version = 3;
+    return s;
+  };
+
+  // Version 4 -> 5 (Megan, 10/3/26): the difficulties were renamed; each save keeps its rules under the new name.
+  // Casual -> Standard, Standard -> Hardcore, Hardcore -> Ragnarök. Also used by G.Scenario.prepare for v4 scenarios.
+  St.DIFF_RENAME_V5 = { casual: "standard", standard: "hardcore", hardcore: "ragnarok" };
+  St.migrate5 = function (s) {
+    const R = St.DIFF_RENAME_V5;
+    if (R[s.difficulty]) s.difficulty = R[s.difficulty];
+    const lr = s.lastResult;
+    if (lr && typeof lr === "object") {
+      if (R[lr.difficulty]) lr.difficulty = R[lr.difficulty];
+      if ("casual" in lr) { lr.standard = lr.casual; delete lr.casual; }   // the forgiving difficulty's death summary
+    }
+    // A run in progress carries the whole save from its deploy as a string (debug "Restart expedition" restores it): that
+    // copy is version 4 too, and restoring it unmigrated changed the rules (an old Hardcore save lost permadeath). Maple's catch
+    if (s.run && typeof s.run.snapshot === "string") {
+      try { const snap = JSON.parse(s.run.snapshot); if (snap && snap.version === 4) s.run.snapshot = JSON.stringify(St.migrate5(snap)); }
+      catch (e) { /* unreadable: left as it was; the restart path reports its own failure */ }
+    }
+    s.version = 5;
+    return s;
+  };
+  St.renameNotice = (s) => "The difficulties have new names: Casual is now Standard, Standard is now Hardcore and Hardcore is now Ragnarök. "
+    + "Your save keeps its rules" + (s.difficultyLocked && DATA.config.difficulty.list[s.difficulty] ? " (it's now called " + DATA.config.difficulty.list[s.difficulty].name + ")." : ".");
+
+  // Fill any Slice 2 fields a save is missing (also used after migration). Never throws on partial saves.
+  St.repair = function (s) {
+    if (!s.maps || !s.maps.a) s.maps = G.Zones.buildAll((s.seed >>> 0) || 1);
+    for (const z of DATA.zones.order) if (!s.maps[z]) s.maps[z] = G.Zones.build(z, (s.seed >>> 0) || 1);   // zones added later (Slice 5 §G Greyback, the generated Scablands) join a save
+    s.world = s.world || { hollow_creek: "pending" }; s.world.sites = s.world.sites || {};
+    s.everSeen = s.everSeen || {}; s.locFlags = s.locFlags || {};
+    s.zonesUnlocked = s.zonesUnlocked || {};
+    for (const z of DATA.zones.order) if (DATA.zones.list[z].startUnlocked) s.zonesUnlocked[z] = true;
+    s.passages = s.passages || {}; s.secrets = s.secrets || {}; s.debuffs = s.debuffs || {};
+    s.cosmetics = s.cosmetics || { unlocked: {} }; s.cosmetics.unlocked = s.cosmetics.unlocked || {};   // Slice 5 §H   // Slice 3 §4b debuffs (Marked by the Orbitals: runs left)
+    s.quests = Object.assign(G.Quests.freshState(), s.quests || {});
+    s.buildings = Object.assign(G.Outpost.freshState(), s.buildings || {});
+    s.journal = s.journal || [];
+    s.stash = s.stash || { items: [], res: {} }; s.stash.items = s.stash.items || []; s.stash.res = s.stash.res || {};
+    for (const k in DATA.resources) if (s.stash.res[k] == null && !DATA.resources[k].hidden && !DATA.resources[k].bagOnly) s.stash.res[k] = 0;
+    s.settings = Object.assign(St.defaultSettings(), s.settings || {});
+    if (G.Tut) { s.tut = Object.assign(G.Tut.fresh(), s.tut || {}); s.tut.steps = s.tut.steps || {}; }   // Slice 4 §A: tutorial flags + Marta's choice
+    if (G.Main) { const prev = G.state; G.state = s; G.Main.st(); G.state = prev; G.Main.clampAnnex(s); }   // Slice 4 §B (+ Vixie's annex rows)
+    s.lore = s.lore || []; s.bodies = s.bodies && s.bodies.length ? s.bodies : [St.makeBasicBody()];
+    s.grunts = s.grunts || []; s.fallenGrunts = s.fallenGrunts || []; s.perks = s.perks || {};   // Slice 3 §3: picks are derived from the level, so old saves get theirs
+    // older saves: Grunts named "Grunt #NN" (or unnamed) get a random name; missing record fields are filled in
+    { const rng = U.makeRng(((s.seed >>> 0) || 1) + 7331), prev = G.state; G.state = s;
+      for (const g of s.grunts.concat(s.fallenGrunts)) { St.repairGrunt(g, 0); if (g.rank !== "core" && (!g.name || /^Grunt( #\d+)?$/.test(g.name))) g.name = St.pickGruntName(rng); }
+      // Slice 3 §1: older Grunts get a surname (a default single first name only), 2 traits (no negative) and a
+      // newest-first history; a run in progress points its squad back at the roster records (JSON breaks the link)
+      const sur = DATA.allies.surnames;
+      for (const g of s.grunts.concat(s.fallenGrunts)) {
+        if (g.s3) continue; g.s3 = true;
+        if (g.tplKey === "grunt" && DATA.bodies.grunt.names.includes(g.name)) g.name = g.name + " " + rng.pick(sur);
+        if (!g.traits.length && g.tplKey !== "core") g.traits = G.Allies.rollTraits(rng, DATA.allies.recruitTraits, { noNegative: true });
+        g.history = g.history.slice().reverse().map((h) => (h.text ? h : Object.assign({}, h, { text: G.Allies.lineText(h) })));
+      }
+      if (s.run && s.run.squad) for (const m of s.run.squad) { const g = s.grunts.find((x) => x.uid === m.g.uid); if (g) m.g = g; }
+      G.state = prev; }
+    if (!s.difficulty || !DATA.config.difficulty.list[s.difficulty]) { s.difficulty = DATA.config.difficulty.default; s.difficultyLocked = true; }   // Slice 4 §H: older saves are Hardcore
+    s.loadout = s.loadout || { bodyId: "body_basic", gear: {}, pouch: [], grunts: [] };
+    s.loadout.gear = s.loadout.gear || {}; s.loadout.pouch = s.loadout.pouch || []; s.loadout.grunts = s.loadout.grunts || [];
+    { const seen = new Set(); for (const k of Object.keys(s.loadout.gear)) { const u = s.loadout.gear[k]; if (u && seen.has(u)) delete s.loadout.gear[k]; else if (u) seen.add(u); } }   // an item in two body slots (pre-fix saves): keep the first
+    return s;
+  };
+  St.wipe = function () { try { St.store.remove(St.key("save")); } catch (e) {} };
+
+  // --- tuning overrides (debug panel)
+  St.saveOverrides = function (ov) { try { St.store.set(St.key("tuning"), JSON.stringify(ov)); } catch (e) {} };
+  St.loadOverrides = function () {
+    // Only overrides whose value already exists in DATA with the same type are applied (a Slice 1 tuning override
+    // for a removed or renamed field is dropped instead of creating a half-defined entry).
+    try {
+      const o = JSON.parse(St.store.get(St.key("tuning")) || "{}"), kept = {};
+      for (const p in o) { try { const cur = U.getPath(DATA, p); if (cur !== undefined && typeof cur === typeof o[p] && typeof cur !== "object") { U.setPath(DATA, p, o[p]); kept[p] = o[p]; } } catch (e) {} }
+      return kept;
+    } catch (e) { return {}; }
+  };
+})(typeof window !== "undefined" ? window : globalThis);

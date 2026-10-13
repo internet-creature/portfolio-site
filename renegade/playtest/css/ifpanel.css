@@ -1,0 +1,69 @@
+/* SP-200 (slice 1 of SP-198 / SP-199): the in-run riveted-steel frame + right panel, from Smudge's v1.3 mock
+   (/workspace/sp199_panel/v1.3_riveted_steel_ingame.png, NOTES.md). Drawn in CSS for now (plate, lips, rivets) so it
+   needs no new art; Smudge's cut 9-slice sprites replace the gradients in a later slice. Press Start 2P (css/dialogue.css
+   @font-face) at 8 / 16 px only, no smoothing. Desktop only: js/ifpanel.js IP.enabled() keeps phones on the old column. */
+:root { --ifp-plate: #4b5056; --ifp-plate-hi: #6c727a; --ifp-plate-lo: #2a2d31; --ifp-well: #15181b; --ifp-gold: #e8c45a; --ifp-ink: #d9dde2; }
+#screen:has(> .exp-layout.ifp-frame) { padding: 0; overflow: hidden; }
+.exp-layout.ifp-frame { gap: 12px; padding: 12px; box-sizing: border-box; height: 100%;
+  background:
+    radial-gradient(circle at 50% 50%, #9aa1a8 0 1.5px, #2a2d31 2px 2.5px, transparent 3px) 0 0 / 30px 30px,
+    linear-gradient(180deg, #555a60, #44494f 60%, #3c4045);
+  image-rendering: pixelated; }
+.exp-layout.ifp-frame > .exp-map { min-width: 0; border-radius: 24px; overflow: hidden; background: #0d0f10;
+  box-shadow: 0 0 0 2px #1a1c1f, 0 0 0 4px var(--ifp-plate-hi), inset 0 0 0 1px #000; }
+.exp-side.ifp { width: 376px; flex: none; overflow: hidden; display: grid; grid-template-rows: auto auto auto minmax(0, 1fr); gap: 8px;
+  padding: 10px 8px; box-sizing: border-box; border-radius: 20px; background: linear-gradient(180deg, #3d4247, #34383d);
+  box-shadow: 0 0 0 2px #1a1c1f, 0 0 0 4px var(--ifp-plate-hi);
+  font-family: "Press Start 2P", monospace; -webkit-font-smoothing: none; font-smooth: never; color: var(--ifp-ink); font-size: 8px; line-height: 1.5; }
+.exp-side.ifp button { font-family: inherit; }
+/* minimap: riveted 3-position slider over a dark well */
+.ifp-minimap { display: flex; flex-direction: column; gap: 4px; }
+.mm-views { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.mm-vbtn { height: 24px; padding: 0; font-size: 8px; color: var(--ifp-ink); border: 0; border-radius: 4px; cursor: pointer; text-shadow: 1px 1px 0 #000;
+  background: linear-gradient(180deg, #7a8088, #565b62 55%, #44484e); box-shadow: inset 0 0 0 1px #15171a, inset 2px 2px 0 rgba(255,255,255,.2), 2px 2px 0 #15171a; }
+.mm-vbtn:hover:not(:disabled) { filter: brightness(1.12); }
+.mm-vbtn.on { color: var(--ifp-gold); transform: translate(2px, 2px); background: linear-gradient(180deg, #44484e, #3a3e43); box-shadow: inset 0 0 0 1px #15171a, inset 2px 2px 0 #000; }
+.mm-vbtn:disabled { cursor: default; color: #6a6e72; background: #3a3d41; box-shadow: inset 0 0 0 1px #15171a; }
+.mm-well { position: relative; height: 172px; border-radius: 8px; background: radial-gradient(ellipse at 50% 40%, #1d2a1c, #111712);
+  box-shadow: inset 2px 2px 0 #000, inset -1px -1px 0 #5a6067; overflow: hidden; }
+.mm-title { position: absolute; left: 8px; top: 6px; color: #b9bfb3; }
+.mm-foot { position: absolute; left: 8px; bottom: 5px; color: #7fd36a; }
+.mm-svg { position: absolute; left: 8px; top: 12px; }
+.mm-link { stroke: var(--ifp-gold); stroke-width: 2; }
+.mm-link.fog { stroke: #6e7377; stroke-dasharray: 3 3; }
+.mm-node rect { fill: #c8a24a; stroke: #1b1405; stroke-width: 1; }
+.mm-node.known rect { fill: #8e7a45; }
+.mm-node.fog rect { fill: #2f3335; stroke: #6e7377; }
+.mm-node.here > rect:first-of-type { fill: #ffe27a; stroke: #fff; }
+.mm-node.reach { cursor: pointer; } .mm-node.reach:hover > rect:first-of-type { stroke: #fff; }
+.mm-node .mm-exit { fill: #5fe05f; stroke: #0b2a0b; }
+.mm-node .mm-you { fill: #d23a2a; stroke: none; }
+.mm-label { fill: #d9d2b0; font-family: "Press Start 2P", monospace; font-size: 8px; paint-order: stroke; stroke: #000; stroke-width: 2px; pointer-events: none; }
+.mm-label.here, .mm-here-label { fill: #fff3c4; font-family: "Press Start 2P", monospace; font-size: 8px; paint-order: stroke; stroke: #000; stroke-width: 2px; }
+/* status strip */
+.ifp-strip { display: grid; grid-template-columns: 1fr 120px; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 8px; background: var(--ifp-well); box-shadow: inset 2px 2px 0 #000, inset -1px -1px 0 #5a6067; }
+.ifp-stats { display: flex; flex-direction: column; gap: 4px; }
+.ifp-stat { display: grid; grid-template-columns: 22px 1fr; align-items: center; } .ifp-stat b { color: var(--ifp-gold); font-weight: normal; }
+.ifp-stat .bar { height: 10px; margin: 0; } .ifp-stat .bar-label { font-size: 8px; line-height: 10px; font-family: inherit; }
+.ifp-med { color: var(--ifp-ink); }
+.ifp-extract { width: 100%; height: 40px; font-size: 8px; color: #fff; border-radius: 4px; border: 0; cursor: pointer; text-shadow: 1px 1px 0 #000;
+  background: linear-gradient(180deg, #d0453a, #a02a22 55%, #7c1d17); box-shadow: inset 0 0 0 1px #2a0806, inset 2px 2px 0 rgba(255,255,255,.25), 2px 2px 0 #111; }
+.ifp-extract:hover:not(:disabled) { filter: brightness(1.12); } .ifp-extract:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: inset 0 0 0 1px #2a0806; }
+.ifp-extract:disabled { cursor: not-allowed; color: #9a8d8b; background: linear-gradient(180deg, #5e4a48, #463735); }
+/* tabs: six physical buttons */
+.ifp-tabs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.ifp-tab { height: 32px; padding: 0; font-size: 8px; color: var(--ifp-ink); border: 0; border-radius: 4px; cursor: pointer; text-shadow: 1px 1px 0 #000;
+  background: linear-gradient(180deg, #7a8088, #565b62 55%, #44484e); box-shadow: inset 0 0 0 1px #15171a, inset 2px 2px 0 rgba(255,255,255,.2), 2px 2px 0 #15171a; }
+.ifp-tab:hover { filter: brightness(1.12); }
+.ifp-tab.on { color: var(--ifp-gold); transform: translate(2px, 2px); background: linear-gradient(180deg, #44484e, #3a3e43); box-shadow: inset 0 0 0 1px #15171a, inset 2px 2px 0 #000; }
+/* tab body: fixed height; only Log (and Pack, until it's paged in slice 2) scroll */
+.ifp-body { min-height: 0; overflow: hidden; border-radius: 8px; padding: 6px; background: var(--ifp-well); box-shadow: inset 2px 2px 0 #000, inset -1px -1px 0 #5a6067;
+  font-family: system-ui, sans-serif; font-size: 13px; line-height: 1.35; -webkit-font-smoothing: auto; }
+.ifp-body.tab-log, .ifp-body.tab-pack, .ifp-body.tab-map { overflow-y: auto; }
+.ifp-body > .panel { background: none; border: 0; margin: 0 0 8px; padding: 0; }
+.ifp-body h3 { font-family: "Press Start 2P", monospace; font-size: 8px; color: var(--ifp-gold); -webkit-font-smoothing: none; margin: 2px 0 6px; border-bottom: 1px dotted #555; padding-bottom: 4px; }
+.ifp-body > .tut-obj { margin: 0 0 8px; }
+.ifp-kv { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid #23272b; }
+.ifp-body h3 small, .ifp-body h3 .hint { font-family: system-ui, sans-serif; font-size: 11px; color: #9aa; -webkit-font-smoothing: auto; }
+.ifp-tab .ifp-ico { display: block; margin: 0 auto; fill: currentColor; filter: drop-shadow(1px 1px 0 #000); }
+.ifp-set { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }

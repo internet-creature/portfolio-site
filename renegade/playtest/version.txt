@@ -1,0 +1,7 @@
+channel=playtest
+version=0.0.1
+epoch=1
+sha=76fd0b2
+commit=76fd0b23c93f7e05691508c1b5c420218d72ce06
+built=2026-10-13T19:56:51.006Z
+indexable=no
