@@ -5,14 +5,14 @@ DATA.dialogue.caine = {
   "status": "draft",
   "source": "https://miro.com/app/board/uXjVEcbwTaw=/",
   "start": "opening",
-  "direction": "Caine is an old, trusted friend, deferential to the player as leader. The player's memory was scrambled in transfer; they are stable now.",
+  "direction": "Caine is an old, trusted friend, deferential to the player as leader. The player's memory was scrambled in a bootleg consciousness transfer; they are stable now. He misses the person he knew and worries about their safety.",
   "actionNotes": "Game actions describe intended outcomes, not existing code APIs. Skipping orientation must not automatically complete any objectives.",
   "nodes": {
     "opening": {
       "beats": [
         {
           "speaker": "Caine",
-          "text": "[TODO: First introduction and old-friend anecdote.]"
+          "text": "{name}. You dragged me out of the line of fire once. I couldn't stand, and you wouldn't leave. We barely... You don't remember. I'm sorry. We can leave that for now. There's a note here, in your handwriting."
         }
       ],
       "next": "note"
@@ -21,7 +21,7 @@ DATA.dialogue.caine = {
       "beats": [
         {
           "speaker": "note",
-          "text": "obtain a memory chip from one of the Enlightened’s drones. you are in complete command here. just follow what Caine tells you."
+          "text": "obtain a memory chip from one of the Enlightened's drones. you are in complete command here. just follow what Caine tells you."
         }
       ],
       "choices": [
@@ -32,7 +32,7 @@ DATA.dialogue.caine = {
         },
         {
           "id": "question_note",
-          "text": "[TODO: Question about when you wrote the note.]",
+          "text": "when did i write this?",
           "target": "asked_before"
         },
         {
@@ -46,23 +46,23 @@ DATA.dialogue.caine = {
       "beats": [
         {
           "speaker": "Caine",
-          "text": "[TODO: Caine explains you have asked a few times.]"
+          "text": "You've asked me that a few times. I still catch myself waiting for you to remember. Ah... there it is again."
         }
       ],
       "choices": [
         {
           "id": "confused",
-          "text": "[TODO: Confused response: there what is?]",
+          "text": "there what is?",
           "target": "confused_reply"
         },
         {
           "id": "angry",
-          "text": "[TODO: Angry response: there what is?]",
+          "text": "there what is? stop looking at me like that.",
           "target": "angry_reply"
         },
         {
           "id": "understands",
-          "text": "[TODO: Insight response: ah i see whats happening here.]",
+          "text": "ah. i see what's happening here.",
           "target": "insight_reply"
         }
       ]
@@ -75,7 +75,7 @@ DATA.dialogue.caine = {
         },
         {
           "speaker": "narrator",
-          "text": "[TODO: Caine laughs and touches your shoulder.]"
+          "text": "Caine gives a quiet, rueful laugh and rests a hand on your shoulder. For a moment, he seems about to say something else."
         }
       ],
       "next": "supply_transition"
@@ -84,7 +84,7 @@ DATA.dialogue.caine = {
       "beats": [
         {
           "speaker": "narrator",
-          "text": "[TODO: Caine smiles.]"
+          "text": "Caine smiles, but it doesn't quite reach his eyes. He waits for you to go on."
         },
         {
           "speaker": "narrator",
@@ -97,19 +97,17 @@ DATA.dialogue.caine = {
       "beats": [
         {
           "speaker": "Caine",
-          "text": "[TODO: Apology.]"
+          "text": "I'm sorry, {name}. That wasn't fair. I won't press you."
         }
       ],
-      "status": "incomplete",
-      "authoringTodo": "Choose the outgoing destination; no route established yet.",
       "next": "supply_transition",
-      "flag": "ROUTED_BY_CODE: draft has no destination; sent to supply_transition. Approved by Megan for now (2026-10-09), revisit when the draft gives it a route (SP-157)"
+      "flag": "ROUTED_BY_CODE: angry_reply -> supply_transition. Approved by Megan for now (2026-10-09; SP-157)"
     },
     "supply_transition": {
       "beats": [
         {
           "speaker": "Caine",
-          "text": "[TODO: Supply-related transition into the tour.]"
+          "text": "Before you head out, let me show you where we keep the supplies. You'll want Med kits and room for what you find. I'd like to see you come home, {name}."
         }
       ],
       "next": "building_introductions"
@@ -118,7 +116,7 @@ DATA.dialogue.caine = {
       "beats": [
         {
           "speaker": "Caine",
-          "text": "[TODO: Building introductions; expand into separate nodes as needed.]"
+          "text": "Of course. We'll start here and work our way round to the Trapdoor. Take your time, {name}. This is still your home."
         }
       ],
       "actions": [
@@ -130,7 +128,7 @@ DATA.dialogue.caine = {
       "beats": [
         {
           "speaker": "Caine",
-          "text": "[TODO: Caine lets you explore on your own.]"
+          "text": "Of course, {name}. I'll be by the Trapdoor if you need me. Before you leave, check your squad and supplies. I'd like you back in one piece."
         }
       ],
       "actions": [

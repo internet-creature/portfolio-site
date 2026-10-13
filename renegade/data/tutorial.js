@@ -110,8 +110,8 @@ DATA.tutorial = {
   // tutorial mode ("Show me around" = full, "I'll take it from here" = none). Portrait / town figure are placeholders.
   advisor: {
     id: "caine", name: "Caine", title: "an old friend", portrait: "npc_caine", townSprite: "town_caine", hotspot: "caine", dialogue: "caine",
-    talkAgain: "Still with us, {name}? Settings has \"Replay tutorial\" if you want the tour again.",   // [PLACEHOLDER]
+    talkAgain: "Good to see you, {name}. Need your bearings again? There's \"Replay tutorial\" in Settings. I'll be here.",
     // "I'll take it from here" + back from a successful extraction: one-off line (shown once, in the run result)
-    notDeadLine: "[TODO: Caine, relieved you made it back on your own.]"
+    notDeadLine: "You're back. Good. The fire's still going. Come and sit a while."
   }
 };
