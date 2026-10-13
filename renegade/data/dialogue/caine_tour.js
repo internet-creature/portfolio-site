@@ -1,11 +1,10 @@
 // SP-157 / SP-192 / SP-004: hand-written parts of Caine's dialogue that the authoring draft doesn't carry.
-// speakers: how a draft speaker id shows in the dialogue box (null = no name line, e.g. narration).
+// (speakers and their chathead models: data/dialogue/speakers.js)
 // tour: the begin_building_introductions action (js/dialogueview.js). One box per building, in order, each with a ring
 //   on `target` (CSS selector; every match is ringed as one box). The box sits centred near the bottom and moves to the
 //   top when the ring would be under it. {name} / {they} /
 //   {them} / {their} come from the new-game name + gender step (state.player).
 window.DATA = window.DATA || {}; DATA.dialogue = DATA.dialogue || {};
-DATA.dialogue.speakers = { Caine: "Caine", note: "A note, in your handwriting", narrator: null };
 // Copy: Vixie's SP-192 building intros and walk-around order, with {name} as the approved temporary address.
 // The copy pass keeps distinctive lines and checks instructions against the current mechanics; no fixed Med kit quantities.
 DATA.dialogue.caine.tour = [

@@ -30,7 +30,7 @@
   D.cur = function (s) {
     if (s.done) return null;
     const n = s.tree.nodes[s.node], b = n.beats[s.beat] || {}, last = s.beat >= n.beats.length - 1;
-    return { node: s.node, speaker: D.speaker(b.speaker), text: D.text(b.text, s.ctx.touch), choices: last && n.choices ? n.choices.map((c) => ({ id: c.id, text: D.text(c.text, s.ctx.touch) })) : null };
+    return { node: s.node, speakerId: b.speaker || null, speaker: D.speaker(b.speaker), text: D.text(b.text, s.ctx.touch), choices: last && n.choices ? n.choices.map((c) => ({ id: c.id, text: D.text(c.text, s.ctx.touch) })) : null };
   };
   // Next on a beat. Returns false when the box is waiting on a choice.
   D.next = function (s) {
