@@ -80,6 +80,17 @@ DATA.mapsV2 = {
   },
   // booby_traps (a modifier) arms ordinary containers with this when their type has no trap of its own
   genericTrap: { check: { skill: "perception", dc: 12 }, failDmgPct: 10, badFailDmgPct: 20, name: "Booby trap" },
+  // SP-216 the duck parade (modifier duck_parade, js/duckparade.js): a bush hides a momma duck and her ducklings. The first
+  // search brings them out (with the first line) and they walk off through the Area's way out (js/duckview.js); searching
+  // the bush again finds one wearable piece of the `set` (data/sets.js), once; after that every boop says the next line.
+  // [DRAFT] gut: 5 ducklings; view sizes in canvas px (1000 x 600), speed px / s.
+  duckParade: { ducklings: 5, set: "raincoat",
+    lines: ["Quack.", "QUACK.", "The last duck quacks a beat late.", "Six quacks, in order. You feel judged.", "Quack?"],
+    text: { out: "[PLACEHOLDER] A momma duck and her ducklings march out of the bush, single file, toward the way out.",
+            examineGone: "[PLACEHOLDER] Little webbed prints lead off toward the way out. Something yellow is caught deep in the bush.",
+            examineSearched: "[PLACEHOLDER] Just a bush now. It smells faintly of duck.",
+            found: "[PLACEHOLDER] Something yellow was snagged deep in the bush:" },
+    view: { momPx: 64, ducklingScale: 0.6, gapPx: 30, speedPx: 70, waddleDeg: 8 } },
 
   // Heat (SP-034, LOCKED 10/3): it comes ONLY from these sources. In a V2 run every other addHeat call adds nothing and
   // is recorded in run.v2.heatBlocked (development log), so a forgotten legacy path can't add Heat quietly.
@@ -264,8 +275,8 @@ DATA.mapsV2 = {
                         loudMult: 0.5 },
       // ---- Silly (hidden only) ----
       duck_parade:    { cat: "silly", danger: 0, reveal: { skill: "survival", level: 5 }, seenOn: "object",
-                        name: "Duck parade", effect: "Ducks follow the squad.", reward: "Boop for quack.",
-                        object: { kind: "decor", decorMod: "duck", name: "Duck parade", sprite: "obj_event", examine: "[PLACEHOLDER] Six ducks in a line. They go where you go.", boop: "Quack." } },
+                        name: "Duck parade", effect: "A momma duck and her ducklings are hiding somewhere here.", reward: "Something left behind where they hid.",
+                        object: { kind: "decor", decorMod: "duck", name: "Quacking bush", sprite: "obj_duck_bush", examine: "[PLACEHOLDER] The bush is quacking. Quietly, but it is." } },
       printer:        { cat: "silly", danger: 0, reveal: { skill: "hacking", level: 5 }, seenOn: "object",
                         name: "The printer works", effect: "Somewhere a printer still prints.", reward: "One ancient decree.",
                         object: { kind: "mod", use: "print", name: "Office printer", sprite: "obj_computer", examine: "[PLACEHOLDER] It wakes up when you walk past. It has one page left in it.",

@@ -768,7 +768,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     const go = (fn) => () => { const e = fn(); if (e) UI.fail(e); UI.render(); }, out = [];
     const equipable = !I.isQuest(it) && !I.isPet(it);
     if (src.where === "bag") {
-      if (equipable) {
+      if (I.canEquip(it)) {   // SP-216: not the rain boots (no feet slot yet)
         out.push({ label: `Equip to ${X.body().name} (you)`, act: "equip", fn: go(() => X.equipFromBag(it.uid, "main")) });
         if (I.isHandItem(it)) out.push({ label: "Equip to Backup set (you)", act: "backup", fn: go(() => X.equipFromBag(it.uid, "backup")) });
       }
@@ -995,7 +995,11 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
           h("button", { class: "confirm-btn", onclick: () => { UI.closeModal(); UI.render(); } }, "Not now"))));
       return;
     }
-    if (acts[0] === "use") { const r = X.useObject(o.id); if (r.error) UI.fail(r.error); else if (r.text) UI.toast(r.text); UI.render(); return; }
+    if (acts[0] === "use" || acts[0] === "rummage") {   // SP-216 rummage: the duck parade's bush (its ducks walk out: js/duckview.js)
+      const r = X.useObject(o.id); if (r.error) UI.fail(r.error); else if (r.text) UI.toast(r.text);
+      if (r.ducks) G.DuckView.play(site, o, r.ducks);
+      UI.render(); return;
+    }
     if (acts[0] === "reopen") { X.reopen(o.id); UI.render(); return; }
     // Slice 4 §B pods room: the mural (examine: a tap on phones reads it), the working pod
     if (acts[0] === "examine") { UI.modal(h("div", { class: "examine", "data-examine": o.id }, h("h2", null, o.name), h("p", { class: "ev-text" }, G.Main.examine(o)), h("button", { class: "primary", onclick: () => UI.closeModal() }, "OK"))); return; }
@@ -1137,7 +1141,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
   UI.stepEvent = function (step) {
     const ev = G.Exp.eventDef(step);
     if (ev.radio && UI._radioSfx !== step) { UI._radioSfx = step; G.Sfx.play("sfx_radio"); }
-    const box = h("div", { class: ev.radio ? "radio" : "" }, h("h2", null, ev.icon ? SP.icon(ev.icon, 32, "ev-icon") : null, (ev.radio ? "📻 " : "") + ev.title), h("p", { class: "ev-text" }, ev.text));
+    const box = h("div", { class: ev.radio ? "radio" : "" }, h("h2", null, ev.icon ? SP.icon(ev.icon, 32, "ev-icon") : null, (ev.radio ? "📻 " : "") + ev.title), h("p", { class: "ev-text" }, G.Exp.eventText(step)));
     const aliveGrunts = G.state.run.squad.some((m) => m.hp > 0);
     ev.options.forEach((opt, i) => {
       const info = G.Exp.optionChance(opt);
@@ -1151,6 +1155,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
 
   UI.eventResult = function (step, i, grunt) {
     const res = G.XP.at({ rect: UI._evAnchor }, () => G.Exp.resolveEvent(step, i, grunt));
+    if (res.dup) return UI.render();
     const box = h("div", null, h("h2", null, G.Exp.eventDef(step).title));
     if (res.roll) { box.appendChild(h("p", { class: "roll " + (G.Checks.isSuccess(res.roll.grade) ? "good" : "bad") }, res.roll.text)); G.Sfx.play(G.Checks.isSuccess(res.roll.grade) ? "sfx_check_success" : "sfx_check_fail"); }
     for (const t of res.texts) box.appendChild(h("p", null, t));

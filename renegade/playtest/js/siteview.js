@@ -95,10 +95,11 @@
     wrap.appendChild(title);
     container.appendChild(wrap);
     if (walk) { wrap.classList.add("walk"); G.AreaWalk.attach(wrap, site, handlers); }
+    G.DuckView.attach(wrap, site);   // SP-216: a duck parade on its way out
     return wrap;
   };
 
-  SV.actionLabel = { leave: "Leave to the zone map ↩", go: "Go through", loot: "Take what's on it (no search, no risk)", boop: "Boop", extract: "Extract", search: "Search", pick: "Pick the lock", force: "Force it", kick: "Kick it", reopen: "Take what's left", use: "Interact", cross: "Crawl through", claim: "Claim the body", examine: "Examine", train: "Train" };
+  SV.actionLabel = { leave: "Leave to the zone map ↩", go: "Go through", loot: "Take what's on it (no search, no risk)", boop: "Boop", extract: "Extract", search: "Search", pick: "Pick the lock", force: "Force it", kick: "Kick it", reopen: "Take what's left", use: "Interact", cross: "Crawl through", claim: "Claim the body", examine: "Examine", train: "Train", rummage: "Search" };
   // Slice 4 §B: a wall wheel. Its arrow points at one of 4 positions. Click the left half to turn it counterclockwise,
   // the right half clockwise; on touch screens two small arrow buttons sit under it (css: .wheel-btns).
   SV.wheel = function (el, o, why, busy) {
@@ -133,7 +134,7 @@
     for (const a of acts) {
       if (a === "extract" && o.opp) { const od = G.V2.oppDef(X.site().nid, o.opp); t += "<br>" + (od.check ? G.UI.checkLabel(G.Checks.compute(od.check.skill, od.check.dc, X.members(), X.gearItems())) : "Extract"); continue; }   // V2: a Contested way out
       if (a === "extract") { t += `<br>${G.UI.extractLabel(X.extractionDef(X.node()))}`; continue; }   // Slice 5 §D: the same line as the panel button
-      if (a === "leave" || a === "use" || a === "cross" || a === "reopen" || a === "claim" || a === "examine" || a === "go" || a === "loot" || a === "boop") { t += `<br>${SV.actionLabel[a]}`; continue; }
+      if (a === "leave" || a === "use" || a === "cross" || a === "reopen" || a === "claim" || a === "examine" || a === "go" || a === "loot" || a === "boop" || a === "rummage") { t += `<br>${SV.actionLabel[a]}`; continue; }
       const i = X.searchInfo(o.id, a);
       const TR = a === "train" && X.trainDef(o);   // Slice 5 §F
       t += `<br>${TR ? TR.label || SV.actionLabel[a] : SV.actionLabel[a]}: <b>${U.fmt1(i.sec)} s</b>${TR ? ` · +${TR.xp} ${DATA.skills[TR.skill].name} XP` : ""} · ` + (i.v2 ? (i.att != null ? `+<b>${i.att}</b> ${DATA.attention.text.label}${i.att > 0 && G.V2.attStealthOn(o, a) ? ` (${DATA.attention.text.stealth} DC ${DATA.attention.stealth.dc})` : ""}` : i.free ? "nobody left to hear you" : i.natural && a === "search" ? "quiet" : `may draw attention <b>${U.fmt1(i.pct)}%</b>`) : `disturbance <b>${U.fmt1(i.pct)}%</b>`) + (i.heatGain ? ` · +${i.heatGain} Heat` : "") + (i.check ? ` · ${DATA.skills[i.check.skill].name} DC ${i.check.dc} ${Math.round(i.check.chance)}%` : "");

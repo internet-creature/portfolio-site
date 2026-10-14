@@ -50,6 +50,14 @@ DATA.items = {
     wizard_robes:  { name: "Wizard Robes",      slot: "body",     armor: 1, evasion: 2, weight: 1.2, req: 0, dropWeight: 0.3, silly: true, rarityCap: "white" },
     maid_outfit:   { name: "Maid Outfit",       slot: "body",     armor: 1, evasion: 2, weight: 1.0, req: 0, dropWeight: 0.3, silly: true, rarityCap: "white" },
     lucky_boxers:  { name: "Lucky Boxers",      slot: "body",     evasion: 3, weight: 0.2, req: 0, dropWeight: 0.3, silly: true, rarityCap: "white" },
+    // SP-216 the Yellow Raincoat set (data/sets.js): only from the duck parade's bush (dropWeight 0). Silly outfits like the
+    // ones above: always Normal, Cosmetic tag, equipping one unlocks its look. [DRAFT] stats; icons and doll layers are
+    // [PLACEHOLDER] badges and stand-ins until Smudge draws them. There is no feet slot yet (more gear slots is its own
+    // ticket): noSlotYet keeps the boots out of every equip path (G.Items.canEquip) and out of the bush. When the slot
+    // exists, drop the flag and give the boots silly + rarityCap "white" (and a look) like the other two.
+    yellow_raincoat: { name: "Yellow Raincoat", slot: "body",   set: "raincoat", armor: 1, evasion: 1, weight: 1.2, req: 0, dropWeight: 0, silly: true, rarityCap: "white" },
+    rain_hat:        { name: "Rain Hat",        slot: "head",   set: "raincoat", evasion: 1, weight: 0.3, req: 0, dropWeight: 0, silly: true, rarityCap: "white" },
+    rain_boots:      { name: "Rain Boots",      slot: "feet",   set: "raincoat", evasion: 1, weight: 0.8, req: 0, dropWeight: 0, noSlotYet: true },
     hide_vest:     { name: "Hide Vest",         slot: "body",     armor: 2, weight: 3.5, req: 0, dropWeight: 3, sprite: "item_hide_vest" },
     // Slice 5 §E shields (the off hand: 1H weapon + shield). armor scales with ilvl like armour; blockPct = chance to stop
     // a hit from the front (config.battle.weaponSets.shield.blockArcDeg); moveSpeedPct = the cost. [DRAFT] numbers. Art: Smudge

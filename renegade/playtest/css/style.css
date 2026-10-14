@@ -166,6 +166,10 @@ canvas.icon { image-rendering: pixelated; vertical-align: middle; }
 .obj-lock { position: absolute; bottom: -6px; right: -6px; font-size: 12px; } .obj-left { position: absolute; top: -8px; left: -4px; color: #ffd84a; font-weight: bold; }
 .site-squad canvas { width: 100%; height: auto; image-rendering: pixelated; }
 .site-squad { position: absolute; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 0 3px #ffd84a); }
+/* SP-216: the duck parade walking out (js/duckview.js): feet on the point, never takes a click or a tap */
+.duck-walker { position: absolute; transform: translate(-50%, -94%); pointer-events: none; z-index: 4; }
+.duck-walker[hidden] { display: none; }
+.duck-walker canvas.duck-art { display: block; width: 100%; height: auto; image-rendering: pixelated; transform-origin: 50% 94%; }
 .site-progress { position: absolute; transform: translate(-50%, -100%); width: 170px; height: 18px; background: #000c; border: 1px solid #ffd84a; border-radius: 3px; z-index: 5; }
 .site-progress .sp-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #b08a3a; }
 .site-progress span { position: absolute; left: 0; right: 0; text-align: center; font-size: 11px; line-height: 16px; text-shadow: 0 0 2px #000; }

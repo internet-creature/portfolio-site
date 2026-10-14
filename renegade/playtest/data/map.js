@@ -79,7 +79,7 @@ DATA.map = {
     hollow_creek:    { name: "Hollow Creek",          icon: "loc_settlement",family: "outlaws", size: "M", odds: { hostiles: 0, event: 0, survivors: 50 }, tags: ["food", "water"], events: [], worldEvent: "distress_hollow_creek",    // Slice 5 §G: the Deer Trail moved to the Fire Lookout
                        
                        worldIcons: { ignored: "loc_distress", fallen: "loc_aftermath", aftermath: "loc_aftermath", aftermath_cleared: "loc_aftermath" },
-                       // Distress call, same run: ignoring the radio starts a countdown. Arrive within holdMoves moves -> holdingEvent
+                       // Distress call, same run: hearing the radio starts a countdown. Arrive within holdMoves moves -> holdingEvent
                        // (the save-the-town defense). Otherwise the town falls THIS run: scavengers + salvage. The next run still
                        // turns it into the aftermath (or allied, if saved) as before.
                        distress: {

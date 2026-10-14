@@ -521,6 +521,13 @@ DATA.sprites = {
   item_wizard_robes:     { file: "items/item_wizard_robes.png", shape: "circle", color: "#1c7470", size: 1, pad: 2 },
   item_maid_outfit:      { file: "items/item_maid_outfit.png", shape: "circle", color: "#26262a", size: 1, pad: 2 },
   item_lucky_boxers:     { file: "items/item_lucky_boxers.png", shape: "circle", color: "#a81c18", size: 1, pad: 2 },
+  // SP-216 the duck parade: the bush and the Yellow Raincoat set are placeholders (no art yet: Smudge); the duck is
+  // Smudge's critter (assets/critters/critters_manifest.json "sprites.js" entry)
+  obj_duck_bush:         { shape: "badge", color: "#3e5a2a", size: 1, text: "BUSH" },
+  item_yellow_raincoat:  { shape: "badge", color: "#e8c020", size: 1, text: "COAT" },
+  item_rain_hat:         { shape: "badge", color: "#e8c020", size: 1, text: "HAT" },
+  item_rain_boots:       { shape: "badge", color: "#e8c020", size: 1, text: "BOOT" },
+  critter_duck:          { file: "critters/critter_duck.png", shape: "none", color: "#5e4a30", size: 1, anchorY: 0.94 },
   // Slice 5 §E shields: Smudge's icons (fbafb0b)
   item_wood_round_shield: { file: "items/item_wood_round_shield.png", shape: "circle", color: "#7a5a30", size: 1, pad: 2 },
   item_riot_shield:       { file: "items/item_riot_shield.png",       shape: "square", color: "#3a4a5a", size: 1, pad: 2 },

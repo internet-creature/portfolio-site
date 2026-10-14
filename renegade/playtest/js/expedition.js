@@ -254,6 +254,14 @@
   X.next = function () { run().queue.shift(); G.State.save(); };
 
   // ---------- movement ----------
+  // SP-212: travels from nid to a location on nid's zone map (Infinity when it isn't there or can't be reached)
+  X.hopsToLoc = function (nid, loc) {
+    const map = G.Zones.map(G.Zones.zoneOf(nid)), goal = map && G.Map.nodeOfLoc(map, loc); if (!goal) return Infinity;
+    const seen = { [nid]: 0 }, q = [nid];
+    while (q.length) { const c = q.shift(); if (c === goal.id) return seen[c]; for (const n of G.Map.neighbors(map, c)) if (seen[n] == null) { seen[n] = seen[c] + 1; q.push(n); } }
+    return Infinity;
+  };
+  X.distressInReach = (nid) => X.hopsToLoc(nid, "hollow_creek") <= DATA.map.locations.hollow_creek.distress.holdMoves;
   X.canMoveTo = function (nid) {
     const r = run();
     if (!r || r.queue.length) return false;
@@ -297,7 +305,9 @@
     X.arrive(node, !first);
     if (G.Hunters && run()) G.Hunters.afterMove({ passage: !!opts.passage });   // Slice 3 §4b: spawn roll / the pack moves 1 node
     // radio: the distress call is a "Crackling radio" object in the location you reach (Zone A only)
-    if (G.state.world.hollow_creek === "pending" && !r.distressFired && r.moves >= CFG().expedition.distressTriggerAfterMoves && r.zone === "a" && X.site(nid)) {
+    // SP-212: only where Hollow Creek is within the hold (distress.holdMoves travels), so the call can be answered in time
+    if (G.state.world.hollow_creek === "pending" && !r.distressFired && r.moves >= CFG().expedition.distressTriggerAfterMoves && r.zone === "a" && X.site(nid)
+      && X.distressInReach(nid)) {
       r.distressFired = true;
       X.addEventObject(X.site(nid), "distress_hollow_creek", { room: 0, perRun: true });
       X.log("📻 A radio crackles somewhere in here: a distress call from Hollow Creek!", "radio");
@@ -363,6 +373,7 @@
   X.equipFromBag = function (uid, set, key) {
     const r = run(); const i = r.bag.items.findIndex((x) => x.uid === uid); if (i < 0) return "Not in the bag.";
     const it = r.bag.items[i], I = G.Items, get = (k) => r.gear[k] || null;
+    if (!I.canEquip(it)) return "That can't be equipped.";   // SP-216: the rain boots before a feet slot
     const slot = key || I.autoSlot(it, get, set);
     if (I.isHandItem(it)) { const fit = I.handFit(slot, it, get); if (fit.why) return fit.why; for (const k of fit.clear) { r.bag.items.push(r.gear[k]); delete r.gear[k]; } }
     r.bag.items.splice(i, 1);
@@ -394,7 +405,7 @@
   // the Grunt slot an item would go to on squad member idx: { slot } or { why }
   X.memberSlot = function (idx, item, want) {   // want (SP-173, the loadout screen): that exact slot, or why not
     const r = run(), m = r.squad[idx], I = G.Items, St = G.State; if (!m || !(m.hp > 0)) return { why: "They can't take gear right now." };
-    const slots = St.gruntSlots(m.g), b = I.base(item.base); if (!b || I.isQuest(item) || I.isPet(item)) return { why: "That can't be equipped." };
+    const slots = St.gruntSlots(m.g), b = I.base(item.base); if (!I.canEquip(item)) return { why: "That can't be equipped." };
     if (!Object.keys(slots).length) return { why: `${G.Allies.name(m.g)} can't wear gear.` };
     if (want) return St.gruntSlotOk(want, item, m.g) ? { slot: want } : { why: `${G.Allies.name(m.g)} can't use that in the ${(X.LOADOUT_GRUNT[want] || want).toLowerCase()} slot.` };
     let slot;
@@ -405,7 +416,7 @@
   };
   // the menu's teammate entries for a carried item: standing teammates with gear slots, not the one already wearing it
   X.equipTargets = function (uid) {
-    const r = run(), src = X.findCarried(uid), I = G.Items; if (!src || I.isQuest(src.item) || I.isPet(src.item)) return [];
+    const r = run(), src = X.findCarried(uid), I = G.Items; if (!src || !I.canEquip(src.item)) return [];
     const out = [];
     r.squad.forEach((m, i) => {
       if (!(m.hp > 0) || !Object.keys(G.State.gruntSlots(m.g)).length || (src.where === "grunt" && src.idx === i)) return;
@@ -534,6 +545,8 @@
 
   // ---------- events ----------
   X.eventDef = (step) => DATA.events[step.eventId];
+  // SP-212: "{hold}" in an event's text is Hollow Creek's hold, so the radio names the real number of moves
+  X.eventText = (step) => X.eventDef(step).text.replace("{hold}", DATA.map.locations.hollow_creek.distress.holdMoves);
   // option text with its up-front Heat (option-level `heat`, Megan's playtest) so the player takes it knowingly
   X.optionLabel = function (opt) {
     if (G.V2 && G.V2.on()) {   // V2: only Heat from an approved source is shown (and added)
@@ -549,6 +562,7 @@
   };
   // returns { texts:[], roll } ; queues follow-up steps (battle, loot) at the FRONT after this event
   X.resolveEvent = function (step, optIdx, useGrunt) {
+    if (X.current() !== step) return { roll: null, texts: [], dup: true };   // a stale modal's button: the step has moved on
     const ev = X.eventDef(step), opt = ev.options[optIdx], r = run();
     r.stats.events++;
     let effects, roll = null, texts = [];
@@ -582,17 +596,15 @@
       if (e.gruntsJoin) { r.gruntsJoin += e.gruntsJoin; texts.push(`+${e.gruntsJoin} recruit(s) will join if you extract`); }
       if (e.claimBody) { const b = G.State.rollHumanBody(G.rng); r.claimedBodies.push(b); texts.push(`Claimed: ${G.State.bodyTitle(b)} (arrives at the Body Lab if you extract)`); }
       if (e.setWorld) Object.assign(G.state.world, e.setWorld);
-      if (e.distressCountdown) { const l = DATA.map.locations[e.distressCountdown]; r.distressLeft = (l.distress && l.distress.holdMoves) || 0; texts.push(`${l.name} holds for ${r.distressLeft} more moves.`); }
-      if (e.travelTo) {
-        const n = G.Map.nodeOfLoc(G.Zones.map(), e.travelTo);
-        if (n) { r.loc = n.id; r.visited[n.id] = true; X.markSeen(); if (G.V2 && G.V2.on()) G.V2.lockMods(n.id); const site = X.ensureSite(n); site.visitSearches = 0; site.visits++; r.view = "site"; texts.push(`You arrive at ${G.Map.label(n)}.`); }
-      }
+      if (e.distressCountdown) texts.push(X.startDistress(e.distressCountdown));
       if (e.hiddenContainer) { const site = X.site(); if (site) { X.addSearchObject(site, "crate", { name: "Hidden stash" }); texts.push("A hidden stash is now searchable here."); } }
       if (e.payKg) { const p = X.payKgDetail(e.payKg); texts.push(p.text); if (p.short !== p.text) shown[texts.length - 1] = p.short; }
       if (e.revealFog) texts.push(X.revealFog(e.revealFog));
       if (e.loot) {
         const n = X.node(); const ilvl = X.itemLevel(G.Map.loc(n) ? n : { tier: 1 });
-        const items = []; for (let k = 0; k < e.loot.rolls; k++) items.push(G.Items.rollLoot(G.rng, ilvl, X.rarityBonus() + (e.loot.rarityBonus || 0)));
+        const lo = e.loot.rarityWeights ? { rarityWeights: e.loot.rarityWeights } : undefined;   // SP-212: a guaranteed rarity band
+        const items = [];
+        for (let k = 0; k < e.loot.rolls; k++) items.push(G.Items.rollLoot(G.rng, ilvl, X.rarityBonus() + (e.loot.rarityBonus || 0), lo));
         const ls = G.V2 && G.V2.on() ? X.site() : null;
         if (ls) {   // V2: the find sits somewhere in the Area as entries (Leave keeps it there); a UI step never owns it
           const o = X._mk(ls, { kind: "search", type: "crate", name: "Loot", sprite: "obj_crate", searched: true, perRun: true, combat: { kind: "event" } }); X._place(ls, o, 0, G.rng);
@@ -600,6 +612,7 @@
           front.push({ type: "loot", site: ls.key || ls.nid, objs: [o.id], title: "Loot" });
         } else front.push({ type: "container", def: { id: "loot", name: "Loot" }, items, res: {}, opened: true, nid: r.loc, title: "Loot" });
       }
+      if (e.event) front.push({ type: "event", eventId: e.event, nid: r.loc });   // a follow-up dialogue (SP-212: Hollow Creek's thanks)
       if (e.battle) {
         front.push({ type: "battle", family: e.battle.family, budgetMult: e.battle.budgetMult, defense: e.battle.defense, nid: r.loc, why: "Battle!", after: effects.slice(i + 1), eventFight: true });
         break;
@@ -611,6 +624,17 @@
     if (texts.length) X.log(texts.join(" · "));
     G.State.save();
     return { texts: popup, logTexts: texts };
+  };
+
+  // The radio's countdown starts. A town site already built this run (visited before the call) gets its holding gate now,
+  // since a site is only rebuilt for a new world state on a later run.
+  X.startDistress = function (locId) {
+    const r = run(), l = DATA.map.locations[locId], D = l.distress || {};
+    r.distressLeft = D.holdMoves || 0;
+    const n = G.Map.nodeOfLoc(G.state.maps.a, locId), site = n && X.site(n.id);
+    const hasGate = site && site.objects.some((o) => o.eventId === D.holdingEvent);
+    if (site && D.holdingEvent && !hasGate) X.addEventObject(site, D.holdingEvent, { room: 0, perRun: true });
+    return `${l.name} holds for ${r.distressLeft} more moves.`;
   };
 
   // lift the fog on the n nearest unseen locations (graph distance from you)

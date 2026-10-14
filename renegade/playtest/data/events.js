@@ -138,27 +138,35 @@ DATA.events = {
     ]
   },
   // ---- world event (radio, timed): the crackling radio object in a location view ----
+  // SP-212: a message, not a choice. Hearing it starts the countdown; arriving within the hold is how you answer it.
+  // "{hold}" in the text is distress.holdMoves (data/map.js). The world value "ignored" means the call is counting down.
   distress_hollow_creek: {
     icon: "loc_distress",
     title: "Distress Call: Hollow Creek",
     radio: true,
-    text: "*crackle* \"Raiders at the wall, anyone out there? Hollow Creek, anyone!\"",
+    text: "*crackle* \"Raiders at the wall, anyone out there? Hollow Creek, anyone!\" [PLACEHOLDER] The town can hold for {hold} more moves. Get there before it falls.",
     options: [
-      { label: "Go now (detour, defense battle)", heat: 20, effects: [ { travelTo: "hollow_creek" }, { battle: { family: "outlaws", budgetMult: 1.3, defense: true } }, { setWorld: { hollow_creek: "saved" } }, { gruntsJoin: 2 }, { loot: { rolls: 1, rarityBonus: 10 } }, { text: "Hollow Creek holds. Two of their people want to join your outpost." }] },
-      { label: "Find a shortcut, then go (+15 Heat, +25 if it fails)", check: { skill: "survival", dc: 14 }, outcomes: {
-          success: [{ text: "You know a dry gully. Less noise on the way." }, { heat: 15 }, { travelTo: "hollow_creek" }, { battle: { family: "outlaws", budgetMult: 1.3, defense: true } }, { setWorld: { hollow_creek: "saved" } }, { gruntsJoin: 2 }, { loot: { rolls: 1, rarityBonus: 10 } }],
-          fail:    [{ text: "No shortcut. You take the long way." }, { heat: 25 }, { travelTo: "hollow_creek" }, { battle: { family: "outlaws", budgetMult: 1.3, defense: true } }, { setWorld: { hollow_creek: "saved" } }, { gruntsJoin: 2 }, { loot: { rolls: 1, rarityBonus: 10 } }] } },
-      { label: "Ignore it (they can hold a few more moves)", effects: [{ text: "The radio goes quiet. Hollow Creek won't hold for long." }, { setWorld: { hollow_creek: "ignored" } }, { distressCountdown: "hollow_creek" }] }
+      { label: "Got it", effects: [{ text: "The radio goes quiet." }, { setWorld: { hollow_creek: "ignored" } }, { distressCountdown: "hollow_creek" }] }
     ]
   },
-  // arriving at Hollow Creek while its distress countdown is still running (same run, after ignoring the radio)
+  // arriving at Hollow Creek while its distress countdown is still running (same run, after hearing the radio)
   hollow_creek_holding: {
     icon: "loc_distress",
     title: "Hollow Creek: still holding",
     text: "Smoke over the wall, but the gate is still shut. Raiders are regrouping for another push.",
     options: [
-      { label: "Defend the town (defense battle)", heat: 20, effects: [{ battle: { family: "outlaws", budgetMult: 1.5, defense: true } }, { setWorld: { hollow_creek: "saved" } }, { gruntsJoin: 2 }, { loot: { rolls: 1, rarityBonus: 10 } }, { text: "Hollow Creek holds. Two of their people want to join your outpost." }] },
+      { label: "Defend the town (defense battle)", heat: 20, effects: [{ battle: { family: "outlaws", budgetMult: 1.5, defense: true } }, { setWorld: { hollow_creek: "saved" } }, { event: "hollow_creek_thanks" }] },
       { label: "Slip away", effects: [{ text: "You leave them to it." }] }
+    ]
+  },
+  // SP-212: after a won defense the town's leader thanks the squad and hands over one item, blue (Tuned) or better
+  hollow_creek_thanks: {
+    icon: "loc_settlement",
+    title: "Hollow Creek: the gate opens",
+    text: "[PLACEHOLDER] The gate swings open. Hollow Creek's leader steps over the raiders' bodies and grips each of your hands in turn. \"You came. Nobody comes. Two of ours want to go back with you, and take this. We were saving it for a worse day.\"",
+    options: [
+      // rarityWeights [DRAFT]: 85% blue, 12% yellow, 3% purple (purple needs iLvl 3; below that it's yellow). Never below blue.
+      { label: "Take it", effects: [{ gruntsJoin: 2 }, { loot: { rolls: 1, rarityWeights: { blue: 85, yellow: 12, purple: 3 } } }] }
     ]
   },
   aftermath_hollow_creek: {

@@ -21,6 +21,18 @@
     while (i > 0 && (!R[order[i]].enabled || (R[order[i]].minIlvl || 0) > ilvl)) i--;
     return order[i];
   };
+  // SP-212: a rarity from an explicit { rarity: weight } table (no rarity bonus). The lowest rarity listed is a floor: the
+  // ilvl cap can drop a roll to it but never below it.
+  I.floorRarity = function (weights) {
+    const R = DATA.items.rarities;
+    return Object.keys(R).find((k) => R[k].enabled && weights[k] > 0) || null;
+  };
+  I.rollRarityFrom = function (rng, weights, ilvl) {
+    const R = DATA.items.rarities, order = Object.keys(R);
+    const ids = order.filter((k) => R[k].enabled && weights[k] > 0);
+    const r = I.capRarity(rng.weighted(ids, (k) => weights[k]), ilvl);
+    return order.indexOf(r) < order.indexOf(ids[0]) ? ids[0] : r;
+  };
   I.isRare = (item) => !!(item && DATA.items.rarities[item.rarity] && DATA.items.rarities[item.rarity].rare);
 
   // opts.setMult { setId: x } (Militia x2 from Gunmen). hunterOnly pieces never come from here: I.rollHunterPiece (Hunter bodies)
@@ -30,10 +42,15 @@
     const b = DATA.items.bases[id], zt = (DATA.items.zoneTypeWeight || {})[zone] || {};
     return b.dropWeight * (b.set && sm && sm[b.set] ? sm[b.set] : 1) * (b.wtype && zt[b.wtype] != null ? zt[b.wtype] : 1);
   };
+  // opts.minRarity: skip bases whose rarityCap sits below it (a cosmetic hat can't be a guaranteed blue)
   I.rollBase = function (rng, opts) {
     const B = DATA.items.bases, sm = (opts && opts.setMult) || {}, SS = DATA.items.slotShares;
     const zone = opts && opts.zone !== undefined ? opts.zone : (G.state && G.state.run ? G.state.run.zone || "a" : null);
     let ids = Object.keys(B).filter((k) => !B[k].natural && (B[k].dropWeight || 0) > 0 && !B[k].hunterOnly);
+    if (opts && opts.minRarity) {
+      const order = Object.keys(DATA.items.rarities), floor = order.indexOf(opts.minRarity);
+      ids = ids.filter((k) => !B[k].rarityCap || order.indexOf(B[k].rarityCap) >= floor);
+    }
     if (SS) { const slots = Object.keys(SS).filter((s) => SS[s] > 0 && ids.some((k) => B[k].slot === s)); const slot = rng.weighted(slots, (s) => SS[s]); ids = ids.filter((k) => B[k].slot === slot); }
     return rng.weighted(ids, (k) => I.dropWeight(k, zone, sm));
   };
@@ -79,8 +96,12 @@
     return item;
   };
 
+  // opts.rarityWeights: the rarity comes from that table instead (I.rollRarityFrom), and rarityBonus is ignored
   I.rollLoot = function (rng, ilvl, rarityBonus, opts) {
-    return I.make(I.rollBase(rng, opts), I.rollRarity(rng, rarityBonus, ilvl), ilvl, rng);
+    const W = opts && opts.rarityWeights;
+    if (!W) return I.make(I.rollBase(rng, opts), I.rollRarity(rng, rarityBonus, ilvl), ilvl, rng);
+    const base = I.rollBase(rng, Object.assign({}, opts, { minRarity: I.floorRarity(W) }));
+    return I.make(base, I.rollRarityFrom(rng, W, ilvl), ilvl, rng);
   };
   // Hunter's Garb piece (Slice 3 §5): only Hunter bodies roll this (DATA.enemies.hunters.loot.garbPct per body)
   I.rollHunterPiece = (rng, ilvl, rarityBonus) => I.make(rng.pick(DATA.sets.list.hunter.pieces), I.rollRarity(rng, rarityBonus, ilvl), ilvl, rng);
@@ -141,6 +162,8 @@
   I.BACKUP_SLOTS = ["weapon2", "offhand2"];
   I.hands = (b) => (!b ? 0 : b.slot === "shield" ? "shield" : b.slot === "weapon" ? (b.hands === 2 ? 2 : 1) : 0);   // 2 | 1 | "shield" | 0
   I.isPet = (item) => !!(item && (I.base(item.base) || {}).slot === "pet");   // Slice 5 §F: carried out = unlocked (G.Allies.unlockPet)
+  // SP-216: a base whose slot doesn't exist yet (noSlotYet: the rain boots before a feet slot) can't be worn by anyone
+  I.canEquip = (item) => { const b = item && I.base(item.base); return !!b && !I.isQuest(item) && !I.isPet(item) && !b.noSlotYet; };
   I.isHandItem = (item) => !!(item && I.hands(I.base(item.base)));
   // Putting item in hand slot key: { why } if it can't go there, else { clear: [keys] } the slots it pushes out.
   // Rules: a shield only goes in an off hand, a 2H weapon only in a main hand (and empties that set's off hand);

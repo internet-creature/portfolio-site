@@ -13,7 +13,11 @@ DATA.sets = {
                           3: { text: "-40% jam chance, +10 Accuracy", stats: { jam_pct: 40, accuracy: 10 } } } },
     hunter:  { name: "Hunter's Garb", pieces: ["hunter_mask", "hunter_coat", "hunter_longrifle"],
                bonuses: { 2: { text: "+8 Evasion, +5 Stealth (checks)", stats: { evasion: 8 }, checks: { stealth: 5 } },
-                          3: { text: "Your first attack each battle is a guaranteed crit, and Hunter packs move only every 2nd move", flags: { firstAttackCrit: true, hunterSlowEvery: 2 } } } }
+                          3: { text: "Your first attack each battle is a guaranteed crit, and Hunter packs move only every 2nd move", flags: { firstAttackCrit: true, hunterSlowEvery: 2 } } } },
+    // SP-216 the duck parade's outfit. [DRAFT] small bonuses. The boots wait for a feet slot, so 3 pieces can't be worn yet.
+    raincoat: { name: "Yellow Raincoat", pieces: ["rain_hat", "yellow_raincoat", "rain_boots"],
+               bonuses: { 2: { text: "+3 Survival (checks)", checks: { survival: 3 } },
+                          3: { text: "+3% Move Speed", stats: { move_speed_pct: 3 } } } }
   },
   gunmanMult: { militia: 2 }    // Militia pieces x2 weight in Outlaw Gunman bodies
   // Hunter's Garb: Hunter bodies only, DATA.enemies.hunters.loot.garbPct (12%) per body

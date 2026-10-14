@@ -317,6 +317,7 @@
     if (!r || r.queue.length) return "Finish what's in front of you first.";
     if (!X.roomOpen(site, o.room)) return "Behind a closed door.";
     // Maps/Areas/Loot (V2): loot entries on a source (a fight's bodies, a searched container), Area exits, modifier objects, opportunities
+    if (G.DuckParade.is(o)) return null;   // SP-216: the bush always has something to do (its find, then boops)
     if (o.loot && G.V2.on()) return G.V2.hasLoot(o) ? null : DATA.mapsV2.text.alreadyEmpty;
     if (o.kind === "areaExit") return null;
     if (o.kind === "mod") return o.done ? "Already used." : null;
@@ -338,6 +339,7 @@
   X.hasLeft = (o) => !!o.left && (o.left.items.length > 0 || Object.keys(o.left.res).some((k) => o.left.res[k] > 0));
   // actions available on an object: search | pick | force | kick | reopen | use | cross
   X.objActions = function (o) {
+    if (G.DuckParade.is(o)) return G.DuckParade.actions(o);   // SP-216: the duck parade's bush (before loot: a boop outlives its find)
     if (o.loot && G.V2.on()) return G.V2.hasLoot(o) ? ["loot"] : [];   // V2: open what's on it (never a search, never a roll)
     if (o.kind === "areaExit") return ["go"];
     if (o.kind === "mod") return o.done ? [] : ["use"];
@@ -482,6 +484,7 @@
     }
     if (G.V2 && G.V2.on() && o.mod) G.V2.seenMod(site.nid, o.mod);
     if (o.kind === "grate") return { confirm: "cross", pid: o.pid };
+    if (G.DuckParade.is(o)) return G.DuckParade.use(site, o);   // SP-216: out come the ducks, then the find, then quacks
     if (o.kind === "decor" && o.boop) { X.log(`${o.name}: ${o.boop}`); return { text: o.boop }; }
     if (o.kind === "mod") return G.V2.useModObject(site, o);   // a modifier's vending machine, printer, shrine
     o.done = true;

@@ -70,8 +70,10 @@ DATA.gruntLook = {
   items: {
     // Vixie's starter / basic items (patched_tunic, hide_vest, wool_cap) need no entry: Smudge's layers (26801b2) are in
     // grunt_options.json under the item's own key, merged at load.
-    head: { militia_helmet: "militia_helmet", scav_hood: "scav_hood", scrap_helmet: "militia_helmet", hunter_mask: "scav_hood" },   // Slice 5 §H outfits: Smudge's layers (25aa602) under the item keys
-    body: { militia_vest: "militia_tabard", scav_poncho: "scav_coat", padded_vest: "quilted_jacket", hunter_coat: "scav_coat" },
+    // SP-216 Yellow Raincoat stand-ins until Smudge's layers land under the item keys: parts no item owns, so no gear look
+    // is taken over (an outfit's part replaces that part's look_<part> entry in the look list)
+    head: { militia_helmet: "militia_helmet", scav_hood: "scav_hood", scrap_helmet: "militia_helmet", hunter_mask: "scav_hood", rain_hat: "starter_wrap" },   // Slice 5 §H outfits: Smudge's layers (25aa602) under the item keys
+    body: { militia_vest: "militia_tabard", scav_poncho: "scav_coat", padded_vest: "quilted_jacket", hunter_coat: "scav_coat", yellow_raincoat: "starter_poncho" },
     backpack: { school_bag: "school_bag", military_ruck: "military_ruck", scav_satchel: "school_bag" },
     weapon: { pipe_rifle: "pipe_rifle", militia_carbine: "militia_carbine", nat_shiv: "nat_shiv", bass_guitar: "bass_guitar" }
   },
@@ -92,7 +94,9 @@ DATA.gruntLook = {
       horse_mask:   { name: "Horse mask",         slot: "head", item: "horse_mask" },
       wizard_robes: { name: "Wizard robes",       slot: "body", item: "wizard_robes" },
       maid_outfit:  { name: "Maid outfit",        slot: "body", item: "maid_outfit" },
-      lucky_boxers: { name: "Lucky boxers",       slot: "body", item: "lucky_boxers" }   // Vixie: its own boxers art (was underwear: true, the bare mannequin)
+      lucky_boxers: { name: "Lucky boxers",       slot: "body", item: "lucky_boxers" },  // Vixie: its own boxers art (was underwear: true, the bare mannequin)
+      yellow_raincoat: { name: "Yellow raincoat", slot: "body", item: "yellow_raincoat" },   // SP-216: stand-in art (items map above) until Smudge's
+      rain_hat:     { name: "Rain hat",           slot: "head", item: "rain_hat" }           // layers land; the rain boots have no slot to show on yet
     }
   },
   dollScale: 5             // the paper doll draws the stand frame at 5x

@@ -86,7 +86,7 @@
   // equip slots: a Grunt has config.grunts.slots (weapon + one gear slot), a Veteran DATA.allies.veteran.slots
   St.gruntSlots = (g) => (g && g.tplKey === "pet" ? {} : g && g.tplKey === "veteran" ? DATA.allies.veteran.slots : DATA.config.grunts.slots);   // Slice 5 §F: pets: none
   St.emptyGear = (g) => { const o = {}; for (const k in St.gruntSlots(g)) o[k] = null; return o; };
-  St.gruntSlotOk = (slot, item, g) => (St.gruntSlots(g)[slot] || []).includes(G.Items.base(item.base).slot);
+  St.gruntSlotOk = (slot, item, g) => G.Items.canEquip(item) && (St.gruntSlots(g)[slot] || []).includes(G.Items.base(item.base).slot);
   St.gruntPack = (g) => St.gruntItems(g).find((it) => G.Items.base(it.base).slot === "backpack") || null;
   // equip a stash item on a Grunt / Veteran (slot from St.gruntSlots), or itemUid null to unequip (back to the stash). Outpost only.
   St.equipGrunt = function (uid, slot, itemUid) {
@@ -110,6 +110,7 @@
   St.equipBody = function (slot, itemUid) {
     const s = G.state, lo = s.loadout, I = G.Items; lo.gear = lo.gear || {}; St.cosUnlocked = null;
     const x = itemUid ? s.stash.items.find((i) => i.uid === itemUid) : null; if (itemUid && !x) return "That item isn't in the stash.";
+    if (x && !I.canEquip(x)) return "That can't be equipped.";
     if (x) {
       const get = (k) => (k !== slot && lo.gear[k] === itemUid) || !lo.gear[k] ? null : s.stash.items.find((i) => i.uid === lo.gear[k]) || null;   // as if it had already left its old slot
       if (I.isHandItem(x)) { const fit = I.handFit(slot, x, get); if (fit.why) return fit.why; for (const k of fit.clear) delete lo.gear[k]; }   // Slice 5 §E

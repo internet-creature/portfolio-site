@@ -383,7 +383,6 @@ DATA.config = {
   // Expedition / map
   expedition: {
     distressTriggerAfterMoves: 2,  // a crackling radio object appears in the location you reach after this many moves (while the call is pending)
-    distressDetourHeat: 4,         // "detour 2 locations (+Heat)" = 2 moves x 2
     distressExpiresAfterRuns: 1,   // ASSUMPTION: world sim is per-run (§16 Q3 open)
     fogPersistsBetweenRuns: true,  // locations you have ever seen stay revealed (dimmed)
     hpPersistsInRun: true,         // ASSUMPTION: HP carries between battles within a run
