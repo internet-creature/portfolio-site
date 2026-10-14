@@ -72,6 +72,8 @@ DATA.searchables = {
     train_chop:     { name: "Chopping stump",   examine: "[PLACEHOLDER] A stump, an axe, a pile of rounds nobody split.", sprite: "obj_chop_stump", searchSec: 8, noise: 6,
                       train: { skill: "hauling", xp: 400, heat: 1, label: "Chop wood", line: "[PLACEHOLDER] You split the pile. Your back will remember it." } },
     train_fish:     { name: "Still water",      examine: "[PLACEHOLDER] Flat water, a rod on a forked stick. Something's biting.", sprite: "obj_fishing_spot", searchSec: 10, noise: 2, wide: 2,
+                      attention: 0,   // SP-210 (Megan 10/13): fishing raises no Attention. Hook: a later special fishing event sets its own
+                      events: [],     // SP-210 hook, empty: special fishing events (design later) that may raise Attention
                       train: { skill: "survival", xp: 600, heat: 0, label: "Fish", line: "[PLACEHOLDER] You sit still long enough to learn the water." } },
     train_terminal: { name: "Working terminal", examine: "[PLACEHOLDER] This one still boots. The login screen blinks at you.", sprite: "obj_computer", searchSec: 8, noise: 4,
                       train: { skill: "hacking", xp: 600, heat: 1, label: "Practise", line: "[PLACEHOLDER] You poke at it until it stops fighting you." } },

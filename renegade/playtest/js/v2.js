@@ -943,6 +943,7 @@
   V.attValue = function (o, action) {
     const C = AT(); if (!o || o.combat) return 0;
     const T = X().typeDef(o), noise = o.noise != null ? o.noise : T.noise || 0, base = C.actions[action] != null ? C.actions[action] : C.actions.search;
+    if (T.attention != null) return Math.max(0, Math.round(T.attention * V.attTutMult()));   // SP-210: a fixed value for every action (fishing: 0)
     const v = (action || "search") === "search" && C.types[o.type] != null ? C.types[o.type] : base + noise * C.noiseMult;
     return Math.max(0, Math.round(v * V.attTutMult()));
   };
