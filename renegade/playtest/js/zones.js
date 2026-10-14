@@ -12,6 +12,18 @@
     return { zone: zid, insertion: d.insertion, nodes, edges: d.edges.map((e) => e.slice()) };
   };
   Z.buildAll = function (seed) { const out = {}; for (const z of DATA.zones.order) out[z] = Z.build(z, seed); return out; };
+  // SP-056: a save keeps the handcrafted map it was built with. This adds the nodes and edges data/zones.js has gained
+  // since; nothing is moved or removed, so a run standing on the map keeps its place.
+  Z.addMissing = function (map, zid) {
+    const d = Z.def(zid);
+    if (!d || d.generated || !map || !map.nodes) return;
+    const fresh = Z.build(zid);
+    for (const id in fresh.nodes) if (!map.nodes[id]) map.nodes[id] = fresh.nodes[id];
+    map.edges = map.edges || [];
+    const key = (e) => e.slice().sort().join("|");
+    const have = new Set(map.edges.map(key));
+    for (const e of fresh.edges) if (!have.has(key(e))) map.edges.push(e);
+  };
   Z.map = function (zid) { const s = G.state; return s.maps[zid || (s.run ? s.run.zone : "a")] || s.maps.a; };
   Z.cur = () => (G.state.run ? G.state.run.zone : "a");
   Z.unlocked = (zid) => !!G.state.zonesUnlocked[zid];

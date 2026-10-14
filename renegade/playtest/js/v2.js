@@ -131,6 +131,23 @@
   // other Map rolls Peaceful / Occupied / none (a legacy Map has no opportunities, so its Contested share is "none").
   // Then: Occupied never in the first row or next to another Occupied; and every Map has a way out (a Peaceful Map or a
   // legacy extraction) within exitWithin steps, else the nearest eligible Map is promoted to Peaceful (deterministic).
+  // SP-056: top a zone up to minExitShare ways out, each new one on the Map farthest from any way out (deterministic, no
+  // rng), so a small zone like the Drowned Suburbs gets exits across the whole map, not only at the far end.
+  const spreadExits = (map, ids, plan, fixed, exit, dists, C) => {
+    const want = Math.ceil(ids.length * (C.minExitShare || 0));
+    const nearest = (id) => {
+      const d = dists(id);
+      let best = Infinity;
+      for (const e of ids) if (exit(e) && d[e] != null) best = Math.min(best, d[e]);
+      return best;
+    };
+    while (ids.filter(exit).length < want) {
+      const cand = ids.filter((id) => !fixed(id) && !exit(id) && id !== map.insertion && !map.nodes[id].secret && plan[id] !== "occupied");
+      if (!cand.length) break;
+      cand.sort((a, b) => (nearest(b) - nearest(a)) || (a < b ? -1 : 1));
+      plan[cand[0]] = "peaceful";
+    }
+  };
   V.classPlan = function (zone) {
     const r = run(); if (!V.on(r)) return {};
     r.v2.classes = r.v2.classes || {};
@@ -159,6 +176,7 @@
       if (!cand.length) break;
       plan[cand[0]] = "peaceful";
     }
+    spreadExits(map, ids, plan, fixed, exit, dists, C);
     r.v2.classes[zone] = plan;
     return plan;
   };

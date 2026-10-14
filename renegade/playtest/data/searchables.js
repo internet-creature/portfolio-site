@@ -90,7 +90,7 @@ DATA.searchables = {
   // No Lumber Mill yet (Hushwood, part G): the chop is in the woodsy Zone A sites until then.
   training: {
     train_chop:     { locs: ["riverbed_camp", "rail_yard", "renegade_hollow", "gb_lodge", "lumber_mill", "mossback"] },   // gb_lodge: the woodpile (Slice 5 §G)
-    train_fish:     { locs: ["toll_bridge", "pump_station", "b_culdesac", "b_outfall", "gb_dam", "stillwater"] },
+    train_fish:     { locs: ["toll_bridge", "pump_station", "b_culdesac", "b_outfall", "b_marina", "gb_dam", "stillwater"] },
     train_terminal: { tags: ["terminal"] }
   },
   // Sizes (Slice 2 §5). Searchable counts include doors (doors = rooms - 1) and generated old bodies; event objects,

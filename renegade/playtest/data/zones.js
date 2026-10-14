@@ -37,7 +37,7 @@ DATA.zones = {
              fixed: { transit_tunnel: { rows: [1] }, sc_tunnel: { rows: [3, 4] }, ex_rooftop: { rows: [4] } } }
     },
     b: {
-      name: "The Drowned Suburbs", size: "Small", tierLabel: "Tier 2", familyMix: "85% Bio-beasts / 15% Outlaws",
+      name: "The Drowned Suburbs", size: "Medium", tierLabel: "Tier 2", familyMix: "80% Bio-beasts / 20% Outlaws",
       startUnlocked: false, lockedLabel: "??? – find the way in",
       insertion: "b1", mapBg: "map_bg_b", resourceMult: 1.25, dcBonus: 0, tier: 2,
       enemyBudgetMult: 1.08,   // every fight in the zone (Slice 3 §11 lever 2, "Zone B enemy budgets"): fresh-starter deaths 52% at 1, 52.9% at 1.06, 60.0% at 1.1
@@ -45,15 +45,22 @@ DATA.zones = {
       // location event), rolled on the location's Event %
       eventPool: { drone_patrol: 0.5 },
       // handcrafted nodes in the 1000x600 map space. hiddenUntilAdjacent: never shown as an "Unscouted" marker
+      // SP-056: b7-b9 bring the zone closer to the Hushwood's size, on open ground in map_bg_b: the plaza on the north road,
+      // the school by the running track (south-west), the marina on the flooded main road (centre). New nodes and edges go
+      // at the end of their lists, so an older save's map gains them in the same order (G.Zones.addMissing).
       nodes: {
-        b1: { loc: "b_outfall",  x: 110, y: 300 },
-        b2: { loc: "b_culdesac", x: 360, y: 150 },
-        b3: { loc: "b_warrens",  x: 360, y: 450 },
-        b4: { loc: "b_clinic",   x: 630, y: 170 },
-        b5: { loc: "b_cistern",  x: 630, y: 430 },
-        b6: { loc: "b_levee",    x: 880, y: 300, hiddenUntilAdjacent: true }
+        b1: { loc: "b_outfall",    x: 110, y: 300 },
+        b2: { loc: "b_culdesac",   x: 360, y: 150 },
+        b3: { loc: "b_warrens",    x: 360, y: 450 },
+        b4: { loc: "b_clinic",     x: 630, y: 170 },
+        b5: { loc: "b_cistern",    x: 630, y: 430 },
+        b6: { loc: "b_levee",      x: 880, y: 300, hiddenUntilAdjacent: true },
+        b7: { loc: "b_strip_mall", x: 215, y: 80 },
+        b8: { loc: "b_gym",        x: 195, y: 470 },
+        b9: { loc: "b_marina",     x: 495, y: 300 }
       },
-      edges: [["b1", "b2"], ["b1", "b3"], ["b2", "b3"], ["b2", "b4"], ["b3", "b5"], ["b4", "b5"], ["b4", "b6"], ["b5", "b6"]]
+      edges: [["b1", "b2"], ["b1", "b3"], ["b2", "b3"], ["b2", "b4"], ["b3", "b5"], ["b4", "b5"], ["b4", "b6"], ["b5", "b6"],
+              ["b1", "b7"], ["b7", "b2"], ["b1", "b8"], ["b8", "b3"], ["b2", "b9"], ["b3", "b9"], ["b9", "b4"], ["b9", "b5"]]
     },
     // Slice 5 §G: The Greyback Hills (handcrafted, tier 2). Outlaws + feral goats; long sightlines. Reached by the Deer Trail
     // (Zone A) or up the Spillway Tunnel from the Drowned Suburbs. Node positions: Smudge's greyback_manifest.json.

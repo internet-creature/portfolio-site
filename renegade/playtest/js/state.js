@@ -364,6 +364,7 @@
   St.repair = function (s) {
     if (!s.maps || !s.maps.a) s.maps = G.Zones.buildAll((s.seed >>> 0) || 1);
     for (const z of DATA.zones.order) if (!s.maps[z]) s.maps[z] = G.Zones.build(z, (s.seed >>> 0) || 1);   // zones added later (Slice 5 §G Greyback, the generated Scablands) join a save
+    for (const z of DATA.zones.order) G.Zones.addMissing(s.maps[z], z);   // SP-056: Maps added to a handcrafted zone later join it too
     s.world = s.world || { hollow_creek: "pending" }; s.world.sites = s.world.sites || {};
     s.everSeen = s.everSeen || {}; s.locFlags = s.locFlags || {};
     s.zonesUnlocked = s.zonesUnlocked || {};

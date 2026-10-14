@@ -45,7 +45,12 @@ DATA.cards = {
     }
   },   // one card for every rival squad
   // one-line blurbs [PLACEHOLDER] (the flavor pass writes them); missing ones use the group default
-  blurbs: {},
+  blurbs: {
+    // SP-056: the Drowned Suburbs' new Maps (data/map.js b_strip_mall / b_gym / b_marina)
+    "loc:b_strip_mall": "[PLACEHOLDER] A strip mall up to its signs in floodwater. Raiders work it from the roofs, one shop at a time.",
+    "loc:b_gym": "[PLACEHOLDER] The flood shelter: cots in rows, a first-aid table, the scoreboard stuck at 0-0. The water came in anyway.",
+    "loc:b_marina": "[PLACEHOLDER] The flood lifted every boat in the club and set them down along Canal Street. Some of them are nests now."
+  },
   blurbDefault: { creatures: "[PLACEHOLDER] Something out there that wants you dead.", people: "[PLACEHOLDER] Somebody with a story.", places: "[PLACEHOLDER] A place in the wastes." },
   // the pickup pop (corner of the screen): card back, flip, front; "NEW!" on a first copy
   pop: { holdMs: 2600, flipMs: 420, newDelayMs: 200, toastMs: 3500 },   // toastMs: landscape phone battles show a bottom toast instead (js/cardview.js)

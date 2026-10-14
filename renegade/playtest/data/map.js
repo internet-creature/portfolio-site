@@ -110,6 +110,12 @@ DATA.map = {
     b_cistern:       { kind: "industrial", zone: "b", name: "Cistern Pumphouse",    icon: "loc_cistern",      family: "outlaws", size: "S", odds: { hostiles: 45, event: 25, survivors: 0 },  tags: ["water", "scrap", "office"], events: ["toll_gate"], passage: "spillway" },   // the Spillway's Drowned end (hidden here until spotted; DATA.zones.passages.spillway)
     b_levee:         { zone: "b", floor: "tile_floor_b_wet", name: "Levee Boat Launch",    icon: "loc_boat_launch",  family: "beasts",  size: "S", odds: { hostiles: 40, event: 0,  survivors: 0 },  tags: [], events: [],
                        extraction: { type: "defense", surviveSec: 20, waves: 3, waveBudgetMult: 0.7 } },           // the zone's only extraction (x0.7 total, via the waves; 20 s so B6 isn't where most runs end)
+    // SP-056: three more Maps (B7-B9) so the zone is closer to the Hushwood's size. Names [PLACEHOLDER] (flavor: the card
+    // blurbs in data/cards.js), numbers [DRAFT]. Ways out come from the V2 classification, not their own extraction. Their
+    // markers aren't painted yet: iconFallback shows until loc_strip_mall / loc_school_gym / loc_marina are registered.
+    b_strip_mall:    { zone: "b", name: "Shoreline Plaza",      icon: "loc_strip_mall", iconFallback: "loc_mall",       family: "outlaws", size: "L", odds: { hostiles: 55, event: 30, survivors: 5 },  tags: ["food", "cloth", "scrap"], events: ["toll_gate", "cache"] },   // a strip mall up to its signs
+    b_gym:           { kind: "medical", zone: "b", name: "Westbrook High Gym", icon: "loc_school_gym", iconFallback: "loc_settlement", family: "beasts", size: "M", odds: { hostiles: 45, event: 30, survivors: 15 }, tags: ["med", "food", "cloth"], events: ["cache"] },   // the flood shelter: cots and first aid
+    b_marina:        { zone: "b", name: "Canal Street Marina",  icon: "loc_marina",     iconFallback: "loc_depot",      family: "beasts",  size: "M", odds: { hostiles: 50, event: 25, survivors: 5 },  tags: ["fuel", "scrap", "water"], events: ["cache"] },   // boats beached along the flooded main road
     // ---- Slice 5 §G: The Greyback Hills (handcrafted, tier 2; nodes + edges in data/zones.js; Smudge's markers aa8b4fd) ----
     // Outlaws + feral goats, long sightlines. [DRAFT] numbers, [PLACEHOLDER] flavor. Not yet built (brainstorm): Quarry
     // blasting charges mid-fight, the Hermit's 50/50 trader / cannibal, Relay storms, the Dam's floodgate lore reveal.

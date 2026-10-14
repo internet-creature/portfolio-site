@@ -112,6 +112,7 @@ DATA.mapsV2 = {
   // falls through to "none" (no classification tag, no way out). [DRAFT] shares.
   classification: {
     shares: { peaceful: 35, contested: 45, occupied: 20 },
+    minExitShare: 0.5,      // SP-056: at least half a zone's Maps are a way out, spread out (about the Hushwood's rolled share) [DRAFT]
     exitWithin: 2,          // every node has a Peaceful Map or a legacy extraction within this many steps, else the nearest eligible Map is promoted to Peaceful
     occupiedMinRow: 2,      // never in the first row, and never next to another Occupied Map
     pool: { peaceful: { max: 2 }, occupied: { plus: 1 } },   // Peaceful Maps are quieter, Occupied ones hold more
