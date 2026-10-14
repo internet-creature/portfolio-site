@@ -660,10 +660,11 @@
   V.lootEmptied = (step) => !!step && !step.finish && (step.type === "loot" || step.type === "spoils") && V.stepObjs(step).every((o) => !V.hasLoot(o));
   V.entryKg = (e) => (e.item ? G.Items.weight(e.item) : e.n * DATA.items.resources[e.res].kgPerUnit);
   V.sources = (site, enc) => site.objects.filter((o) => o.combat && o.combat.enc === enc);
-  // can kg more be carried? limit: "fit" (Take all: <= fitPct) or "take" (a single Take: short of the immobile line)
-  V.room = function (limit) {
+  // how many more kg can be carried: Take and Take all both go up to (never onto) the immobile line, so you may end up
+  // overloaded (SP-214: Take all only stops when nothing more can be carried)
+  V.room = function () {
     const cap = X().capacity(), kg = X().carried();
-    return limit === "fit" ? cap * D().loot.fitPct / 100 - kg : cap * CFG().carry.immobileAtPct / 100 - kg - 1e-6;
+    return cap * CFG().carry.immobileAtPct / 100 - kg - 1e-6;
   };
   const opSeen = function (r, opKey) {
     if (!opKey) return false;
@@ -678,7 +679,7 @@
     const r = run(); if (opts.opKey && r.v2.ops[opts.opKey]) return { dup: true };   // the same request again: already done
     const site = X().site(siteKey), o = site && X().obj(objId, site); if (!o || !o.loot) return { error: "Nothing there." };
     const e = o.loot.find((x) => x.id === entryId); if (!e || !(e.item || e.n > 0)) return { error: D().text.alreadyEmpty };
-    const lim = opts.limit || "take", room = V.room(lim);
+    const room = V.room();
     if (e.item) {
       const kg = G.Items.weight(e.item);
       if (!G.Items.isQuest(e.item) && kg > room + 1e-9) return { error: `No room: you need ${U.fmt1(kg - room)} kg more.`, needKg: kg - room };
@@ -702,14 +703,14 @@
     if (!opts.noSave) G.State.save();
     return { ok: true };
   };
-  // Take all that fits: complete legal quantities only, at most fitPct of capacity; reports what stays
+  // Take all: everything that can be carried (partial stacks too), up to the immobile line; reports what stays
   V.takeAll = function (siteKey, objIds, opKey) {
     const r = run(); if (!V.on(r)) return { taken: 0, left: 0, needKg: 0 }; if (opKey && r.v2.ops[opKey]) return { dup: true }; opSeen(r, opKey);
     const site = X().site(siteKey), got = [], left = [], meds = []; let need = 0;
     for (const id of objIds) {
       const o = X().obj(id, site); if (!o) continue;
       for (const e of V.left(o)) {
-        const res = V.take(siteKey, id, e.id, { limit: "fit", noSave: true });
+        const res = V.take(siteKey, id, e.id, { noSave: true });
         if (res.ok) { got.push(e.id); if (res.meds) meds.push(...res.meds); if (!e.item && e.n > 0) left.push(e.id); }
         else { left.push(e.id); need = Math.max(need, res.needKg || 0); }
       }

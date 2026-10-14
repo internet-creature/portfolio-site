@@ -170,7 +170,7 @@
       for (const l of res.meds || []) UI().toast(l);   // SP-194: each med item found
       if (res.left) UI().toast(res.taken ? `Took ${res.taken}. ${res.left} thing${res.left === 1 ? "" : "s"} didn't fit${res.needKg ? ` (${U.fmt1(res.needKg)} kg more room needed)` : ""}: still ${objs.some((o) => o.combat) ? "on the bodies" : "there"}.` : `Nothing fits: you need ${U.fmt1(res.needKg)} kg more room.`);
       else if (V.lootEmptied(step)) { TV.hideLoot = null; X.next(); if (G.AreaWalk && G.AreaWalk.guard) G.AreaWalk.guard(); }   // SP-144: emptied (loot or spoils, not the extraction one): nothing left to look at
-      UI().render(); } }, "Take all that fits"));
+      UI().render(); } }, "Take all"));
     if (left) row.appendChild(h("button", { "data-act": "manage", title: "Drop or equip things from your bag (side panel), then come back", onclick: () => { TV.hideLoot = sid; UI().render(); } }, "Manage inventory"));
     if (step.finish) row.appendChild(h("button", { class: "primary", "data-act": "finish-extraction", onclick: () => { const res = G.V2.finishExtraction(); if (res.error) UI().fail(res.error); UI().render(); } }, T().finishExtraction + (left ? " (leave the rest)" : "")));
     row.appendChild(h("button", { class: step.finish ? "" : "primary", "data-act": "done", onclick: () => { TV.hideLoot = null; X.next(); UI().render(); } }, left ? "Leave the rest" : "Done"));

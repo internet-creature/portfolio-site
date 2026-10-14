@@ -95,10 +95,6 @@ DATA.mapsV2 = {
     loud: { minGunShots: 6, every: 2, amount: 10 }
   },
 
-  // Battle loot (draft §8). "Take all that fits" keeps you at or under fitPct of capacity; a single Take may go over it
-  // (you're overloaded) but never to the immobile line (config.carry.immobileAtPct).
-  loot: { fitPct: 100 },
-
   // Extraction (draft §11). Classification belongs to the Map; opportunities sit in Areas.
   extraction: {
     names: { peaceful: "Peaceful", contested: "Contested", occupied: "Occupied", legacy: "Legacy extraction rules" },
