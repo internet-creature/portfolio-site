@@ -258,7 +258,7 @@ DATA.config = {
     tacticalPause: { enabled: true, key: " ", channelSec: { med: 1.5 },   // TODO: special-ammo swaps dropped from the pause (milestone 5)
       // Megan (milestone 5): after Med Supplies are used on a unit, that unit can't take more for
       // max(minSec, baseSec - perMedicine x the user's Medicine level) seconds of combat time (the user = your body)
-      medCooldown: { baseSec: 20, perMedicine: 1, minSec: 8 } },
+      medCooldown: { baseSec: 10, perMedicine: 0.2, minSec: 6 } },   // SP-203: Megan's 10 s default; per-Medicine and floor [DRAFT]
     // Break away (Megan, milestone 5): a repeatable escape check in battle (button / B, or queued in the tactical pause).
     // channelSec on your body (cancelled if it goes down; not usable while it's downed), then the best Acrobatics of your
     // standing units: d20 + floor(skill / 4) vs dc + perEnemy per living enemy beyond freeEnemies, + hunterPack if a

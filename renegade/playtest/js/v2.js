@@ -668,7 +668,12 @@
   V.toEntries = function (prefix, l) {
     const out = [];
     (l.items || []).forEach((it, i) => out.push({ id: prefix + ":i" + i, item: it }));
-    for (const k in l.res || {}) if (l.res[k] > 0) out.push({ id: prefix + ":r:" + k, res: k, n: l.res[k] });
+    for (const k in l.res || {}) {
+      if (!(l.res[k] > 0)) continue;
+      const e = { id: prefix + ":r:" + k, res: k, n: l.res[k] };
+      if (k === "med" && l.meds && l.meds.length === l.res[k]) e.meds = l.meds.slice();   // SP-203: the named med items
+      out.push(e);
+    }
     return out;
   };
   V.left = (o) => (o && o.loot ? o.loot.filter((e) => (e.item ? 1 : e.n) > 0) : []);
@@ -704,7 +709,7 @@
       opSeen(r, opts.opKey); r.bag.items.push(e.item); e.item = null; e.taken = true;
     } else if (e.res === "med") {   // SP-194: Med Supplies finds roll named med items straight into the pouch (no pack space)
       opSeen(r, opts.opKey); const n = e.n; e.n = 0;
-      const lines = G.Med.lootFinds(n, G.Med.ctxAt(X().node(), o));
+      const lines = G.Med.lootFinds(n, G.Med.ctxAt(X().node(), o), e.meds);
       V.ev("take", { site: siteKey, obj: objId, entry: entryId }); if (!opts.noSave) G.State.save();
       return { ok: true, meds: lines };
     } else if (G.Currency.isPouch(e.res)) {   // SP-196: Chips / Old World Money straight into the currency pouch (no pack space, never lost)

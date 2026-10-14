@@ -155,7 +155,7 @@
       const ctx = Object.values(r.gear).filter(Boolean);
       for (const e of es) {
         if (e.item) sec.appendChild(UI().itemEl(e.item, [{ label: "Take", fn: () => take(o, e) }], null, ctx));
-        else { const R = DATA.items.resources[e.res]; sec.appendChild(h("div", { class: "item-row" }, SP.icon(R.sprite, 20), (e.res === "med" ? ` Med Supplies: ${e.n} med item${e.n === 1 ? "" : "s"} (straight to your pouch) ` : ` ${e.n} × ${R.name} (${U.fmt1(e.n * R.kgPerUnit)} kg) `), h("button", { "data-act": "take", onclick: () => take(o, e) }, "Take"))); }
+        else { const R = DATA.items.resources[e.res]; sec.appendChild(h("div", { class: "item-row" }, SP.icon(R.sprite, 20), (e.res === "med" ? G.Med.lootText(e.n, e.meds) : ` ${e.n} × ${R.name} (${U.fmt1(e.n * R.kgPerUnit)} kg) `), h("button", { "data-act": "take", onclick: () => take(o, e) }, "Take"))); }
       }
       box.appendChild(sec);
     }

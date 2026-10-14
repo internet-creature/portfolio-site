@@ -68,9 +68,17 @@
     }
     return lines;
   };
-  // n Med Supplies finds taken from loot: roll the items, add them to the pouch, log each line
-  M.lootFinds = function (n, ctx) {
-    const lines = M.grant(M.rollN(n, G.rng, ctx));
+  // SP-203: roll the items when the loot is made (on their own stream, so other rolls don't move), so the loot window
+  // can name them before you take them. Stored as table ids.
+  M.byId = (id) => M.table().find((e) => e.id === id) || null;
+  M.preRoll = (n, ctx) => M.rollN(n, G.Currency.rngFor(), ctx).map((e) => e.id);
+  M.lootText = (n, ids) => (ids && ids.length === n ? ` ${M.labels(ids).join(", ")} (Med Supplies, straight to your pouch) ` : ` Med Supplies: ${n} med item${n === 1 ? "" : "s"} (straight to your pouch) `);
+  M.labels = (ids) => ids.map(M.byId).filter(Boolean).map((e) => (e.kind === "charges" ? `${e.name} (+${e.charges})` : e.name));
+  // n Med Supplies finds taken from loot: the pre-rolled items when there are n of them, else roll now; add them to the
+  // pouch, log each line
+  M.lootFinds = function (n, ctx, ids) {
+    const pre = ids && ids.length === n ? ids.map(M.byId).filter(Boolean) : [];
+    const lines = M.grant(pre.length === n ? pre : M.rollN(n, G.rng, ctx));
     if (G.state.run) for (const l of lines) G.Exp.log(l, "good");
     return lines;
   };

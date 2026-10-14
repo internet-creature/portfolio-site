@@ -355,7 +355,7 @@
       const u = R.u, up = u.state === "alive", f = up ? U.clamp(u.hp / Math.max(1, u.maxHp), 0, 1) : 0;
       const why = T.itemBlock(b, "med", u, true);
       const coming = !!(T && why) && (T.queue(b).some((a) => a.kind === "med" && a.u === u) || (u.channel && u.channel.kind === "med") || (u.chQ || []).some((c) => c.kind === "med"));
-      const txt = coming ? "Coming" : u.medCd > 0 && up ? `Med ${Math.ceil(u.medCd)}s` : `Med (${n})`;
+      const txt = coming ? "In Progress" : u.medCd > 0 && up ? `Med ${Math.ceil(u.medCd)}s` : `Med (${n})`;
       const ex = R.extra.map((x) => { const w = T.itemBlock(b, x.kind, u, true); return { x, w, t: `${G.Med.name(x.kind)} (${T.kindFree(b, x.kind)})` }; });
       const k = [Math.round(f * 200), up ? Math.ceil(u.hp) : u.state, why, txt, ...ex.map((e) => e.w + e.t)].join("|"); if (k === R.k) continue; R.k = k;
       for (const e of ex) { e.x.btn.textContent = e.t; e.x.btn.disabled = !!e.w; e.x.btn.title = e.w || `${G.Med.name(e.x.kind)} on ${u.name}`; }

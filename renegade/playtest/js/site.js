@@ -443,7 +443,8 @@
     X.rollExtras((T.extras || []).concat((o && o.extras) || []), res, rng);
     if (o && o.addRes && !o.resOnly) for (const k in o.addRes) { const R = DATA.resources[k]; if (!R || R.hidden) continue; const n = rng.int(o.addRes[k][0], o.addRes[k][1]); if (n > 0) res[k] = (res[k] || 0) + n; }   // a modifier object's own stock
     if (o && o.famDrops) X.rollFamilyDrops(o.famDrops, items, res, rng, X.itemLevel(node), !!o.resOnly, o.unit);   // Slice 5 §F
-    if (!(o && o.resOnly)) G.Currency.rollFinds(type, o, res);   // SP-196: Chips / Old World Money on their own stream
+    if (!(o && o.resOnly)) G.Currency.rollFinds(type, o, res);
+    if (!(o && o.resOnly) && res.med > 0) return { items, res, meds: G.Med.preRoll(res.med, G.Med.ctxAt(node, o)) };   // SP-203: named before taking   // SP-196: Chips / Old World Money on their own stream
     return { items, res };
   };
 
@@ -637,7 +638,7 @@
       o.loot = G.V2.left(o).concat(G.V2.toEntries(key + ":" + o.id + ":" + site.searches, loot));
       X.push({ type: "loot", site: key, objs: [o.id], title: o.name });
     }
-    else if (!empty) X.push({ type: "container", items: loot.items, res: loot.res, opened: true, nid: site.nid, objId: o.id, title: o.name, def: { id: o.type, name: o.name } });
+    else if (!empty) X.push({ type: "container", items: loot.items, res: loot.res, meds: loot.meds, opened: true, nid: site.nid, objId: o.id, title: o.name, def: { id: o.type, name: o.name } });
     else if (o.searched && o.type !== "door") texts.push("Nothing useful.");
     G.State.save();
     return { texts, roll, disturb: { pct: info.pct, roll: dr, hit, math: info.math, free: info.free, v2 }, alarm, empty, fight: !!fight, att, stealth };

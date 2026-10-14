@@ -351,7 +351,7 @@
   // SP-194: Med Supplies finds roll named med items into the pouch at once (returns their toast lines)
   X.takeRes = function (step, k) {
     const r = run(), n = step.res[k]; delete step.res[k];
-    if (k === "med") return G.Med.lootFinds(n, G.Med.ctxAt(X.node(), step.obj || null));
+    if (k === "med") return G.Med.lootFinds(n, G.Med.ctxAt(X.node(), step.obj || null), step.meds);
     if (G.Currency.isPouch(k)) return G.Currency.pickUp(k, n);   // SP-196: currency pouch
     r.bag.res[k] = (r.bag.res[k] || 0) + n; return null;
   };
