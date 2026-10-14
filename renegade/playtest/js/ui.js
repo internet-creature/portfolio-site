@@ -134,7 +134,8 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     const s = G.state, scr = $("#screen");
     const title = !!(G.Title && G.Title.open);   // Slice 4 §G: the title screen is up (music_title, the camp's ambience)
     G.Sfx.setScreen(title ? "title" : s.run || UI.battle ? "run" : "outpost");   // ambient loop per screen (crossfades)
-    if (G.Music) G.Music.set(title ? "title" : UI.battle ? "battle" : s.run ? "run" : s.lastResult && s.lastResult.kind === "extracted" ? "victory" : "outpost", title ? null : s.run ? s.run.zone : null);   // music state (js/music.js); victory: the EXTRACTED result
+    if (G.Music) G.Music.set(title ? "title" : UI.battle ? "battle" : s.run ? "run" : s.lastResult && s.lastResult.kind === "extracted" ? "victory" : s.runCount ? "outpost" : "outpostFirst", title ? null : s.run ? s.run.zone : null);   // music state (js/music.js); victory: the EXTRACTED result; outpostFirst: before the first expedition (SP-146)
+    if (G.Music && G.Music.lootDuck) { const st = s.run && !UI.battle && G.Exp.current(); G.Music.lootDuck(!!(st && st.type === "container")); }   // SP-146: zone music ducked while the loot screen is open
     if (UI.battle) return; // battle view owns the screen
     if (s.run) { UI.renderExpedition(scr); if (!UI.search) UI.renderStep(); return; }
     UI.renderOutpost(scr);

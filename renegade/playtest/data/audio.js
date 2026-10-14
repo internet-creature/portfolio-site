@@ -113,7 +113,9 @@ DATA.audio = {
     // views, searches, events and the pre-battle card; battle = the battle screen (placement, fight, summary).
     // title = the start screen (Slice 4 §G): starts on the first tap / the 🔊 button; Play crossfades to the outpost
     // victory = the EXTRACTED results screen (Megan, Oct 8, via Snare): music_extract_victory, then the outpost on Continue
-    states: { title: "music_title", outpost: "music_outpost", run: "music_hushwood", battle: "music_hushwood_battle", victory: "music_extract_victory" },
+    // outpostFirst (SP-146, Megan, Oct 12): the settlement before the first expedition (state.runCount 0, js/ui.js) keeps the
+    // title's music looping (no switch from the title: same track); music_outpost from the first return on
+    states: { title: "music_title", outpost: "music_outpost", outpostFirst: "music_title", run: "music_hushwood", battle: "music_hushwood_battle", victory: "music_extract_victory" },
     // per-zone overrides. b = the Drowned Suburbs (data/zones.js); hollis = the Hollis Outskirts (wired with the zone,
     // Slice 5 §G). Zone a (The Hushwood) keeps the default pair. scablands: the same
     // sync group on both tracks (bar-line crossfade, like the Hushwood pair) (Snare, Slice 5 §G).
@@ -140,6 +142,9 @@ DATA.audio = {
     leadSec: 0.06,                              // scheduling headroom for Web Audio start times
     // SP-118: decoded PCM budget for Mu.trim's LRU (tunable). Phone uses the Touch layout test.
     cacheMB: { desktop: 220, phone: 120 },
+    // SP-146 (Megan, Oct 12): the zone music a little quieter while the loot screen (a container) is open: the music bus to
+    // to x its level (0.7 = -3.1 dB) over attack s, back over release s on close (js/music.js Mu.lootDuck; Web Audio only)
+    lootDuck: { to: 0.7, attack: 0.3, release: 0.3 },
     oneShot: ["music_title", "music_extract_victory"]   // dropped as soon as nothing plays or wants it (the title plays once per load), budget or not
   }
 };

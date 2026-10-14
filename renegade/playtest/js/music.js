@@ -140,9 +140,11 @@
 
   // ---- the music channel ----
   Mu.gain = () => { const s = S() ? S().settings() : {}, d = DATA.audio.defaults; return s.mute || Mu.muted ? 0 : (s.master ?? d.master) * (s.music ?? d.music ?? 0.7); };
-  Mu.ensureBus = function () { const c = S().ctx; if (c && !Mu.bus) { Mu.bus = c.createGain(); Mu.bus.gain.value = Mu.gain(); Mu.bus.connect(S().master || c.destination); } return Mu.bus; };
+  // the bus level: the music gain, x the loot screen's duck while it's open (SP-146, data/audio.js music.lootDuck)
+  Mu.busGain = () => Mu.gain() * (Mu.looting ? ((M().lootDuck || {}).to ?? 1) : 1);
+  Mu.ensureBus = function () { const c = S().ctx; if (c && !Mu.bus) { Mu.bus = c.createGain(); Mu.bus.gain.value = Mu.busGain(); Mu.bus.connect(S().master || c.destination); } return Mu.bus; };
   Mu.applySettings = function () {
-    if (Mu.bus) { const c = S().ctx; if (Mu.ducking) { Mu.ducking = null; Mu.bus.gain.cancelScheduledValues(c.currentTime); } Mu.bus.gain.setTargetAtTime(Mu.gain(), c.currentTime, 0.05); }   // a settings change ends a sting's duck
+    if (Mu.bus) { const c = S().ctx; if (Mu.ducking) { Mu.ducking = null; Mu.bus.gain.cancelScheduledValues(c.currentTime); } Mu.bus.gain.setTargetAtTime(Mu.busGain(), c.currentTime, 0.05); }   // a settings change ends a sting's duck
     for (const v of Mu.voices) if (v.el) v.apply();
     if (Mu.state) Mu.set(Mu.state, Mu.zone);
   };
@@ -276,10 +278,24 @@
   Mu.ducking = null;
   Mu.duck = function (to, attack, hold, release) {
     const c = S() && S().ctx; if (!c || !Mu.bus || !useWA() || Mu.gain() <= 0) return false;
-    const g = Mu.gain(), p = Mu.bus.gain, t = c.currentTime, a = Math.max(0.01, attack || 0.12), hd = Math.max(a, hold || 0), r = Math.max(0.05, release ?? 1.5);
+    const g = Mu.busGain(), p = Mu.bus.gain, t = c.currentTime, a = Math.max(0.01, attack || 0.12), hd = Math.max(a, hold || 0), r = Math.max(0.05, release ?? 1.5);
     p.cancelScheduledValues(t); p.setValueAtTime(p.value, t); p.linearRampToValueAtTime(to * g, t + a); p.setValueAtTime(to * g, t + hd); p.linearRampToValueAtTime(g, t + hd + r);
     Mu.ducking = { to, at: t, until: t + hd + r, hold: hd, release: r };
     note({ at: t, duck: to, attack: a, hold: hd, release: r });
+    return true;
+  };
+  // SP-146: the loot screen's duck. Mu.lootDuck(true / false) on every render (js/ui.js); only a change ramps the bus, to
+  // lootDuck.to x the music gain over attack s, back over release s. A sting's duck running at that moment is left alone and
+  // the new level follows its release. Web Audio only, like Mu.duck.
+  Mu.looting = false;
+  Mu.lootDuck = function (on) {
+    on = !!on; if (Mu.looting === on) return false;
+    Mu.looting = on;
+    const c = S() && S().ctx; if (!c || !Mu.bus || !useWA()) return false;
+    const L = M().lootDuck || {}, p = Mu.bus.gain, t = c.currentTime, r = Math.max(0.01, (on ? L.attack : L.release) ?? 0.3);
+    if (Mu.ducking && t < Mu.ducking.until) { p.linearRampToValueAtTime(Mu.busGain(), Mu.ducking.until + r); return true; }
+    p.cancelScheduledValues(t); p.setValueAtTime(p.value, t); p.linearRampToValueAtTime(Mu.busGain(), t + r);
+    note({ at: t, lootDuck: on ? (L.to ?? 1) : 1, ramp: r });
     return true;
   };
   // Mu.stingOut(dur, { fade, lead, leaveState }): the wipe and the extraction success. The music fades out over fade s
