@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="robots" content="noindex">
+  <link rel="icon" href="data:,">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>RENEGADE [working title] — Slice 5</title>
+<!-- SP-100: the 3D battle view's ES modules (js/b3d/, loaded on demand by js/gfx.js) find three.js + cannon-es here -->
+<script type="importmap">
+{"imports": {"three": "./vendor/three-0.185.0/three.module.min.js?v=9c6e055", "three/addons/": "./vendor/three-0.185.0/addons/", "cannon-es": "./vendor/cannon-es-0.20.0/cannon-es.js?v=9c6e055", "./js/chathead3d.js": "./js/chathead3d.js?v=9c6e055", "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js": "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js?v=9c6e055", "three/addons/loaders/GLTFLoader.js": "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js?v=9c6e055", "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js": "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js?v=9c6e055", "three/addons/utils/SkeletonUtils.js": "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js?v=9c6e055", "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js": "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js?v=9c6e055", "three/addons/utils/BufferGeometryUtils.js": "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js?v=9c6e055", "./js/b3d/map3d.js": "./js/b3d/map3d.js?v=9c6e055", "./js/b3d/view.js": "./js/b3d/view.js?v=9c6e055", "./js/b3d/scenes/scablands.js": "./js/b3d/scenes/scablands.js?v=9c6e055", "./js/b3d/world.js": "./js/b3d/world.js?v=9c6e055", "./js/b3d/scenes/hollis.js": "./js/b3d/scenes/hollis.js?v=9c6e055", "./js/b3d/scenes/drowned.js": "./js/b3d/scenes/drowned.js?v=9c6e055", "./js/b3d/scenes/hushwood.js": "./js/b3d/scenes/hushwood.js?v=9c6e055", "./js/b3d/scenes/greyback.js": "./js/b3d/scenes/greyback.js?v=9c6e055", "./js/b3d/instancing.js": "./js/b3d/instancing.js?v=9c6e055", "./js/b3d/figures.js": "./js/b3d/figures.js?v=9c6e055", "./js/b3d/physics.js": "./js/b3d/physics.js?v=9c6e055", "./js/b3d/killcam.js": "./js/b3d/killcam.js?v=9c6e055", "./js/b3d/assets.js": "./js/b3d/assets.js?v=9c6e055", "./js/b3d/look.js": "./js/b3d/look.js?v=9c6e055", "./js/b3d/fx.js": "./js/b3d/fx.js?v=9c6e055", "./vendor/cannon-es-0.20.0/cannon-es.js": "./vendor/cannon-es-0.20.0/cannon-es.js?v=9c6e055", "./vendor/three-0.185.0/three.module.min.js": "./vendor/three-0.185.0/three.module.min.js?v=9c6e055", "./vendor/three-0.185.0/three.core.min.js": "./vendor/three-0.185.0/three.core.min.js?v=9c6e055"}}
+</script>
+</head>
+<body class="entry-open">
+<style id="entry-style">
+body.entry-open { margin:0; min-height:100%; background:#0c0d10; color:#efe9d7; font-family:system-ui,sans-serif; }
+#entry { position:fixed; inset:0; z-index:2147483646; overflow:hidden; background:#0c0d10; display:flex; align-items:flex-end; justify-content:center; padding:16px 16px max(56px,calc(env(safe-area-inset-bottom) + 24px)); box-sizing:border-box; }
+#entry-backdrop { position:absolute; inset:0; pointer-events:none; }
+#entry .title-gl { position:absolute; inset:0; width:100%; height:100%; display:block; image-rendering:pixelated; image-rendering:crisp-edges; opacity:0; transition:opacity .6s; }
+#entry .title-gl.on { opacity:1; }
+#entry .entry-card { position:relative; width:min(420px,100%); padding:12px 16px 14px; box-sizing:border-box; text-align:center; background:rgba(12,13,16,.78); border:1px solid #6b5631; border-radius:6px; box-shadow:0 2px 12px rgba(0,0,0,.5); }
+#entry h1 { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+#entry p { line-height:1.5; margin:0; }
+#entry button { min-height:48px; margin-top:10px; padding:10px 24px; font:inherit; font-weight:600; cursor:pointer; border:1px solid #dbc183; background:#dbc183; color:#141810; border-radius:5px; }
+#entry button:disabled { opacity:.5; cursor:wait; } #entry button:focus-visible { outline:3px solid white; outline-offset:4px; }
+#entry progress { display:block; width:100%; margin:10px 0 0; height:10px; accent-color:#dbc183; }
+#entry [hidden] { display:none!important; } #entry-status { min-height:24px; overflow-wrap:anywhere; }
+#asset-notice { position:fixed; top:4px; right:4px; z-index:1000; max-width:240px; padding:6px 10px; border-radius:5px; background:#20251f; color:#fff; font:12px system-ui; box-shadow:0 1px 4px #000; }
+#asset-notice:empty { display:none; } #asset-notice button { margin-left:8px; min-height:32px; }
+</style>
+<section id="entry" aria-labelledby="entry-title"><div id="entry-backdrop"></div><div class="entry-card">
+<h1 id="entry-title">RENEGADE</h1>
+<p id="entry-status" role="status" aria-live="polite">Preparing the start screen…</p>
+<progress id="entry-progress" hidden></progress>
+<button id="entry-retry" hidden onclick="location.reload()">Retry</button>
+<noscript><p>Enable JavaScript to play. Your saved game has not been changed.</p></noscript>
+</div></section>
+
+<script>
+window.entryWatchdog = setTimeout(function () {
+  if (!window.Entry) { document.getElementById('entry-status').textContent = 'The start screen could not load. Check your connection and retry.'; document.getElementById('entry-retry').hidden = false; }
+}, 12000);
+</script>
+<script src="js/entry.js?v=9c6e055" defer onerror="clearTimeout(window.entryWatchdog);document.getElementById('entry-status').textContent='The start screen could not load. Check your connection and retry.';document.getElementById('entry-retry').hidden=false"></script>
+<div id="app" hidden inert>
+  <header id="topbar"></header>
+  <main id="screen"></main>
+  <div id="modal-root"></div>
+  <div id="tooltip" class="hidden"></div>
+  <aside id="debug" class="hidden"></aside>
+  <div id="toast"></div>
+</div>
+<template id="game-resources">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/mobile.css">
+<link rel="stylesheet" href="css/title.css">
+<link rel="stylesheet" href="css/scenario.css">
+<link rel="stylesheet" href="css/maps.css">
+<link rel="stylesheet" href="css/forest.css">
+<link rel="stylesheet" href="css/dialogue.css">
+<link rel="stylesheet" href="css/ifpanel.css">
+<!-- data (all tuning numbers) -->
+<script src="js/build_id.js?v=9c6e055"></script>
+<script src="data/config.js"></script>
+<script src="data/resources.js"></script>
+<script src="data/meds.js"></script>
+<script src="data/currency.js"></script>
+<script src="data/sprites.js"></script>
+<script src="data/skills.js"></script>
+<script src="data/bodies.js"></script>
+<script src="data/items.js"></script>
+<script src="data/weapons.js"></script>
+<script src="data/sets.js"></script>
+<script src="data/enemies.js"></script>
+<script src="data/map.js"></script>
+<script src="data/zones.js"></script>
+<script src="data/searchables.js"></script>
+<script src="data/mapsv2.js"></script>
+<script src="data/attention.js"></script>
+<script src="data/forestmap.js"></script>
+<script src="data/hushwood_areas.js"></script>
+<script src="data/events.js"></script>
+<script src="data/quests.js"></script>
+<script src="data/outpost.js"></script>
+<script src="data/recipes.js"></script>
+<script src="data/injuries.js"></script>
+<script src="data/radio.js"></script>
+<script src="data/rivals.js"></script>
+<script src="data/scouting.js"></script>
+<script src="data/town.js"></script>
+<script src="data/town_art.js"></script>
+<script src="data/town_art_homes.js"></script>
+<script src="data/audio.js"></script>
+<script src="data/allies.js"></script>
+<script src="data/perks.js"></script>
+<script src="data/abilities.js"></script>
+<script src="data/tutorial.js"></script>
+<script src="data/dialogue/caine.js"></script>
+<script src="data/dialogue/caine_tour.js"></script>
+<script src="data/dialogue/speakers.js"></script>
+<script src="data/barks.js"></script>
+<script src="data/main.js"></script>
+<script src="data/cards.js"></script>
+<script src="data/gruntlook.js"></script>
+<script src="data/title.js"></script>
+<script src="data/prestige.js"></script>
+<!-- logic (no DOM) -->
+<script src="js/core.js"></script>
+<script src="js/release.js"></script>
+<script src="js/xp.js"></script>
+<script src="js/skills.js"></script>
+<script src="js/items.js"></script>
+<script src="js/state.js"></script>
+<script src="js/gruntgear.js"></script>
+<script src="js/allies.js"></script>
+<script src="js/perks.js"></script>
+<script src="js/map.js"></script>
+<script src="js/zones.js"></script>
+<script src="js/outpost.js"></script>
+<script src="js/quests.js"></script>
+<script src="js/workbench.js"></script>
+<script src="js/injuries.js"></script>
+<script src="js/radio.js"></script>
+<script src="js/checks.js"></script>
+<script src="js/battle.js"></script>
+<script src="js/enemyai.js"></script>
+<script src="js/hunters.js"></script>
+<script src="js/rivals.js"></script>
+<script src="js/abilities.js"></script>
+<script src="js/tactical.js"></script>
+<script src="js/meds.js"></script>
+<script src="js/currency.js"></script>
+<script src="js/barks.js"></script>
+<script src="js/escape.js"></script>
+<script src="js/expedition.js"></script>
+<script src="js/site.js"></script>
+<script src="js/areapath.js"></script>
+<script src="js/v2.js"></script>
+<script src="js/duckparade.js"></script>
+<script src="js/hushwood.js"></script>
+<script src="js/scouting.js"></script>
+<script src="js/tutorial.js"></script>
+<script src="js/ifpanel.js"></script>
+<script src="js/dialogue.js"></script>
+<script src="js/mainquest.js"></script>
+<script src="js/cards.js"></script>
+<script src="js/difficulty.js"></script>
+<script src="js/dice.js"></script>
+<script src="js/titlescene.js"></script>
+<script src="js/prestige.js"></script>
+<script src="js/scenario.js"></script>
+<script src="js/savesnapshot.js"></script>
+<!-- presentation -->
+<script src="js/assets.js"></script>
+<script src="js/sprites.js"></script>
+<script src="js/sfx.js"></script>
+<script src="js/music.js"></script>
+<script src="js/battleview.js"></script>
+<script src="js/battleclock.js"></script>
+<script src="js/roster3d.js"></script>
+<script src="js/gfx.js"></script>
+<script src="js/mapview.js"></script>
+<script src="js/forestmap.js"></script>
+<script src="js/siteview.js"></script>
+<script src="js/duckview.js"></script>
+<script src="js/areawalk.js"></script>
+<script src="js/traversal.js"></script>
+<script src="js/invpanel.js"></script>
+<script src="js/townview.js"></script>
+<script src="js/xpfloat.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/settlepanel.js"></script>
+<script src="js/buildui.js"></script>
+<script src="js/debug.js"></script>
+<script src="js/touch.js"></script>
+<script src="js/tutorialview.js"></script>
+<script src="js/chathead.js"></script>
+<script src="js/dialogueview.js"></script>
+<script src="js/cardview.js"></script>
+<script src="js/gruntlook.js"></script>
+<script src="js/title.js"></script>
+<script src="js/scenarioview.js"></script>
+<script src="js/main.js"></script>
+</template>
+<div id="build-stamp" data-channel="stable" style="position:fixed;right:4px;bottom:3px;z-index:2147483647;font:10px/1.2 monospace;opacity:.85;background:#2c5d9e;color:#fff;padding:2px 6px;border-radius:3px;pointer-events:none;user-select:none">STABLE v0.0.1 · 9c6e055</div>
+</body>
+</html>

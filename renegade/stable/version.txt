@@ -1,0 +1,7 @@
+channel=stable
+version=0.0.1
+epoch=1
+sha=9c6e055
+commit=9c6e055eca66a305844c0cdf870333434c0b5bc8
+built=2026-10-14T19:17:26.884Z
+indexable=no
