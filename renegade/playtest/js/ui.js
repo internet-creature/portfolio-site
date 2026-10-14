@@ -122,6 +122,8 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
 
   // ---------- main render ----------
   UI.render = function () {
+    const kept = G.InvPanel.saveScroll();   // SP-117: an interaction never scrolls a panel back to the top
+    queueMicrotask(() => G.InvPanel.restoreScroll(kept));
     if (UI._itemMenu) UI.closeItemMenu();
     // The title owns this screen; town artwork and tutorial/result dialogs wait until Play.
     if (G.Title && G.Title.open) { G.Sfx.setScreen("title"); if (G.Music) G.Music.set("title"); return; }
@@ -844,10 +846,11 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
       for (const slot of ["weapon2", "offhand2"]) { const it = r.gear[slot]; if (it) carry.appendChild(UI.itemEl(it, () => UI.carryActs(it), UI.slotLabel[slot], worn)); }
     }
     const wornSets = UI.setsEl(worn); if (wornSets) carry.appendChild(wornSets);
+    { const pin = h("div", { class: "carry-pin" }); while (carry.firstChild) pin.appendChild(carry.firstChild); carry.appendChild(pin); }   // SP-117: capacity + gear stay put, the bag scrolls
     carry.appendChild(h("h4", null, "Bag"));
     for (const it of r.bag.items) carry.appendChild(UI.itemEl(it, () => UI.carryActs(it), G.Items.isQuest(it) ? "quest item" : G.Items.isPet(it) ? "pet: extract with it to keep it" : null));
     for (const k in r.bag.res) if (r.bag.res[k] > 0) carry.appendChild(h("div", { class: "item-row" }, SP.icon(DATA.items.resources[k].sprite, 20), h("span", { class: "item-name" }, `${r.bag.res[k]} × ${DATA.items.resources[k].name}`, h("small", null, ` ${U.fmt1(r.bag.res[k] * DATA.items.resources[k].kgPerUnit)} kg`)),
-      h("span", { class: "item-acts" }, h("button", { onclick: () => { const e = X.resToPouch(k); if (e) UI.fail(e); UI.render(); } }, "Pouch"), h("button", { onclick: () => { X.dropRes(k, 1); UI.render(); } }, "Drop 1"))));
+      h("span", { class: "item-acts" }, h("button", { onclick: () => { const e = X.resToPouch(k); if (e) UI.fail(e); UI.render(); } }, "Pouch"), G.InvPanel.dropCtl(k))));
     carry.appendChild(h("h4", null, `Secure Pouch (${r.pouch.length}/${G.Outpost.pouchSlots()}, max ${G.Outpost.pouchMaxKg()} kg — survives death)`));
     r.pouch.forEach((p, i) => { if (p.item) carry.appendChild(UI.itemEl(p.item, () => [{ label: "Take out", act: "take-out", fn: () => { X.fromPouch(i); UI.render(); } }])); else carry.appendChild(h("div", { class: "item-row" }, `${p.n} × ${DATA.items.resources[p.res].name}`, h("button", { onclick: () => { X.fromPouch(i); UI.render(); } }, "Take out"))); });
     side.appendChild(put("carry", carry));

@@ -597,3 +597,10 @@ button.promote { background: #6a5a1a; }
 .tut-obj-mark { flex: none; width: 1em; text-align: center; }
 .tut-obj-item.done .tut-obj-mark { color: #9fd6a0; text-decoration: none; }
 .tut-obj-item.current .tut-obj-mark { color: #dbc183; }
+
+/* SP-117: the inventory side panel keeps capacity and worn gear pinned while the bag list scrolls under it */
+.carry-pin { position: sticky; top: 0; z-index: 2; background: #1e1d17; padding-bottom: 6px; box-shadow: 0 6px 6px -6px #000; max-height: 45vh; overflow-y: auto; }
+@media (max-height: 560px) { .carry-pin { max-height: 34vh; } }   /* phones: the pinned block never takes the bag's room */
+.drop-slider { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; width: 100%; margin-top: 4px; }
+.drop-slider input[type=range] { flex: 1 1 120px; }
+.drop-slider .drop-n { font-size: 12px; color: #c8c2a8; min-width: 110px; }
