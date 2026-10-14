@@ -138,7 +138,7 @@
   };
   BU.badges.infirmary = () => { const J = G.Injuries, b = J.beds(); if (b.length) { const m = Math.min(...b.map((x) => x.until)); return { cls: "timer", text: "✚ " + U.fmtTime(Math.max(0, m - G.now())) }; } const st = O().stored("infirmary"); if (st.med) return { cls: "count", text: `+${st.med} Med` }; return null; };
   BU.giverExtra = function (el, g) { if (g === "ilse" && G.Injuries) BU.panelInfirmary(el); if (G.Quests.shop(g)) BU.panelShop(el, g); };
-  // Megan (milestone 5): Dunn's Stores sells Med Supplies charges and Pain pills (SP-194) for Scrap (no town currency yet); SP-047: "(Owned: N)" counts the item, not the Scrap
+  // Megan (milestone 5): Dunn's Stores sells Med Supplies charges and Pain pills (SP-194) for Chips (SP-196); SP-047: "(Owned: N)" counts the item, not the Scrap
   BU.panelShop = function (el, g) {
     const Q = G.Quests, sh = Q.shop(g), res = G.state.stash.res, sec = h("section", { class: "panel shop" }, h("h3", null, "Stores"));
     for (const key in sh) {
@@ -149,6 +149,11 @@
         h("button", { "data-buy": key + ":5", disabled: !!Q.canBuy(g, key, 5), onclick: () => buy(5) }, "Buy 5")));
     }
     sec.appendChild(h("p", { class: "hint" }, `Stockpile: ${Object.keys(Object.values(sh)[0].price).map((r) => `${res[r] || 0} ${DATA.resources[r].name}`).join(", ")}. No stock limit.`));
+    // SP-196: the currency pouch, and the one-way exchange (Old World Money -> Chips, never back)
+    const C = G.Currency, rate = DATA.currency.chipsPerOldMoney;
+    sec.appendChild(h("div", { class: "shop-row", "data-act": "currency-pouch" }, h("span", null, `${C.readout()}. ${DATA.currency.pouchNote}`),
+      h("button", { "data-act": "exchange-oldmoney", disabled: !(C.oldMoney() > 0), title: `One way only: Chips never turn back into Old World Money.`,
+        onclick: () => { const r = C.exchange(1); G.UI.toast(r.error || r.line); G.Sfx.play(r.error ? "sfx_ui_error" : "sfx_ui_click"); G.State.save(); G.UI.render(); } }, `Exchange 1 Old World Money for ${rate} Chips`)));
     el.appendChild(sec);
   };
 

@@ -443,6 +443,7 @@
     X.rollExtras((T.extras || []).concat((o && o.extras) || []), res, rng);
     if (o && o.addRes && !o.resOnly) for (const k in o.addRes) { const R = DATA.resources[k]; if (!R || R.hidden) continue; const n = rng.int(o.addRes[k][0], o.addRes[k][1]); if (n > 0) res[k] = (res[k] || 0) + n; }   // a modifier object's own stock
     if (o && o.famDrops) X.rollFamilyDrops(o.famDrops, items, res, rng, X.itemLevel(node), !!o.resOnly, o.unit);   // Slice 5 §F
+    if (!(o && o.resOnly)) G.Currency.rollFinds(type, o, res);   // SP-196: Chips / Old World Money on their own stream
     return { items, res };
   };
 
@@ -662,6 +663,7 @@
       const beast = u.family === "beasts" || (DATA.sprites.beastFamilies || []).includes(u.family), machine = !!u.metal;
       const type = machine ? "body_machine" : beast ? "body_beast" : "body_human";   // Slice 3 §4a: a killed machine is a wreck
       const o = mk(site, { type, name: (machine ? "Wreck: " : beast ? "Dead " : "Body: ") + u.name, sprite: u.corpseSprite || u.corpse || SD().types[type].sprite, fresh: true, gibbed: !!u.gibbed, unit: u.eid, rot: Math.round(G.rng() * 360) });
+      if (u.elite) o.elite = true;   // SP-196: Old World Money on Elite bodies (any Heat)
       if (u.elite && SD().eliteExtras && X.tierAtLeast("Marked")) o.extras = SD().eliteExtras.filter((x) => !x.minTier || X.tierAtLeast(x.minTier));   // Relic Tech on Elites at Marked+
       const ud = DATA.enemies.units[u.eid] || {};
       if (ud.relicPct) o.extras = (o.extras || []).concat([{ res: "relic", n: 1, chance: ud.relicPct }]);   // Warden: 10% Relic Tech

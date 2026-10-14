@@ -10,8 +10,8 @@ DATA.quests = {
     dunn: { name: "Dunn", title: "the Quartermaster", hotspot: "dunn_stores", portrait: "npc_dunn",
             perks: { 2: { type: "upgradeCostMult", res: ["food", "water"], mult: 0.8, desc: "Upgrades cost 20% less Food and Water." } },
             // Megan (milestone 5): Dunn's Stores, no stock limit. SP-194: 1 Med Supplies charge each, and Pain pills at twice that
-            // (the design's 2 and 4 Chips; Chips don't exist until SP-196, so the price stays in Scrap: 15 and 30 [DRAFT])
-            shop: { med: { price: { scrap: 15 } }, pills: { price: { scrap: 30 } } } },
+            // SP-196: priced in Chips (Megan: 2 per Med Supply charge, 4 per Pain pills; re-tune after playtests)
+            shop: { med: { price: { chips: 2 } }, pills: { price: { chips: 4 } } } },
     ilse: { name: "Doc Ilse", title: "runs the Infirmary", hotspot: "ilse_tent", portrait: "npc_ilse", journal: true,
             perks: { 2: { type: "medicNextPick", desc: "A Medic is guaranteed in your next human body pick (one-shot)." } } }
   },

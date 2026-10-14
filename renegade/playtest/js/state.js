@@ -377,6 +377,8 @@
     for (const k in DATA.resources) if (s.stash.res[k] == null && !DATA.resources[k].hidden && !DATA.resources[k].bagOnly) s.stash.res[k] = 0;
     // SP-194: Med Supplies live in the pouch as charges; an older save's mid-run bag Med kits join the pool (1 kit = 1 charge)
     s.stash.specialMeds = s.stash.specialMeds || {};
+    // SP-196: the currency pouch (an older save starts with none; Chips / Old World Money found in an old run bag move to it)
+    for (const k of ["chips", "oldmoney"]) { s.stash.res[k] = s.stash.res[k] || 0; if (s.run && s.run.bag && s.run.bag.res && s.run.bag.res[k]) { s.stash.res[k] += s.run.bag.res[k]; delete s.run.bag.res[k]; } }
     if (s.run && s.run.bag && s.run.bag.res && s.run.bag.res.med) { s.stash.res.med = (s.stash.res.med || 0) + s.run.bag.res.med; delete s.run.bag.res.med; }
     s.settings = Object.assign(St.defaultSettings(), s.settings || {});
     if (G.Tut) { s.tut = Object.assign(G.Tut.fresh(), s.tut || {}); s.tut.steps = s.tut.steps || {}; }   // Slice 4 §A: tutorial flags + Marta's choice

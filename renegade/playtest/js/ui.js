@@ -828,6 +828,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     { const M = G.Med, kinds = ["pills", "morphine"].concat(Object.keys(DATA.meds.specials).map((id) => "sm:" + id)).filter((k) => M.count(k) > 0);
       sq.appendChild(h("div", { class: "sq-pouch-meds", "data-med-charges": String(M.charges()) }, h("small", null, `Med Supplies: ${M.charges()} charge${M.charges() === 1 ? "" : "s"}`),
         ...kinds.map((k) => h("button", { disabled: true, title: DATA.meds.battleOnly, "data-pouch-med": k }, `${M.name(k)} (${M.count(k)})`)))); }
+    sq.appendChild(h("div", { class: "sq-pouch-currency", title: DATA.currency.pouchNote }, h("small", null, G.Currency.readout())));   // SP-196
     side.appendChild(put("squad", sq));
     // carry
     const cap = X.capacity(), kg = X.carried(), pct = (kg / cap) * 100;

@@ -352,6 +352,7 @@
   X.takeRes = function (step, k) {
     const r = run(), n = step.res[k]; delete step.res[k];
     if (k === "med") return G.Med.lootFinds(n, G.Med.ctxAt(X.node(), step.obj || null));
+    if (G.Currency.isPouch(k)) return G.Currency.pickUp(k, n);   // SP-196: currency pouch
     r.bag.res[k] = (r.bag.res[k] || 0) + n; return null;
   };
   X.containerEmptied = (step) => !step.items.length && !Object.keys(step.res).length;   // SP-144: the legacy container closes after its last take

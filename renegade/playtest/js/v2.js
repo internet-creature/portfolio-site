@@ -688,6 +688,11 @@
       const lines = G.Med.lootFinds(n, G.Med.ctxAt(X().node(), o));
       V.ev("take", { site: siteKey, obj: objId, entry: entryId }); if (!opts.noSave) G.State.save();
       return { ok: true, meds: lines };
+    } else if (G.Currency.isPouch(e.res)) {   // SP-196: Chips / Old World Money straight into the currency pouch (no pack space, never lost)
+      opSeen(r, opts.opKey); const n = e.n; e.n = 0;
+      const lines = G.Currency.pickUp(e.res, n);
+      V.ev("take", { site: siteKey, obj: objId, entry: entryId }); if (!opts.noSave) G.State.save();
+      return { ok: true, meds: lines };
     } else {
       const per = DATA.items.resources[e.res].kgPerUnit, want = Math.min(e.n, opts.n || e.n), n = Math.min(want, Math.floor((room + 1e-9) / per));
       if (n <= 0) return { error: `No room: you need ${U.fmt1(per - room)} kg more.`, needKg: per - room };
