@@ -12,6 +12,14 @@
   T.setMode = function (m) { const st = T.st(); st.mode = m; st.talked = true; };
   // Settings > Gameplay "Replay tutorial": re-arm every step (mode "none" becomes "full", or nothing would show)
   T.replay = function () { const st = T.st(); st.steps = {}; if (!st.mode || st.mode === "none") st.mode = "full"; st.talked = true; };
+  // SP-205: the box's button for a step. A doneOn step waits for its action (Fight!) and hides the button, unless it
+  // also has ok: true; then the button says OK and closes the tip, and the action still closes it too.
+  T.button = function (st, last, hasTarget) {
+    if (st.doneOn && hasTarget && !st.ok) return { hidden: true };
+    if (st.doneOn && hasTarget) return { hidden: false, label: D().okLabel };
+    return { hidden: false, label: last ? "Got it" : "Next" };
+  };
+  T.confirmOffText = () => D().confirmOff;
   T.done = (id) => !!T.st().steps[id];
   T.mark = (id) => { T.st().steps[id] = 1; };
   T.needsAdvisor = () => !T.st().talked;        // his "!", the first-load dialogue and the trapdoor intercept

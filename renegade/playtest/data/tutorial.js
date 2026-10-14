@@ -38,6 +38,9 @@ window.DATA = window.DATA || {};
 DATA.tutorial = {
   enabled: true,      // master switch: false = no overlay steps at all (Caine still talks)
   pollMs: 400,        // how often a due step is looked for (on top of every render)
+  // SP-205: asked before the tutorial turns off (Skip tutorial, or Settings > Tutorial: Off)
+  confirmOff: "Turn the tutorial off? You can bring it back from Settings > Replay tutorial.",
+  okLabel: "OK",   // a doneOn step with ok: true also shows this button, so it can be closed without its action
   dimAlpha: 0.6,      // the dim layer (~60% black)
   ringPadPx: 6,       // padding around the ringed box
   sequences: {
@@ -80,7 +83,7 @@ DATA.tutorial = {
       { id: "t3_abl", target: ".ability-bar .abl-btn:not(.esc-btn)", fallback: ".bh-pause", fallbackTouch: ".tc-pause", text: "While paused, queue abilities, Med Supplies and Pain pills (a pill clears a heal cooldown). They fire the moment you unpause." },
       { id: "t3_break", target: ".esc-btn", targetTouch: ".tc-esc", fallback: ".esc-btn", text: "Losing? Break away ({key:B}) to run for it. Not everyone always makes it." },
       // the finish: no Next; you can drag your squad under the box, and Fight! (or Space) closes it and starts the fight
-      { id: "t3_fight", target: "[data-act=fight]", free: true, doneOn: "fight", text: "Drag your units around the grid to set them up. Then press Fight! ({key:Space}) to start.",
+      { id: "t3_fight", target: "[data-act=fight]", free: true, doneOn: "fight", ok: true, text: "Drag your units around the grid to set them up. Then press Fight! ({key:Space}) to start.",
         textTouch: "Drag your units around the grid to set them up. Then tap Fight! to start." }
     ] },
     // T4: first extraction site on the first (tutorial) run

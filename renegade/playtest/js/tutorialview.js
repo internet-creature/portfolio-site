@@ -90,7 +90,6 @@
     const el = TV.el, last = TV.cur.i === TV.cur.steps.length - 1;
     el.classList.toggle("free", !!st.free);
     el.querySelector(".tut-text").textContent = G.Util.copy(G.Tut.text(st, touch()));
-    el.querySelector(".tut-next").textContent = last ? "Got it" : "Next";
     el.querySelector(".tut-n").textContent = TV.cur.steps.length > 1 ? `${TV.cur.i + 1}/${TV.cur.steps.length}` : "";
     el.dataset.step = st.id;
     TV.nextBtn();
@@ -112,7 +111,9 @@
   // a doneOn step has no Next (its target finishes it), unless the target isn't on screen: then Next, so it can't trap you
   TV.nextBtn = function () {
     const st = TV.step(), b = TV.el && TV.el.querySelector(".tut-next"); if (!st || !b) return;
-    b.hidden = !!(st.doneOn && targetsOf(st).length);
+    const last = TV.cur.i === TV.cur.steps.length - 1, k = G.Tut.button(st, last, targetsOf(st).length > 0);
+    b.hidden = k.hidden;
+    if (!k.hidden) b.textContent = k.label;
   };
   // ring = the union box of every visible match (re-queried every frame: renders replace the DOM)
   TV.place = function () {
@@ -156,7 +157,7 @@
     TV.cur.i++;
     if (TV.cur.i >= TV.cur.steps.length) TV.close(); else TV.show();
   };
-  TV.skip = function () { G.Tut.setMode("none"); G.State.save(); TV.close(); document.querySelectorAll("[data-tut-obj]").forEach((e) => e.remove());   // SP-189: the objective panel goes with it
+  TV.skip = function () { if (!confirm(G.Tut.confirmOffText())) return; G.Tut.setMode("none"); G.State.save(); TV.close(); document.querySelectorAll("[data-tut-obj]").forEach((e) => e.remove());   // SP-189: the objective panel goes with it
     G.UI.toast("Tutorial off. Settings → Gameplay → Replay tutorial brings it back."); };
   TV.close = function () {
     TV.cur = null; TV.scrolled = null; if (TV.raf) cancelAnimationFrame(TV.raf); TV.raf = 0;

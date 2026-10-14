@@ -677,7 +677,10 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     // Slice 4 §A: tutorial level (Caine's dialogue) + Replay tutorial (re-arms every step for the next run)
     if (G.Tut) {
       box.appendChild(h("h3", null, "Gameplay"));
-      const tm = h("select", { "data-set": "tutorial", onchange: (e) => { G.Tut.setMode(e.target.value); G.State.save(); } });
+      const tm = h("select", { "data-set": "tutorial", onchange: (e) => {
+        if (e.target.value === "none" && !confirm(G.Tut.confirmOffText())) { e.target.value = G.Tut.mode() || "full"; return; }   // SP-205
+        G.Tut.setMode(e.target.value); G.State.save();
+      } });
       for (const [v, l] of [["full", "Full tutorial"], ["tips", "Tips when they come up"], ["none", "Off"]]) tm.appendChild(h("option", { value: v, selected: (G.Tut.mode() || "full") === v }, l));
       box.appendChild(h("div", { class: "set-row" }, h("label", null, "Tutorial"), tm));
       box.appendChild(h("div", { class: "set-row" }, h("label", null, ""), h("button", { "data-act": "replay-tutorial", onclick: () => { G.Tut.replay(); G.State.save(); tm.value = G.Tut.mode(); UI.toast("Tutorial re-armed: every step shows again."); } }, "Replay tutorial")));
