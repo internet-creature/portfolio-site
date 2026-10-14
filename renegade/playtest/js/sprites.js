@@ -23,19 +23,26 @@
     if (c) return c.ok ? c.img : c.failed && reg()[key] && reg()[key].fallback ? SP.get(reg()[key].fallback) : null;   // def.fallback: another key's art if this file fails to load
     if (/^gl_/.test(key)) { if (G.GruntLook) G.GruntLook.ensure(key.replace(/_w$/, "")); return null; }   // composited at runtime, never fetched
     const d = SP.def(key);
-    const entry = SP.cache[key] = { ok: false, img: null };
+    const entry = SP.cache[key] = { ok: false, img: null, t0: Date.now() };
     if (reg().probeAssets === false || !d.file || typeof Image === "undefined") return null;
     if ((reg().pendingArt || []).some((p) => key.startsWith(p))) return null; // not delivered yet: don't request (avoids 404 noise)
     const ready = (img) => { entry.ok = true; entry.failed = false; entry.img = img; for (const f of SP.listeners) f(key); };
-    const failed = () => { entry.failed = true; if (d.fallback) { const f = SP.get(d.fallback); if (f) for (const fn of SP.listeners) fn(key); else { let done = false; SP.listeners.push((k) => { if (done || k !== d.fallback) return; done = true; setTimeout(() => { for (const fn of SP.listeners) fn(key); }, 0); }); } } };
+    const failed = () => { entry.failed = true; if (!d.fallback) { for (const fn of SP.listeners) fn(key); return; } if (d.fallback) { const f = SP.get(d.fallback); if (f) for (const fn of SP.listeners) fn(key); else { let done = false; SP.listeners.push((k) => { if (done || k !== d.fallback) return; done = true; setTimeout(() => { for (const fn of SP.listeners) fn(key); }, 0); }); } } };
+    entry.loading = true;   // SP-206: draw nothing (not the placeholder shape) while the real file is on its way
+    if (typeof setTimeout !== "undefined") setTimeout(() => { if (!entry.ok && !entry.failed) { entry.loading = false; for (const fn of SP.listeners) fn(key); } }, SP.GRACE_MS);
     if (G.Assets) entry.promise = G.Assets.image(reg().basePath + d.file).then(ready, failed);
     else { const img = new Image(); img.onload = () => ready(img); img.onerror = failed; img.src = reg().basePath + d.file; }
     return null;
   };
 
+  // SP-206: a file that is still loading draws nothing for up to GRACE_MS (gut 1500 ms), so the placeholder shape no
+  // longer flashes for a frame before the art. A failed or slow file still gets its placeholder (the listeners repaint).
+  SP.GRACE_MS = 1500;
+  SP.loading = (key) => { const c = SP.cache[key]; return !!(c && c.loading && !c.ok && !c.failed && Date.now() - c.t0 < SP.GRACE_MS); };
   // draw centred at (x,y), size in px, rotation in rad
   SP.draw = function (ctx, key, x, y, size, rot, alpha, tint) {
     const d = SP.def(key), img = SP.get(key);
+    if (!img && SP.loading(key)) return;
     ctx.save(); ctx.translate(x, y); if (alpha != null) ctx.globalAlpha = alpha;
     if (img) {
       const facing = /^(unit|enemy|corpse)_/.test(key);
