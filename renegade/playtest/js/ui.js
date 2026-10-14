@@ -878,9 +878,11 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     if (ifp) {   // SP-200: the riveted-steel panel replaces the scrolling column on desktop; the frame wraps the play window too
       if (secs.log) { secs.log[0].innerHTML = ""; secs.log[0].appendChild(h("h3", null, "Log")); for (const line of r.log.slice().reverse()) secs.log[0].appendChild(h("div", null, line)); }   // the Log tab scrolls, so it gets every line
       const acts = { extract: () => G.Traversal.extract(), legacy: () => UI.extractClick(),
-        escape: () => { const res = G.V2.useEscape(r.loc); if (res.error) UI.fail(res.error); else UI.toast(res.text); UI.render(); } };
+        escape: () => { const res = G.V2.useEscape(r.loc); if (res.error) UI.fail(res.error); else UI.toast(res.text); UI.render(); },
+        settings: () => UI.showSettings(), heal: (who) => { UI.toast(X.useMed(who)); UI.render(); } };   // SP-204
       layout.classList.add("ifp-frame");
       layout.appendChild(G.IfPanel.el(h, bar, secs, acts));
+      layout.appendChild(G.IfPanel.xpEl(h));   // SP-204: the XP trough spans the play window and the panel
     } else layout.appendChild(side);
     scr.appendChild(layout);
   };

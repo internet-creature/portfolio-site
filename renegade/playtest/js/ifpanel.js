@@ -169,11 +169,53 @@
       for (const ty of [y + 18, y - 10]) { const tx = Math.round(x - w / 2), b = [tx, ty - 8, tx + w, ty]; if (tx < 2 || tx + w > W - 2 || ty - 8 < 12 || ty > H - 2) continue;
         const own = boxes.splice(M.nodes.indexOf(n), 1)[0]; const clear = !hit(b); boxes.splice(M.nodes.indexOf(n), 0, own);
         if (clear) { s += `<text class="mm-label${n.here ? " here" : ""}" data-mm-label="${esc(n.id)}" x="${tx}" y="${ty}">${esc(t)}</text>`; boxes.push(b); placed = true; break; } }
+      for (const t2 of placed ? [] : IP.shortLabels(t)) {   // SP-204: a shortened name before none at all ("FRONT OFF.")
+        const w2 = t2.length * 8;
+        for (const ty of [y + 18, y - 10]) { const tx = Math.max(2, Math.min(W - 2 - w2, Math.round(x - w2 / 2))), b = [tx, ty - 8, tx + w2, ty]; if (ty - 8 < 12 || ty > H - 2) continue;
+          const own = boxes.splice(M.nodes.indexOf(n), 1)[0]; const clear = !hit(b); boxes.splice(M.nodes.indexOf(n), 0, own);
+          if (clear) { s += `<text class="mm-label short${n.here ? " here" : ""}" data-mm-label="${esc(n.id)}" x="${tx}" y="${ty}">${esc(t2)}</text>`; boxes.push(b); placed = true; break; } }
+        if (placed) break;
+      }
       if (!placed) s = s.replace(`data-mm-node="${esc(n.id)}">`, `data-mm-node="${esc(n.id)}" data-mm-tip-only="1">`);
     }
     return s + "</svg>";
   };
 
+  // shorter forms of a minimap name, longest first: words over 5 letters cut to 4 + ".", then the first word alone, then
+  // the first 6 letters ("FRONT OFFICE" -> "FRONT OFFI.", "FRONT", "FRONT.")
+  IP.shortLabels = function (t) {
+    const words = t.split(/\s+/).filter(Boolean), out = [];
+    if (words.length > 1) out.push(words.map((w) => (w.length > 5 ? w.slice(0, 4) + "." : w)).join(" "), words[0]);
+    if (t.length > 6) out.push(t.slice(0, 5) + ".");
+    return out.filter((x, i) => x !== t && out.indexOf(x) === i);
+  };
+  // SP-204: squad HP + Heal rows, always on show under the status strip (model: logic; the view below draws it)
+  IP.squadModel = function () {
+    const r = run(), X = G.Exp, body = X.body(), maxHp = X.maxBodyHp(), med = G.Med.charges() > 0, out = [];
+    out.push({ who: "body", name: body.name, hp: r.bodyHp, max: maxHp, alive: r.bodyHp > 0, canHeal: med && r.bodyHp > 0 && r.bodyHp < maxHp });
+    r.squad.forEach((m, i) => { const mx = G.Battle.unitFromGrunt(m.g).maxHp; out.push({ who: i, name: G.Allies.name(m.g), hp: m.hp, max: mx, alive: m.hp > 0, canHeal: med && m.hp > 0 && m.hp < mx }); });
+    return out;
+  };
+  IP.squadEl = function (h, bar, acts) {
+    const box = h("div", { class: "ifp-squad", "data-ifp-squad": "1" });
+    for (const m of IP.squadModel()) box.appendChild(h("div", { class: "ifp-sqrow" + (m.alive ? "" : " dead"), "data-sq": String(m.who) },
+      h("span", { class: "ifp-sqname" }, m.name.toUpperCase()),
+      m.alive ? bar(m.hp / m.max, "#5fd35f", `${Math.ceil(m.hp)}/${Math.round(m.max)}`) : h("span", { class: "ifp-dead" }, "DEAD"),
+      m.alive ? h("button", { class: "ifp-btn", "data-act": "ifp-heal", disabled: !m.canHeal, title: m.canHeal ? "Field heal: 1 Med Supplies charge" : "No heal needed or no charges",
+        onclick: () => acts.heal && acts.heal(m.who) }, "HEAL") : null));
+    return box;
+  };
+  // SP-204: the body's character XP trough under the play window
+  IP.xpModel = function () {
+    const s = G.state, L = DATA.config.leveling, lvl = G.Skills.charLevel(s), at = (n) => n * n * L.charLevelDivisor;
+    const cur = (s.lifetimeXp || 0) - at(lvl), need = at(lvl + 1) - at(lvl);
+    return { lvl, cur: Math.round(cur), need: Math.round(need), frac: need > 0 ? Math.max(0, Math.min(1, cur / need)) : 0 };
+  };
+  IP.xpEl = function (h) {
+    const X = IP.xpModel();
+    return h("div", { class: "ifp-xp", "data-ifp-xp": String(X.lvl), title: "Character XP" }, h("b", null, `LV ${X.lvl}`),
+      h("div", { class: "ifp-xp-track" }, h("div", { class: "ifp-xp-fill", style: `width:${Math.round(X.frac * 1000) / 10}%` })), h("span", null, `${X.cur}/${X.need} XP`));
+  };
   IP.minimapEl = function (h) {
     const M = IP.model(), views = IP.views(), cur = IP.view();
     const slider = h("div", { class: "mm-views", role: "radiogroup", "aria-label": "Minimap view" });
@@ -207,9 +249,11 @@
     for (const k in IP.routes) if (IP.routes[k] === tab && sections[k]) for (const el of [].concat(sections[k])) body.appendChild(el);
     if (tab === "skills") { const sec = h("section", { class: "panel" }, h("h3", null, "Skills (" + G.Exp.body().name + ")")); for (const s of IP.skills()) sec.appendChild(h("div", { class: "ifp-kv" }, h("span", null, s.name), h("b", null, String(s.lvl)))); body.appendChild(sec); }
     if (tab === "settings") body.appendChild(h("section", { class: "panel" }, h("h3", null, "Settings"),
+      h("button", { class: "ifp-btn wide", "data-act": "ifp-open-settings", onclick: () => acts.settings && acts.settings() }, "OPEN SETTINGS"),
+      h("small", { class: "hint" }, "Audio, aim mode, graphics, tutorial."),
       h("label", { class: "ifp-set" }, h("input", { type: "checkbox", "data-set": "textTabLabels", checked: txt, onchange: (e) => IP.setTextLabels(e.target.checked) }), " Text tab labels"),
       h("small", { class: "hint" }, "Shows the tab names as text instead of icons.")));
     if (!body.childNodes.length) body.appendChild(h("small", { class: "hint" }, "Nothing here right now."));
-    return h("div", { class: "exp-side ifp", "data-ifpanel": "1" }, IP.minimapEl(h), IP.stripEl(h, bar, acts), tabs, body);
+    return h("div", { class: "exp-side ifp", "data-ifpanel": "1" }, IP.minimapEl(h), IP.stripEl(h, bar, acts), IP.squadEl(h, bar, acts), tabs, body);
   };
 })(typeof window !== "undefined" ? window : this);
