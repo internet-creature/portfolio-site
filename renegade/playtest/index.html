@@ -8,7 +8,7 @@
 <title>RENEGADE [working title] — Slice 5</title>
 <!-- SP-100: the 3D battle view's ES modules (js/b3d/, loaded on demand by js/gfx.js) find three.js + cannon-es here -->
 <script type="importmap">
-{"imports": {"three": "./vendor/three-0.185.0/three.module.min.js?v=cfc7065", "three/addons/": "./vendor/three-0.185.0/addons/", "cannon-es": "./vendor/cannon-es-0.20.0/cannon-es.js?v=cfc7065", "./js/chathead3d.js": "./js/chathead3d.js?v=cfc7065", "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js": "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js?v=cfc7065", "three/addons/loaders/GLTFLoader.js": "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js?v=cfc7065", "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js": "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js?v=cfc7065", "three/addons/utils/SkeletonUtils.js": "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js?v=cfc7065", "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js": "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js?v=cfc7065", "three/addons/utils/BufferGeometryUtils.js": "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js?v=cfc7065", "./js/b3d/map3d.js": "./js/b3d/map3d.js?v=cfc7065", "./js/b3d/view.js": "./js/b3d/view.js?v=cfc7065", "./js/b3d/scenes/scablands.js": "./js/b3d/scenes/scablands.js?v=cfc7065", "./js/b3d/world.js": "./js/b3d/world.js?v=cfc7065", "./js/b3d/scenes/hollis.js": "./js/b3d/scenes/hollis.js?v=cfc7065", "./js/b3d/scenes/drowned.js": "./js/b3d/scenes/drowned.js?v=cfc7065", "./js/b3d/scenes/hushwood.js": "./js/b3d/scenes/hushwood.js?v=cfc7065", "./js/b3d/scenes/greyback.js": "./js/b3d/scenes/greyback.js?v=cfc7065", "./js/b3d/instancing.js": "./js/b3d/instancing.js?v=cfc7065", "./js/b3d/figures.js": "./js/b3d/figures.js?v=cfc7065", "./js/b3d/physics.js": "./js/b3d/physics.js?v=cfc7065", "./js/b3d/killcam.js": "./js/b3d/killcam.js?v=cfc7065", "./js/b3d/assets.js": "./js/b3d/assets.js?v=cfc7065", "./js/b3d/look.js": "./js/b3d/look.js?v=cfc7065", "./js/b3d/fx.js": "./js/b3d/fx.js?v=cfc7065", "./vendor/cannon-es-0.20.0/cannon-es.js": "./vendor/cannon-es-0.20.0/cannon-es.js?v=cfc7065", "./vendor/three-0.185.0/three.module.min.js": "./vendor/three-0.185.0/three.module.min.js?v=cfc7065", "./vendor/three-0.185.0/three.core.min.js": "./vendor/three-0.185.0/three.core.min.js?v=cfc7065"}}
+{"imports": {"three": "./vendor/three-0.185.0/three.module.min.js?v=f7f3699", "three/addons/": "./vendor/three-0.185.0/addons/", "cannon-es": "./vendor/cannon-es-0.20.0/cannon-es.js?v=f7f3699", "./js/chathead3d.js": "./js/chathead3d.js?v=f7f3699", "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js": "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js?v=f7f3699", "three/addons/loaders/GLTFLoader.js": "./vendor/three-0.185.0/addons/loaders/GLTFLoader.js?v=f7f3699", "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js": "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js?v=f7f3699", "three/addons/utils/SkeletonUtils.js": "./vendor/three-0.185.0/addons/utils/SkeletonUtils.js?v=f7f3699", "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js": "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js?v=f7f3699", "three/addons/utils/BufferGeometryUtils.js": "./vendor/three-0.185.0/addons/utils/BufferGeometryUtils.js?v=f7f3699", "./js/b3d/map3d.js": "./js/b3d/map3d.js?v=f7f3699", "./js/b3d/view.js": "./js/b3d/view.js?v=f7f3699", "./js/b3d/scenes/scablands.js": "./js/b3d/scenes/scablands.js?v=f7f3699", "./js/b3d/world.js": "./js/b3d/world.js?v=f7f3699", "./js/b3d/scenes/hollis.js": "./js/b3d/scenes/hollis.js?v=f7f3699", "./js/b3d/scenes/drowned.js": "./js/b3d/scenes/drowned.js?v=f7f3699", "./js/b3d/scenes/hushwood.js": "./js/b3d/scenes/hushwood.js?v=f7f3699", "./js/b3d/scenes/greyback.js": "./js/b3d/scenes/greyback.js?v=f7f3699", "./js/b3d/instancing.js": "./js/b3d/instancing.js?v=f7f3699", "./js/b3d/figures.js": "./js/b3d/figures.js?v=f7f3699", "./js/b3d/physics.js": "./js/b3d/physics.js?v=f7f3699", "./js/b3d/killcam.js": "./js/b3d/killcam.js?v=f7f3699", "./js/b3d/assets.js": "./js/b3d/assets.js?v=f7f3699", "./js/b3d/look.js": "./js/b3d/look.js?v=f7f3699", "./js/b3d/fx.js": "./js/b3d/fx.js?v=f7f3699", "./vendor/cannon-es-0.20.0/cannon-es.js": "./vendor/cannon-es-0.20.0/cannon-es.js?v=f7f3699", "./vendor/three-0.185.0/three.module.min.js": "./vendor/three-0.185.0/three.module.min.js?v=f7f3699", "./vendor/three-0.185.0/three.core.min.js": "./vendor/three-0.185.0/three.core.min.js?v=f7f3699"}}
 </script>
 </head>
 <body class="entry-open">
@@ -41,7 +41,7 @@ window.entryWatchdog = setTimeout(function () {
   if (!window.Entry) { document.getElementById('entry-status').textContent = 'The start screen could not load. Check your connection and retry.'; document.getElementById('entry-retry').hidden = false; }
 }, 12000);
 </script>
-<script src="js/entry.js?v=cfc7065" defer onerror="clearTimeout(window.entryWatchdog);document.getElementById('entry-status').textContent='The start screen could not load. Check your connection and retry.';document.getElementById('entry-retry').hidden=false"></script>
+<script src="js/entry.js?v=f7f3699" defer onerror="clearTimeout(window.entryWatchdog);document.getElementById('entry-status').textContent='The start screen could not load. Check your connection and retry.';document.getElementById('entry-retry').hidden=false"></script>
 <div id="app" hidden inert>
   <header id="topbar"></header>
   <main id="screen"></main>
@@ -60,7 +60,7 @@ window.entryWatchdog = setTimeout(function () {
 <link rel="stylesheet" href="css/dialogue.css">
 <link rel="stylesheet" href="css/ifpanel.css">
 <!-- data (all tuning numbers) -->
-<script src="js/build_id.js?v=cfc7065"></script>
+<script src="js/build_id.js?v=f7f3699"></script>
 <script src="data/config.js"></script>
 <script src="data/resources.js"></script>
 <script src="data/meds.js"></script>
@@ -180,6 +180,6 @@ window.entryWatchdog = setTimeout(function () {
 <script src="js/scenarioview.js"></script>
 <script src="js/main.js"></script>
 </template>
-<div id="build-stamp" data-channel="playtest" style="position:fixed;right:4px;bottom:3px;z-index:2147483647;font:10px/1.2 monospace;opacity:.95;background:#e0a800;color:#000;font-weight:bold;padding:2px 6px;border-radius:3px;pointer-events:none;user-select:none">PLAYTEST · build cfc7065</div>
+<div id="build-stamp" data-channel="playtest" style="position:fixed;right:4px;bottom:3px;z-index:2147483647;font:10px/1.2 monospace;opacity:.95;background:#e0a800;color:#000;font-weight:bold;padding:2px 6px;border-radius:3px;pointer-events:none;user-select:none">PLAYTEST · build f7f3699</div>
 </body>
 </html>

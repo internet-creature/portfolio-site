@@ -369,6 +369,13 @@
     bark(b, def, "ally_down");
     for (const o of b.units) if (o !== def && o.side === def.side && alive(o) && o.cx.cx_ally_down) { const c = o.cx.cx_ally_down; o.buffs.allyDown = { pct: c.asPct, t: c.sec }; floatText(b, o, `+${c.asPct}% AS`, "#ffb070"); }
   }
+  // SP-217: an enemy has a goryDeathPct chance to gib even on a normal kill. Hashed from the battle seed and the unit id
+  // (not b.rng), so the fight's own rolls, outcomes and replays stay exactly as they were.
+  B.goryRoll = function (b, def) {
+    const pct = C().goryDeathPct || 0; if (!pct || def.side === 0) return false;
+    let h = 2166136261; for (const ch of String(b.seed || 0) + ":" + def.id) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; }
+    return (h % 10000) < pct * 100;
+  };
   function onZero0(b, att, def, overkill, opts) {
     const r = R();
     if (def.ironWill) {   // Iron Will (Slice 3 §3): your body survives the lethal hit at 1 HP, once per expedition
@@ -382,7 +389,7 @@
       if (att.cx.cx_kill_cd && att.abl) for (const s of att.abl) s.cd = Math.max(0, s.cd - att.cx.cx_kill_cd.sec);    // Complex: kills cut cooldowns 1 s
     }
     def.killedBy = att ? { name: att.name, elite: !!att.elite, eid: att.eid, family: att.family } : null;   // Memorial Wall cause of death
-    const gore = opts.gib || overPct >= C().gibOverkillPct || (opts.crit && b.rng() < 0.5) || (att && att.spec && att.spec.passive && att.spec.passive.finisherGib);
+    const gore = opts.gib || overPct >= C().gibOverkillPct || B.goryRoll(b, def) || (opts.crit && b.rng() < 0.5) || (att && att.spec && att.spec.passive && att.spec.passive.finisherGib);
     // Slice 3 §7: rivals play by enemy rules: at 0 HP every rival unit dies (the rival body can show DOMED)
     if (def.rival) {
       if (def.rank === "body") {

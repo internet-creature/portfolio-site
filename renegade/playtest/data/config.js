@@ -238,6 +238,7 @@ DATA.config = {
     corpseLimit: 60,
     decalLimit: 400,
     gibOverkillPct: 40,         // overkill >= this % of max HP -> gibs
+    goryDeathPct: 25,           // SP-217 (Megan's number): any enemy death has this % chance to gib anyway
     maxDurationSec: 120,
     // Megan's playtest: your body doesn't die at 0 HP in battle. It goes DOWNED (enemies ignore it, AoE skips it)
     // while the others fight on. Win -> the run continues at downedReviveHp HP. No ally left standing -> normal death.
