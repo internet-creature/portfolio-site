@@ -186,7 +186,7 @@
     const def = DATA.skills[skillId];
     const s = G.state, E = G.XP ? G.XP.emit : () => {};
     const charBefore = S.charLevel(s);
-    const charAfter = () => { const c = S.charLevel(s); if (c > charBefore) { E({ levelUp: `Character ${c}!` }); if (G.Perks) G.Perks.checkReady(charBefore); } };
+    const charAfter = () => { const c = S.charLevel(s); if (c > charBefore) { E({ levelUp: `Character ${c}!`, rank: "character", lvl: c }); if (G.Perks) G.Perks.checkReady(charBefore); } };
     if (def.kind === "mind") {
       if (ref.kind !== "body") return; // only the consciousness has mind skills
       const got = amount * DATA.config.leveling.mindXpSourceMult;
@@ -201,7 +201,7 @@
       const up = S.addXp({ name: b.name, skills: b.skills, cap: fam.skillCap, xpMult: fam.xpMult }, skillId, amount);
       b.bodyXp = (b.bodyXp || 0) + amount; s.lifetimeXp += amount;
       E({ label: def.name, n: amount }); if (up) E({ levelUp: `${def.name} ${b.skills[skillId].lvl}!` });
-      E({ label: "Body", n: amount, derived: true }); if (S.bodyLevel(b) > bl) E({ levelUp: `Body ${S.bodyLevel(b)}!` });
+      E({ label: "Body", n: amount, derived: true }); if (S.bodyLevel(b) > bl) E({ levelUp: `Body ${S.bodyLevel(b)}!`, rank: "body", lvl: S.bodyLevel(b) });
       E({ label: "Character", n: amount, derived: true }); charAfter();
     } else if (ref.kind === "grunt") {
       const g = ref.grunt;

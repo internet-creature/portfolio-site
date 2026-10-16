@@ -27,7 +27,7 @@
   // named conditions for `when` (sequence or step). ctx: { touch }
   T.conds = {
     tutorialRun: () => !G.state.tutorialDone,
-    extractCheck: () => { const r = G.state.run; if (!r || !G.Exp) return false; const ex = G.Exp.extractionDef(G.Exp.node()); return !!ex && ex.type === "check"; }
+    tutorialRunFought: () => { const s = G.state; return !s.tutorialDone && !!s.run && !!s.run.stats && s.run.stats.battles > 0; },   // THIS run had a fight (a past extraction is not proof; review)
   };
   T.cond = (name, ctx) => !name || (T.conds[name] ? !!T.conds[name](ctx || {}) : false);
   T.sel = (step, touch) => (touch && step.targetTouch !== undefined ? step.targetTouch : step.target) || null;   // targetTouch: null = no ring on phones

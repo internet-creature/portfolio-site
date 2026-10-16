@@ -417,7 +417,7 @@
     }
     kill(b, def, gore);
     if (def.rank === "body") { floatText(b, def, "YOU DIED", "#ff3030", true); b.log.push(`${def.name} (your body) died`); }
-    else b.log.push(`${def.name} killed${att ? " by " + att.name : ""}${gore ? " (gibbed)" : ""}`);
+    else b.log.push(`${def.name} killed${att ? " by " + att.name : ""}`);   // SP-228: a gory death shows, it isn't announced
   }
 
   function kill(b, u, gore, cause) {

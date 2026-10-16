@@ -147,6 +147,6 @@ DATA.items = {
   },
   // resources: defined in data/resources.js (Slice 2: 7 resources); aliased here so existing paths keep working
   resources: DATA.resources,
-  startingStash: { resources: { food: 0, water: 0, scrap: 0, cloth: 0, electronics: 0, chemicals: 0, med: 6, pills: 2, chips: 10, oldmoney: 0 }, items: [] },   // SP-194: 6 Med Supplies charges [DRAFT] (Megan's "about 2 kits" x 3) and 2 Pain pills [DRAFT]; was 20 Med kits (SP-005); SP-196: 10 Chips [GUT], 0 Old World Money
+  startingStash: { resources: { food: 0, water: 0, scrap: 0, cloth: 0, electronics: 0, chemicals: 0, med: 20, pills: 2, chips: 10, oldmoney: 0 }, items: [] },   // SP-225: 20 Med Supplies charges [GUT] and 2 Pain pills [DRAFT]; SP-196: 10 Chips [GUT], 0 Old World Money
   startingGear: { weapon: { base: "zip_gun", rarity: "white", ilvl: 1 }, body: { base: "patched_tunic", rarity: "white", ilvl: 1 } } // SP-208: + Patched Tunic. "starter gear" for the Basic body (§3.5). Vixie (Slice 4): the white Zip Gun, a real lootable pistol from the §C flood
 };

@@ -7,6 +7,7 @@
 window.DATA = window.DATA || {};
 DATA.attention = {
   enabled: true,              // off: every Map plays by the old V2 encounter rules (the rolls below come back too)
+  barBands: [[0, "#e0b84a"], [40, "#ff9a3a"], [70, "#ff6a2a"], [90, "#ff3a2a"]],   // SP-227: [GUT] % filled at least -> bar colour, amber to red
   barMax: 100,                // PLACEHOLDER (SP-132) the bar; reaching it pulls the party straight into battle prep
 
   // Attention per interaction (no flat per-click spawn chance). An ordinary search adds actions.search + the object's

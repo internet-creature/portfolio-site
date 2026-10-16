@@ -190,6 +190,8 @@ DATA.searchables = {
       label: "EXIT"   // the small tag under it, so borrowed art still reads as the way out
     },
     extract: {
+      checkWarn: "Better rolls mean a smoother exit. A bad roll has consequences.",   // SP-230: shown when you click a way out that has a check
+
       default:    { name: "Extraction point", sprite: "obj_radio", examine: "[PLACEHOLDER] Your way home." },
       byLoc: {
         ex_truck:   { name: "Logging Truck",  sprite: "obj_logging_truck", wide: 2, wreckedSprite: "obj_logging_truck_wrecked", wreckedAnim: "obj_logging_truck_wrecked_smoke",   // Slice 5 §G (Smudge 1828231; Vixie: the red Rusted Truck art is retired from zone a, asset kept)

@@ -33,3 +33,10 @@ DATA.stats = {
 DATA.damageTypes = { kinetic: "Kinetic", energy: "Energy", bio: "Bio" };
 // starting mind skills of the consciousness (all others start at 1)
 DATA.startingMind = { medicine: 1, scavenging: 1 };
+
+// SP-229: the banner for the player's own level-ups (js/levelup.js). Copy [DRAFT]; showMs [GUT]
+DATA.levelUp = {
+  showMs: 2600,
+  character: { title: "Level up! Character Lv {n}", sub: "Your skills and perks grow with you. Check Character at camp." },
+  body: { title: "Body Lv {n}", sub: "This body is tougher now." }
+};

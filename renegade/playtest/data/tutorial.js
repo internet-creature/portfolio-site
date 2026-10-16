@@ -11,7 +11,7 @@
 //               "extract_site" standing on an extraction location with nothing queued (its Extract panel is showing)
 //   modes     the help mode Caine's dialogue sets: "full" ("Show me everything"), "tips" ("Just tips when they come up")
 //   when      optional condition name (G.Tut.conds in js/tutorial.js): "tutorialRun" (Basic-body tutorial still on,
-//             state.tutorialDone false), "extractCheck" (the extraction you're standing on has a skill check)
+//             state.tutorialDone false)
 //   steps     shown in order, one text box each
 // STEP fields:
 //   id          one-time flag (state.tut.steps[id]): a step shows once per save. A sequence is "due" while it has an
@@ -87,10 +87,11 @@ DATA.tutorial = {
         textTouch: "Drag your units around the grid to set them up. Then tap Fight! to start." }
     ] },
     // T4: first extraction site on the first (tutorial) run
-    t4_extract: { trigger: "extract_site", modes: ["full", "tips"], when: "tutorialRun", steps: [
-      { id: "t4_how", target: "[data-act=extract]", text: "Here's how you get out. {click} Extract, then pass the check for your ride.",
+    // SP-226: only after the run's first fight (the Ranger's Gate can be left from the start), and on the
+    // interface panel's EXTRACT button on desktop (phones keep the side column's Extract)
+    t4_extract: { trigger: "extract_site", modes: ["full", "tips"], when: "tutorialRunFought", steps: [
+      { id: "t4_how", target: "[data-act=strip-extract]", targetTouch: "[data-act=extract]", fallback: "[data-act=extract]", text: "Here's how you get out. {click} Extract, then pass the check for your ride.",
         textV2: "Here's how you get out. {click} Extract to head home with everything you're carrying." },
-      { id: "t4_graded", target: "[data-act=extract]", when: "extractCheck", text: "Better rolls mean a smoother exit. A bad roll has consequences." }
     ] }
   },
   // SP-101 slice 1 (SP-189): the desktop objective panel on the right (js/tutorialview.js TV.objectives). Always on

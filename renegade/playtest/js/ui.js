@@ -866,7 +866,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     else if (loc && loc.extraction) {
       const ex = X.extractionDef(node), open = X.extractionOpen(node);
       const label = UI.extractLabel(ex);
-      side.appendChild(h("section", { class: "panel extract" }, h("h3", null, "Extraction point: " + loc.name), open ? h("button", { class: "primary big", "data-act": "extract", disabled: !X.canExtract(), onclick: () => UI.extractClick() }, label)
+      side.appendChild(h("section", { class: "panel extract" }, h("h3", null, "Extraction point: " + loc.name), open ? h("button", { class: "primary big", "data-act": "extract", disabled: !X.canExtract(), onclick: () => UI.extractConfirm() }, label)
         : X.wrecked(node) ? h("div", { class: "warn wrecked", "data-note": "wrecked" }, `${X.crashLine(node)} ${X.otherExitsNote(node)}`) : h("div", { class: "warn" }, "Closed at this Heat level.")));
     } else if (v2) { if (!area || !(G.AreaWalk && G.AreaWalk.enabled())) side.appendChild(h("section", { class: "panel" }, h("small", null, inSite ? `${TL() ? "Tap" : "Click"} an object to search it. The way you came in takes you back to traversal.` : `${TL() ? "Tap" : "Click"} a place to see what's known about it, then travel there. Walking around inside a place never starts a fight; searching, forcing and noise can.`))); }
     else side.appendChild(h("section", { class: "panel" }, h("small", null, inSite ? (TL() ? "Tap" : "Click") + " an object to search it. The tooltip shows the time and the disturbance chance. The EXIT you came in by takes you back to the zone map." : `${TL() ? "Tap" : "Click"} a highlighted neighbouring location to move (+${DATA.config.heat.perMove} Heat). ${TL() ? "Tap" : "Click"} where you are to go back inside. The outpost is hidden: extraction is the only way home.`)));
@@ -878,7 +878,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     { const obj = put("obj", G.TutView && G.TutView.objectivesEl && G.TutView.objectivesEl()); if (obj) side.insertBefore(obj, side.firstChild); }   // SP-189: tutorial objectives stack on top of the side column (SP-200 panel: the Map tab)
     if (ifp) {   // SP-200: the riveted-steel panel replaces the scrolling column on desktop; the frame wraps the play window too
       if (secs.log) { secs.log[0].innerHTML = ""; secs.log[0].appendChild(h("h3", null, "Log")); for (const line of r.log.slice().reverse()) secs.log[0].appendChild(h("div", null, line)); }   // the Log tab scrolls, so it gets every line
-      const acts = { extract: () => G.Traversal.extract(), legacy: () => UI.extractClick(),
+      const acts = { extract: () => G.Traversal.extract(), legacy: () => UI.extractConfirm(),
         escape: () => { const res = G.V2.useEscape(r.loc); if (res.error) UI.fail(res.error); else UI.toast(res.text); UI.render(); },
         settings: () => UI.showSettings(), heal: (who) => { UI.toast(X.useMed(who)); UI.render(); } };   // SP-204
       layout.classList.add("ifp-frame");
@@ -981,9 +981,9 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     if (acts[0] === "boop") { const res = X.useObject(o.id); if (res.text) UI.toast(res.text); return; }
     if (acts[0] === "extract" && o.opp) {
       const od = G.V2.oppDef(site.nid, o.opp), ck = od.check ? UI.checkLabel(G.Checks.compute(od.check.skill, od.check.dc, X.members(), X.gearItems())) : "No check.";
-      UI.modal(h("div", { "data-hotspot": "opportunity" }, h("h2", null, o.name), h("p", { class: "examine" }, X.examine(o)), h("p", null, ck), h("p", { class: "hint" }, "A failed attempt is loud (whatever's still nearby may come), and you'll have to step away before trying again."),
-        h("div", { class: "confirm-row" }, h("button", { class: "primary confirm-btn", "data-act": "extract-opportunity", onclick: () => { UI.closeModal(); if (G.Sfx.preloadStings) G.Sfx.preloadStings(["stinger_extract_success", "stinger_extract_fail"]); const res = G.V2.attemptOpp(G.state.run.loc, o.opp); if (res.error) UI.fail(res.error); else { UI.toast(res.text); UI.extractFailSting(res); } UI.render(); } }, "Try it"),
-          h("button", { class: "confirm-btn", onclick: () => { UI.closeModal(); UI.render(); } }, "Not now"))));
+      UI.modal(h("div", { "data-hotspot": "opportunity" }, h("h2", null, o.name), h("p", { class: "examine" }, X.examine(o)), h("p", null, ck), od.check ? h("p", { class: "warn", "data-extract-warn": "1" }, DATA.searchables.access.extract.checkWarn) : null, h("p", { class: "hint" }, "A failed attempt is loud (whatever's still nearby may come), and you'll have to step away before trying again."),
+        h("div", { class: "confirm-row" }, h("button", { class: "primary confirm-btn", "data-act": "extract-opportunity", onclick: () => { UI.closeModal(); if (G.Sfx.preloadStings) G.Sfx.preloadStings(["stinger_extract_success", "stinger_extract_fail"]); const res = G.V2.attemptOpp(G.state.run.loc, o.opp); if (res.error) UI.fail(res.error); else { UI.toast(res.text); UI.extractFailSting(res); } UI.render(); } }, od.check ? "Confirm" : "Extract"),
+          h("button", { class: "confirm-btn", "data-act": "extract-back", onclick: () => { UI.closeModal(); UI.render(); } }, "Go back"))));
       return;
     }
     // Slice 5 §D: the way out leaves to the zone map; the extraction hotspot asks first, then runs the panel's flow
@@ -992,8 +992,9 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     if (acts[0] === "extract") {
       const ex = X.extractionDef(X.node());
       UI.modal(h("div", { "data-hotspot": "extract" }, h("h2", null, o.name), h("p", { class: "examine" }, X.examine(o)), h("p", null, UI.extractLabel(ex)),
-        h("div", { class: "confirm-row" }, h("button", { class: "primary confirm-btn", "data-act": "extract-hotspot", disabled: !X.canExtract(), onclick: () => { UI.closeModal(); UI.extractClick(); } }, ex.type === "check" ? "Try it" : ex.type === "defense" ? "Hold out" : "Extract"),
-          h("button", { class: "confirm-btn", onclick: () => { UI.closeModal(); UI.render(); } }, "Not now"))));
+        ex.type === "check" ? h("p", { class: "warn", "data-extract-warn": "1" }, DATA.searchables.access.extract.checkWarn) : null,   // SP-230: the warning lives here, not in the tutorial
+        h("div", { class: "confirm-row" }, h("button", { class: "primary confirm-btn", "data-act": "extract-hotspot", disabled: !X.canExtract(), onclick: () => { UI.closeModal(); UI.extractClick(); } }, ex.type === "check" ? "Confirm" : ex.type === "defense" ? "Hold out" : "Extract"),
+          h("button", { class: "confirm-btn", "data-act": "extract-back", onclick: () => { UI.closeModal(); UI.render(); } }, "Go back"))));
       return;
     }
     if (acts[0] === "use" || acts[0] === "rummage") {   // SP-216 rummage: the duck parade's bush (its ducks walk out: js/duckview.js)
@@ -1050,6 +1051,13 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     const S = res.stealth, T = DATA.attention.text, tag = S.band === "nat1" ? T.stealthNat1 : S.band === "nat20" ? T.stealthNat20 : `${T.stealth} ${S.roll.total} vs ${S.dc}`;
     return `${tag}: ${S.base} x${S.mult} → +${res.att} ${T.label}`;
   };
+  // SP-227: the band colour for a bar this full (DATA.attention.barBands)
+  UI.attColor = function (bar, max) {
+    const pct = max > 0 ? (100 * bar) / max : 0;
+    let c = DATA.attention.barBands[0][1];
+    for (const [at, col] of DATA.attention.barBands) if (pct >= at) c = col;
+    return c;
+  };
   // SP-133 Enemy Attention: the Map's bar + notoriety icon, inside the Map (a separate thing from Heat, never its numbers)
   UI.attentionEl = function (nid) {
     const A = G.V2 && G.V2.attView(nid); if (!A) return null;
@@ -1057,7 +1065,7 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     if (A.off) return A.peaceful ? h("div", { class: "att-bar off", "data-att": "peaceful" }, h("span", { class: "att-label" }, T.label), h("small", null, T.peaceful)) : null;
     return h("div", { class: "att-bar" + (A.bar >= A.max ? " full" : ""), "data-att": String(A.bar), "data-att-max": String(A.max), title: `${T.label}: looting and noise raise it. When it fills, a patrol comes for you.` },
       h("span", { class: "att-label" }, T.label),
-      h("div", { class: "att-track" }, h("div", { class: "att-fill", style: `width:${Math.round(100 * A.bar / A.max)}%` })),
+      h("div", { class: "att-track" }, h("div", { class: "att-fill", "data-att-color": UI.attColor(A.bar, A.max), style: `width:${Math.round(100 * A.bar / A.max)}%;background:${UI.attColor(A.bar, A.max)}` })),
       h("span", { class: "att-num" }, `${A.bar}/${A.max}`),
       h("span", { class: "att-noto" + (A.noto ? " on" : ""), "data-notoriety": String(A.noto), title: `${T.notoriety} ${A.noto}: ${T.notorietyTip}`, "aria-label": `${T.notoriety} ${A.noto}` }, h("i", null, "!"), String(A.noto)),
       A.esc ? h("span", { class: "att-esc", "data-esc": String(A.esc) }, `Next fight +${A.esc}`) : null,
@@ -1105,6 +1113,17 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
 
   // Slice 5 §A: the truck crash: the heavy sound, a short line across the screen, the roll in a toast
   // Slice 5 §B: a check extraction rolls the d20 on screen first (G.Dice queue); the flash / toast / screen wait for it.
+  // SP-230 (Megan, 10/14): the side panel's Extract (the legacy panel button and the riveted strip's EXTRACT) asks the
+  // same Confirm / Go back as the truck hotspot when the way out is a check; a sure way out still goes straight through
+  UI.extractConfirm = function () {
+    const X = G.Exp, ex = X.extractionDef(X.node());
+    if (!ex || ex.type !== "check") return UI.extractClick();
+    UI.modal(h("div", { "data-extract-confirm": "panel" }, h("h2", null, "Extract?"), h("p", null, UI.extractLabel(ex)),
+      h("p", { class: "warn", "data-extract-warn": "1" }, DATA.searchables.access.extract.checkWarn),
+      h("div", { class: "confirm-row" }, h("button", { class: "primary confirm-btn", "data-act": "extract-confirm", disabled: !X.canExtract(), onclick: () => { UI.closeModal(); UI.extractClick(); } }, "Confirm"),
+        h("button", { class: "confirm-btn", "data-act": "extract-back", onclick: () => { UI.closeModal(); UI.render(); } }, "Go back"))));
+    return null;
+  };
   UI.extractClick = function () {
     if (G.Sfx.preloadStings) G.Sfx.preloadStings(["stinger_extract_success", "stinger_extract_fail"]);   // decoded while the die rolls
     const res = G.Exp.extract();
