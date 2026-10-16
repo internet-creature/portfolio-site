@@ -17,6 +17,7 @@
         catch (e) { G.ScenarioView.fail(e); return; }
         finally { clearTimeout(timer); }
       }
+      if (G.State.sandbox && G.Music && G.Music.loadPrefs) G.Music.loadPrefs();   // prefs after the scenario namespace is set (normal games: already loaded, unchanged)
       G.State.checkBuild();
       G.Debug.overrides = G.State.loadOverrides();
       if (!G.State.sandbox && !G.State.load()) G.State.newGame();

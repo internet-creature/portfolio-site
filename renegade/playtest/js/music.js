@@ -5,8 +5,9 @@
 // position, on the bar grid; other switches crossfade and restart the incoming track from the top.
 // Under file:// (no fetch) it falls back to HTMLAudio elements: same mapping, approximate sync.
 // Starts after the first tap / click / key (G.Sfx.unlock). A file that fails to load is silent (tried once, ogg then mp3).
-// Megan: music starts muted on every page load (Mu.muted, never saved); the title's sound button or Settings > Music turns it
-// on for this visit. Muted, nothing is downloaded.
+// SP-222: music is on by default (DATA.audio.musicOnByDefault). The title's sound button and Settings > Music switch it,
+// and that choice is kept outside the save (G.State.key("music")), so a player who turned it off stays off. Muted,
+// nothing is downloaded. Browsers still hold all audio until the first tap / click / key.
 (function (root) {
   const G = root.G;
   const M = () => DATA.audio.music;
@@ -15,6 +16,19 @@
   const S = () => G.Sfx;
   const base = () => (DATA.sprites.basePath || "assets/");
   const mod = (x, d) => ((x % d) + d) % d;
+
+  // the player's stored choice wins; with none, DATA.audio.musicOnByDefault
+  Mu.storedOn = function () {
+    let raw = null;
+    try { raw = G.State.store.get(G.State.key("music")); } catch (e) { raw = null; }
+    if (raw === "on") return true;
+    if (raw === "off") return false;
+    return DATA.audio.musicOnByDefault !== false;
+  };
+  // read the stored choice into Mu.muted. Called once here (the main game: no namespace, so this is final) and again by
+  // js/main.js after a scenario has set St.sandbox, so a sandbox reads its own renegade_sandbox_music key (review)
+  Mu.loadPrefs = function () { Mu.muted = !Mu.storedOn(); return Mu.muted; };
+  Mu.loadPrefs();
 
   // ---- pure helpers (tested headless) ----
   Mu.trackFor = (state, zone) => { const Z = (M().zones || {})[zone] || {}; return (state && (Z[state] || M().states[state])) || null; };
@@ -165,10 +179,14 @@
   };
   Mu.onReady = function (key) { if (Mu.holding()) return; if (Mu.want === key && (!Mu.main || Mu.main.key !== key)) Mu.go(key, Mu.held(Mu.state)); };
   Mu.onUnlock = function () { if (Mu.state) Mu.set(Mu.state, Mu.zone); };
-  // Music on / off for this visit: the title's sound button and Settings > Music on both come here. On also lifts a
+  // Music on / off (kept across visits): the title's sound button and Settings > Music on both come here. On also lifts a
   // saved Mute, so turning music on is never silent
+  // SP-222: the login screen's unmute-icon pulse (js/title.js); on unless the player turned it off. Outside the save.
+  Mu.nudgeOn = function () { let raw = null; try { raw = G.State.store.get(G.State.key("musicNudge")); } catch (e) { raw = null; } return raw !== "off"; };
+  Mu.setNudge = function (on) { try { G.State.store.set(G.State.key("musicNudge"), on ? "on" : "off"); } catch (e) { /* storage may be unavailable */ } if (!on && G.Title && G.Title.stopNudge) G.Title.stopNudge(); };
   Mu.setOn = function (on) {
     Mu.muted = !on;
+    try { G.State.store.set(G.State.key("music"), on ? "on" : "off"); } catch (e) { /* storage may be unavailable */ }
     const st = G.state && G.state.settings;
     if (on && st && st.mute) { st.mute = false; if (G.State && G.State.save) G.State.save(); }
     if (on && S()) { S().enabled = true; if (S().resume) S().resume(); }

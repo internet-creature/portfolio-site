@@ -3,6 +3,9 @@
 window.DATA = window.DATA || {};
 DATA.config = {
   version: 5,               // save format. 5 (Megan, 10/3/26): the difficulties were renamed (Casual -> Standard, Standard -> Hardcore, Hardcore -> Ragnarök); version 4 saves and scenarios are migrated on load (js/state.js St.migrate5), keeping their rules. 4 (Slice 5 §G, Vixie): The Scablands' map + the moved Rooftop Pickup, so version 1-3 saves are set aside (new game); St.migrate / St.migrate3 still exist for the tests
+  // SP-222 (Megan 10/15): on the login screen with music off, the unmute icon pulses once firstMs after load, then
+  // every everyMs, each pulse pulseMs long, until music is on or the screen closes. Settings can turn it off.
+  soundNudge: { firstMs: 10000, everyMs: 30000, pulseMs: 1200 },
   saveKey: "renegade_slice1_save",      // same key as Slice 1 so an existing save is found and migrated
   overridesKey: "renegade_slice1_tuning",
   // Megan, for now: a new build (window.BUILD_ID from js/build_id.js, the commit hash in packaged builds) wipes the saved

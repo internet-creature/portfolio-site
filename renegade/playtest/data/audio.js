@@ -4,6 +4,7 @@ window.DATA = window.DATA || {};
 DATA.audio = {
   enabled: true,                  // SFX on by default (was G.Sfx.enabled = false in Slice 2)
   sfxPath: "sfx/", ambPath: "amb/", ext: ".mp3", loopExts: [".ogg", ".mp3"],   // under DATA.sprites.basePath (assets/); loops prefer .ogg (gapless), .mp3 if the browser can't play ogg or the file is missing
+  musicOnByDefault: true,   // SP-222: a player who never touched the music switch hears it
   defaults: { master: 0.6, sfx: 0.8, ambient: 0.5, music: 0.7, mute: false },   // Settings panel, saved with the game (state.settings); music 0.7: Snare's tracks are -20 LUFS vs the -18 LUFS ambience
   pitchVar: 0.05,                 // ±5% playback rate per play
   retriggerMs: 50,

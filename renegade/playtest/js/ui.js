@@ -655,9 +655,10 @@ h("span", { class: "res-i" }, SP.icon(DATA.items.resources[k].sprite, 16), " " +
     box.appendChild(h("h3", null, "Audio"));
     box.appendChild(slider("master", "Master")); box.appendChild(slider("sfx", "Sound effects")); box.appendChild(slider("ambient", "Ambient")); box.appendChild(slider("music", "Music"));
     box.appendChild(h("div", { class: "set-row" }, h("label", null, h("input", { type: "checkbox", "data-set": "mute", checked: !!st.mute, onchange: (e) => { st.mute = e.target.checked; G.Sfx.applySettings(); G.State.save(); syncAudio(); } }), " Mute")));
-    // Megan: music starts muted on every visit (G.Music.muted, never saved). Checked = music is audible; turning it on
+    // SP-222: music is on unless the player turned it off (G.Music.muted, from G.Music.storedOn). Checked = music is audible; turning it on
     // lifts a saved Mute, the same as the title's sound button (G.Music.setOn)
-    if (G.Music) box.appendChild(h("div", { class: "set-row" }, h("label", null, h("input", { type: "checkbox", "data-set": "music-on", checked: !G.Music.muted && !st.mute, onchange: (e) => { G.Music.setOn(e.target.checked); syncAudio(); } }), " Music on (starts off each visit)")));
+    if (G.Music) box.appendChild(h("div", { class: "set-row" }, h("label", null, h("input", { type: "checkbox", "data-set": "music-on", checked: !G.Music.muted && !st.mute, onchange: (e) => { G.Music.setOn(e.target.checked); syncAudio(); } }), " Music on (on by default; your choice is remembered)")));
+    if (G.Music && G.Music.nudgeOn) box.appendChild(h("div", { class: "set-row" }, h("label", null, h("input", { type: "checkbox", "data-set": "music-nudge", checked: G.Music.nudgeOn(), onchange: (e) => G.Music.setNudge(e.target.checked) }), " Pulse the unmute icon on the login screen while music is off")));   // SP-222
     function syncAudio() { const m = box.querySelector("[data-set=mute]"), on = box.querySelector("[data-set=music-on]"); if (m) m.checked = !!st.mute; if (on) on.checked = !G.Music.muted && !st.mute; }
     box.appendChild(h("h3", null, "Battle"));
     const aim = h("select", { "data-set": "aimMode", onchange: (e) => { st.aimMode = e.target.value; G.State.save(); } });

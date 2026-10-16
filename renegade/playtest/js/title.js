@@ -17,11 +17,29 @@
   T.soundOn = () => !!(G.Sfx && G.Sfx.unlocked && G.Sfx.enabled && !(G.state && G.state.settings && G.state.settings.mute) && !(G.Music && G.Music.muted));
   T.syncSound = function () {
     const b = document.querySelector("#title .title-sound"); if (!b) return;
-    const on = T.soundOn(); b.classList.toggle("on", on); b.title = on ? "Music on (tap to mute)" : "Music off (tap to play)"; b.setAttribute("aria-pressed", on ? "true" : "false");
+    const on = T.soundOn(); b.classList.toggle("on", on); if (on) b.classList.remove("nudge"); b.title = on ? "Music on (tap to mute)" : "Music off (tap to play)"; b.setAttribute("aria-pressed", on ? "true" : "false");
+  };
+  // SP-222: with music off, the sound button pulses once (soft ring, pulseMs) firstMs after the screen opens, then every
+  // everyMs, until music is on or the screen closes. Timings: DATA.config.soundNudge. Settings can switch it off.
+  T.nudge = { first: null, every: null, end: null };
+  T.stopNudge = function () { const n = T.nudge; clearTimeout(n.first); clearInterval(n.every); clearTimeout(n.end); n.first = n.every = n.end = null;
+    const b = document.querySelector("#title .title-sound"); if (b) b.classList.remove("nudge"); };
+  T.pulse = function () {
+    const b = document.querySelector("#title .title-sound"), C = DATA.config.soundNudge;
+    if (!T.open || !b || T.soundOn() || (G.Music && !G.Music.nudgeOn())) { if (!T.open || T.soundOn()) T.stopNudge(); return false; }
+    b.style.setProperty("--nudge-ms", C.pulseMs + "ms");
+    b.classList.remove("nudge"); void b.offsetWidth; b.classList.add("nudge");
+    clearTimeout(T.nudge.end); T.nudge.end = setTimeout(() => b.classList.remove("nudge"), C.pulseMs);
+    return true;
+  };
+  T.startNudge = function () {
+    T.stopNudge(); const C = DATA.config.soundNudge;
+    if (!C || (G.Music && !G.Music.nudgeOn())) return;
+    T.nudge.first = setTimeout(() => { T.pulse(); T.nudge.every = setInterval(T.pulse, C.everyMs); }, C.firstMs);
   };
   T.toggleSound = function () {
     // by what the button shows: the tap that presses it has already unlocked audio (js/sfx.js resumes on pointerdown).
-    // It switches the music for this visit (Megan: music starts muted on every load), through G.Music.setOn
+    // It switches the music (the choice is kept, SP-222) through G.Music.setOn
     const b = document.querySelector("#title .title-sound");
     if (G.Music) { G.Music.setOn(!(b && b.classList.contains("on"))); G.Music.set("title"); }
     T.syncSound();
@@ -176,11 +194,11 @@
     T.keys = (e) => { if (G.Util.typing(e)) return; if ((e.key === "Enter" || (e.key === " " && T.step !== "who")) && T.open && !document.querySelector("#modal-root .modal")) { e.preventDefault(); if (T.step === "login") T.login(); else if (T.step === "diff") T.toWho(); else T.play(); } };
     window.addEventListener("keydown", T.keys);
     T.tapSync = () => setTimeout(T.syncSound, 50); document.addEventListener("pointerup", T.tapSync, true);
-    T.prepareArt(root); T.startScene(root, pre); T.syncSound();
+    T.prepareArt(root); T.startScene(root, pre); T.syncSound(); T.startNudge();
     if (G.Music) G.Music.set("title");
   };
   T.close = function () {
-    if (!T.open) return; T.open = false;
+    if (!T.open) return; T.open = false; T.stopNudge();
     if (G.TitleScene) G.TitleScene.stop();
     if (T.onResize) window.removeEventListener("resize", T.onResize);
     window.removeEventListener("keydown", T.keys); document.removeEventListener("pointerup", T.tapSync, true);

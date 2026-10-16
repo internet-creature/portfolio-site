@@ -239,6 +239,8 @@
     if (kind === "tuning") return P ? P + "tuning" : c.overridesKey;
     if (kind === "build") return NS ? NS + "build_id" : (c.save || {}).buildIdKey;
     if (kind === "gfx") return P ? P + "gfx" : "renegade_gfx";   // SP-100 graphics prefs (js/gfx.js): outside the save, kept by a build wipe
+    if (kind === "music") return P ? P + "music" : "renegade_music";
+    if (kind === "musicNudge") return P ? P + "music_nudge" : "renegade_music_nudge";   // SP-222: the login screen's unmute pulse on/off, next to the music choice   // SP-222 music on/off choice (js/music.js): outside the save, like gfx
     throw new Error("unknown storage key kind " + kind);
   };
   const LS = () => root.localStorage;
