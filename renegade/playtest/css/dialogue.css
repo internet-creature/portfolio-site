@@ -3,7 +3,7 @@
    metal_panels.py), Press Start 2P (OFL, assets/fonts/PressStart2P-OFL.txt): name + line 16 px (2x native),
    CLICK TO CONTINUE 8 px, no smoothing. The gold name sits on a bolted steel tag; the 128 px chathead in the frame. */
 @font-face { font-family: "Press Start 2P"; src: url("../assets/fonts/PressStart2P.woff2") format("woff2"); font-display: block; }
-.dlg { position: fixed; inset: 0; z-index: 9000; pointer-events: none; }
+.dlg { position: fixed; inset: 0; z-index: 9000; pointer-events: none; user-select: none; -webkit-user-select: none; }   /* SP-223: dialogue text is not selectable */
 .dlg .dlg-block { position: fixed; inset: 0; pointer-events: auto; }
 .dlg.talk .dlg-block { background: rgba(0, 0, 0, 0.45); }
 .dlg .dlg-ring { position: fixed; display: none; border: 3px solid #ffd84a; border-radius: 8px; pointer-events: none; box-shadow: 0 0 0 200vmax rgba(0, 0, 0, 0.55), 0 0 16px 4px #ffd84a88; transition: left .15s, top .15s, width .15s, height .15s; }
