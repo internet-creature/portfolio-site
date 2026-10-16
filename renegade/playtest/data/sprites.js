@@ -583,6 +583,38 @@ DATA.sprites = {
   res_cloth:             { file: "icons/res_cloth.png",             shape: "badge",    color: "#9a7a9a", size: 1, text: "C" },
   res_electronics:       { file: "icons/res_electronics.png",         shape: "diamond",  color: "#40a0e0", size: 1 },
   res_chemicals:         { file: "icons/res_chemicals.png",         shape: "badge",    color: "#80c040", size: 1, text: "Ch" },
+  // SP-236 (Smudge): an icon per named med item (data/meds.js: charge items, pills, Morphine, specials) + the two currencies.
+  // Med keys: "item_med_" + lowercased name, non-alphanumerics -> "_". Not yet shown per item in loot/shop (Rivet wires).
+  item_med_bandage: { file: "items/item_med_bandage.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Bandage (white)
+  item_med_sterile_gauze_pad: { file: "items/item_med_sterile_gauze_pad.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Sterile gauze pad (white)
+  item_med_medical_adhesive_tape: { file: "items/item_med_medical_adhesive_tape.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Medical adhesive tape (white)
+  item_med_hydrocolloid_dressing: { file: "items/item_med_hydrocolloid_dressing.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Hydrocolloid dressing (white)
+  item_med_sterile_saline_wash: { file: "items/item_med_sterile_saline_wash.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Sterile saline wash (white)
+  item_med_antibiotics: { file: "items/item_med_antibiotics.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Antibiotics (white)
+  item_med_splint: { file: "items/item_med_splint.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Splint (green)
+  item_med_gauze_roll: { file: "items/item_med_gauze_roll.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Gauze roll (green)
+  item_med_hypodermic_syringe: { file: "items/item_med_hypodermic_syringe.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Hypodermic syringe (green)
+  item_med_iv_set: { file: "items/item_med_iv_set.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 IV set (green)
+  item_med_trauma_pressure_dressing: { file: "items/item_med_trauma_pressure_dressing.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Trauma pressure dressing (blue)
+  item_med_windlass_tourniquet: { file: "items/item_med_windlass_tourniquet.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Windlass tourniquet (blue)
+  item_med_hemostatic_gauze: { file: "items/item_med_hemostatic_gauze.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Hemostatic gauze (blue)
+  item_med_chest_decompression_needle: { file: "items/item_med_chest_decompression_needle.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Chest decompression needle (blue)
+  item_med_first_aid_kit: { file: "items/item_med_first_aid_kit.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 First-aid kit (yellow)
+  item_med_ifak: { file: "items/item_med_ifak.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 IFAK (yellow)
+  item_med_trauma_bag: { file: "items/item_med_trauma_bag.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Trauma bag (yellow)
+  item_med_portable_defibrillator: { file: "items/item_med_portable_defibrillator.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Portable defibrillator (purple)
+  item_med_tech_bandage: { file: "items/item_med_tech_bandage.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Tech bandage (purple)
+  item_med_healing_gel: { file: "items/item_med_healing_gel.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Healing gel (orange)
+  item_med_medical_nanites: { file: "items/item_med_medical_nanites.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Medical nanites (orange)
+  item_med_pain_pills: { file: "items/item_med_pain_pills.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Pain pills (blue)
+  item_med_morphine: { file: "items/item_med_morphine.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Morphine (purple)
+  item_med_mender_patch: { file: "items/item_med_mender_patch.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Mender Patch (purple)
+  item_med_regen_mist: { file: "items/item_med_regen_mist.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Regen Mist (purple)
+  item_med_amplifier_ampoule: { file: "items/item_med_amplifier_ampoule.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Amplifier Ampoule (purple)
+  item_med_quickseal_foam: { file: "items/item_med_quickseal_foam.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Quickseal Foam (orange)
+  item_med_surge_injector: { file: "items/item_med_surge_injector.png", shape: "cross", color: "#e04040", size: 1, pad: 2 },   // SP-236 Surge Injector (orange)
+  res_chips: { file: "icons/res_chips.png", shape: "circle", color: "#d83030", size: 1 },   // SP-236 Chips (Smudge)
+  res_oldmoney: { file: "icons/res_oldmoney.png", shape: "circle", color: "#9ab878", size: 1 },   // SP-236 Old World Money (Smudge)
   res_med:               { file: "icons/res_med.png",               shape: "cross",    color: "#e04040", size: 1 },
   res_biomass:           { file: "icons/res_biomass.png",           shape: "circle",   color: "#60c040", size: 1 },
   // Slice 3 §11 resources (pending art: badge placeholders)

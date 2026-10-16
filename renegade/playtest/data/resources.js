@@ -13,8 +13,8 @@ DATA.resources = {
   chemicals:   { name: "Chemicals",    sprite: "res_chemicals",   kgPerUnit: 0.5 },
   med:         { name: "Med Supplies", sprite: "res_med",         kgPerUnit: 0, pouch: true, unit: "charge" },   // SP-194: a pool of charges in the pouch, weightless, never lost
   pills:       { name: "Pain pills",   sprite: "res_med",         kgPerUnit: 0, pouch: true, hidden: true },   // SP-194: pouch stack, battle only (hidden: never a resource drop, not in the stockpile list)
-  chips:       { name: "Chips",        sprite: "res_electronics", kgPerUnit: 0, pouch: true, currency: true },   // SP-196: currency pouch, weightless, never lost (sprite placeholder)
-  oldmoney:    { name: "Old World Money", sprite: "res_data_shards", kgPerUnit: 0, pouch: true, currency: true },   // SP-196: premium, earnable only here (sprite placeholder)
+  chips:       { name: "Chips",        sprite: "res_chips",       kgPerUnit: 0, pouch: true, currency: true },   // SP-196: currency pouch, weightless, never lost (icon: SP-236)
+  oldmoney:    { name: "Old World Money", sprite: "res_oldmoney", kgPerUnit: 0, pouch: true, currency: true },   // SP-196: premium, earnable only here (icon: SP-236)
   morphine:    { name: "Morphine",     sprite: "res_med",         kgPerUnit: 0, pouch: true, hidden: true },
   // Slice 3 §11: four new resources (biomass was a hidden Slice 2 resource, now dropping).
   // tag: the location tag that doubles this resource's loot-table weight (default: the resource id).
