@@ -303,26 +303,36 @@
   }
   /* Native disclosures keep each flavor in the note, with keyboard support. */
   .flavors { margin: 12px 0; }
+  .flavor {
+    --flavor-label: #c7e7bd; --flavor-border: #a0c894;
+    --flavor-paper: #f0f8ec; --flavor-paper-border: #d3e6cb;
+  }
+  .flavor.connection {
+    --flavor-label: #f4c3dc; --flavor-border: #dda4c5;
+    --flavor-paper: #fff1f8; --flavor-paper-border: #eed2e2;
+  }
+  .flavor.art {
+    --flavor-label: #dcc9f0; --flavor-border: #bea4dd;
+    --flavor-paper: #f6f0fc; --flavor-paper-border: #e3d4f0;
+  }
   .flavor + .flavor { margin-top: 8px; }
   .flavor summary {
     width: fit-content; max-width: 100%; min-height: 44px;
     padding: 9px 13px; border-radius: 18px;
-    border: 1px solid rgba(121,199,141,0.5);
-    background: #e1f3dc; color: var(--text);
+    border: 1px solid var(--flavor-border);
+    background: var(--flavor-label); color: var(--text);
     font-size: 14px; font-weight: 700; line-height: 1.5;
     cursor: pointer; overflow-wrap: anywhere; list-style-position: inside;
     touch-action: manipulation;
   }
-  .flavor:nth-child(2) summary { background: #e5f2fb; border-color: #c2deef; }
-  .flavor:nth-child(3) summary { background: #f1e5f8; border-color: #dcc8ed; }
   .flavor summary:hover { filter: brightness(1.02); }
   .flavor summary:focus-visible {
     outline: 2px solid #6a3a5c; outline-offset: 3px;
   }
   .flavor-bubble {
     margin-top: 8px; padding: 12px 16px;
-    border-radius: 16px; border: 1px solid #d5e5d0;
-    background: rgba(255,255,255,0.7); overflow-wrap: anywhere;
+    border-radius: 16px; border: 1px solid var(--flavor-paper-border);
+    background: var(--flavor-paper); overflow-wrap: anywhere;
   }
   /* welcome.txt splits into its own scroll region + a fixed dock below it,
      so the action bar can never overlap the body text at any size */
@@ -864,30 +874,41 @@
     wrap.innerHTML = `
       <div class="doc-eyebrow">internetcreature os · start here</div>
       <div class="doc-title">hi! welcome :3</div>
-      <p>my name is Megan! I’m the creator of this site and the founder of Internet Creature Studios, my own independent dev studio.</p>
-      <p>here you’ll find my current and past projects, and hopefully have some fun interacting with the page and exploring what I’ve been making!</p>
-      <p>The software I’m most excited to create comes in three flavors:</p>
+      <p>my name is Megan! i’m the creator of this site and the founder of Internet Creature Studios.</p>
+      <p>here you’ll find my current and past projects. hopefully, you’ll also have some fun interacting with the page and exploring what i’ve been making!</p>
+      <p>for most of my professional career, i worked as a software engineer specializing in backend infrastructure. i got to work alongside incredibly smart and talented people, and i’m grateful for everything i learned from them.</p>
+      <p>over time, though, i realized that the parts of the work that interested me most were the bigger questions: what should we make? who is it for? how should it feel to use? the day-to-day coding, debugging, and testing often drained me, while creative direction and high-level problem solving pulled me in.</p>
+      <p>i use AI assistance heavily in my work, and i know people have different feelings about that. for me, these tools have unlocked so much creative possibility. they help me turn ideas into things i can actually build, explore, and share. my own creativity, judgment, and personal direction are still at the heart of everything i make.</p>
+      <p>Internet Creature Studios is where i’m bringing those ideas to life. the software i’m drawn to making comes in three overlapping flavors:</p>
       <div class="flavors">
-        <details class="flavor">
-          <summary>Software for public good</summary>
-          <div class="flavor-bubble"><p>I want to build tools that help people live happier, healthier lives while respecting our planet.</p></div>
+        <details class="flavor public-good">
+          <summary>🌱 software for public good</summary>
+          <div class="flavor-bubble">
+            <p>my career began in marketing and advertising technology, where i saw what software could do at an enormous, worldwide scale. i loved learning from the people around me, but revenue goals alone were never enough to motivate me. the part of advertising that did interest me was making it genuinely useful: showing someone something timely and relevant that they might actually want to discover.</p>
+            <p>that search for meaningful work brought me to Aledade. i was drawn to its mission and leadership with deep experience in healthcare. the basic idea was simple: help doctors keep patients healthier through better, more proactive care, and share in the savings from avoiding preventable medical costs. helping people was central to how the business succeeded. i was also drawn to the prospect of working alongside smart, empathetic people who cared about that goal.</p>
+            <p>with my own studio, i want to bring that sense of purpose to human connection, education, and entertainment. and yes, i consider entertainment a public good! stories, games, and music can help keep people going through some of the darkest times in their lives. making something that brings someone joy, comfort, or a reason to look forward to tomorrow is meaningful work to me.</p>
+          </div>
         </details>
-        <details class="flavor">
-          <summary>Software that makes human communication and connection easier, richer, and deeper</summary>
-          <div class="flavor-bubble"><p>That second one is especially personal to me. As an autistic person, communication and connection haven’t always come easily, and I care deeply about making them easier for others too.</p></div>
+        <details class="flavor connection">
+          <summary>💬 software to facilitate, enhance, and deepen human connection</summary>
+          <div class="flavor-bubble">
+            <p>i want technology to take more initiative in helping people find each other, and do more of the hard, messy work that makes connection possible.</p>
+            <p>in my own experience, a post about starting a group can get tons of enthusiastic replies, but turning that interest into a lasting community is another thing entirely. organizing takes effort. trust takes care. and bad experiences can burn people out on trying again.</p>
+            <p>so much of social media feels built around following people, building an audience, and chasing visibility. i want to build toward something more mutual: people meeting, participating, and actually getting to know one another.</p>
+            <p>i’d love to create a social platform of my own someday, bringing together what i learn across many of my projects about helping those connections happen.</p>
+          </div>
         </details>
-        <details class="flavor">
-          <summary>Software as a form of art</summary>
-          <div class="flavor-bubble"><p>Art-focused projects will be a large part of the studio’s early work, while the other two areas need more time and care.</p></div>
+        <details class="flavor art">
+          <summary>🎨 software as art</summary>
+          <div class="flavor-bubble">
+            <p>i think the best media is art, whatever form it takes. games, websites, advertisements, logos, graphic design, even the choice of a font: all of these can carry intention, personality, and feeling.</p>
+            <p>websites are a particular obsession of mine. a browser has so much potential for creating experiences, yet we so often settle for text and images on a screen, with tabs to move between them. i want to explore what else a website can be! something full of life, surprise, play, and experimentation.</p>
+            <p>but the intended user experience always comes first. the creativity should help make something a joy to use and explore. that applies just as much to the games, tools, and other media i create.</p>
+            <p>this will be a large part of the studio’s early work, while i give the broader public-good and connection projects the time and care they need.</p>
+          </div>
         </details>
       </div>
-      <p>Internet Creature Studios is my home for all of these ideas: tools, apps, games, and whatever else I find myself cooking up!</p>
-      <p>For most of my professional career, I was a software engineer specializing in backend infrastructure. I got to work with extremely smart and talented people, and I feel very privileged to have the experience that I do.</p>
-      <p>Over time, though, I realized that the day-to-day coding, debugging, and testing could leave me deeply drained. What consistently excited me was the bigger picture: strategy, creative direction, and figuring out what we should build and why.</p>
-      <p>I tried to move toward that kind of work in my last role, especially after finally beginning to understand my own health struggles. Finding a role that fit both my strengths and my needs was difficult.</p>
-      <p>Now, with AI tools as my constant collaborators, I feel more ready than ever to turn my ideas into software that can make a meaningful difference in the world. I use AI assistance heavily in my work, and I know people have different feelings about that. For me personally, it has genuinely unlocked so much of my creative potential!!</p>
-      <p>I’m constantly putting my own creativity, intelligence, and personal direction into what I make. Every project reflects my tastes, experiences, and the things I care about. Having more help building things has given me more room to express all of that.</p>
-      <p>And I can’t wait to get the tools, apps, and games I’m creating into your hands! :3</p>`;
+      <p>i have so much cooking, and i can’t wait to put these tools, apps, games, and experiences into people’s hands. thanks for stopping by 🩷</p>`;
     scroll.appendChild(wrap);
 
     const actions = document.createElement('div');
