@@ -358,9 +358,9 @@ DATA.sprites = {
   npc_dunn:              { file: "ui/npc_dunn.png",                 shape: "badge",    color: "#6a5a3a", size: 1, text: "D" },
   npc_ilse:              { file: "ui/npc_ilse.png",                 shape: "badge",    color: "#7a4a4a", size: 1, text: "I" },
   // Slice 4 §A1 Old Marta (portrait + town figure; Smudge's art, bb0a635)
-  // DEC-96 Caine (the advisor): placeholder badges, no art yet
+  // DEC-96 Caine (the advisor): town figure by Smudge (SP-235, matches his Guard Brannock chathead); npc_ portrait still a badge
   npc_caine:             { shape: "badge", color: "#3a4a6a", size: 1, text: "C" },
-  town_caine:            { shape: "badge", color: "#3a4a6a", size: 1, text: "C" },
+  town_caine:            { file: "town/town_caine.png",             shape: "badge",    color: "#3a4a6a", size: 1, text: "C" },
   npc_marta:             { file: "ui/npc_marta.png",                shape: "badge",    color: "#4a6a3a", size: 1, text: "M" },
   town_marta:            { file: "town/town_marta.png",             shape: "badge",    color: "#4a6a3a", size: 1, text: "M" },
   // Slice 4 §D cards + binder (Smudge; assets/slice4_manifest.json "cards"). DOM images: js/cardview.js

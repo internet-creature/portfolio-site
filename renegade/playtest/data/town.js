@@ -19,7 +19,7 @@ DATA.town = {
     { id: "memorial",    label: "Memorial Wall",              opens: "memorial",  x: 660, y: 64,  w: 130, h: 64,  sprite: "town_memorial",  state: "active", tip: "The fallen, newest first" },
     { id: "lot_comms",   label: "Empty lot (Comms Array)",    opens: "radio", x: 820, y: 60,  w: 120, h: 90,  sprite: "town_lot_comms",       state: "active", tip: "Build the Radio" },
     // DEC-96: Caine, the advisor, by the trapdoor (DATA.tutorial.advisor). Placeholder badge figure until his art lands.
-    { id: "caine",       label: "Caine",                      opens: "advisor", x: 374, y: 452, w: 70,  h: 84,  sprite: "town_caine", state: "active", npc: "caine" },
+    { id: "caine",       label: "Caine",                      opens: "advisor", x: 369, y: 440, w: 80,  h: 96,  sprite: "town_caine", state: "active", npc: "caine" },
     { id: "lot_still",   label: "Empty lot (Water Still)",    opens: "still", x: 460, y: 300, w: 120, h: 80,  sprite: "town_lot_still",       state: "active", tip: "Build the Water Still" }
   ],
   // Floating quest marker over a giver's building while it has a quest you can take now (data/quests.js givers[].hotspot).
