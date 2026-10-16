@@ -52,7 +52,7 @@ DATA.config = {
   // enemies, loot and Heat are the same in all three; only the death rules change. Old saves are Hardcore.
   // SP-157: the new-game name + gender step (js/title.js, after the difficulty). state.player = { name, gender }; dialogue
   // text uses {name} / {they} / {them} / {their} (js/dialogue.js). Genders map to pronouns: he / she / they.
-  player: { maxName: 16, namePlaceholder: "Your name", hint: "Caine will call you by this name.", needBoth: "Type a name and pick one.",
+  player: { maxName: 16, namePlaceholder: "Your name", hint: "", needBoth: "Type a name and pick one.",
     genders: [{ id: "he", label: "Man" }, { id: "she", label: "Woman" }, { id: "they", label: "Nonbinary" }] },
   difficulty: {
     order: ["standard", "hardcore", "ragnarok"],

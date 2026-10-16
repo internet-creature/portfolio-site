@@ -54,7 +54,7 @@ DATA.tutorial = {
     ] },
     // SP-004: the zone picker (the trapdoor opens it) on the first visit: ring the Hushwood. Picking it finishes the step.
     t0_zones: { trigger: "zones", modes: ["full"], steps: [
-      { id: "t0_hushwood", target: "[data-zone=a]", free: true, doneOn: "zone", text: "The Hushwood is the way in. {click} it to get ready for your first run." }
+      { id: "t0_hushwood", target: "[data-zone=a]", free: true, doneOn: "zone", ok: true, text: "The Hushwood is the closest neighboring region where we can safely gather supplies without being detected. Let's start there." }
     ] },
     // T2: first time the run map opens
     t2_map: { trigger: "map", modes: ["full", "tips"], steps: [

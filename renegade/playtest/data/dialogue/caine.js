@@ -27,96 +27,21 @@ DATA.dialogue.caine = {
       "choices": [
         {
           "id": "request_tour",
-          "text": "thanks Caine why don’t you show me around again",
+          "text": "Continue",
           "target": "building_introductions"
         },
         {
-          "id": "question_note",
-          "text": "when did i write this?",
-          "target": "asked_before"
-        },
-        {
           "id": "explore_alone",
-          "text": "i’ll take it from here",
+          "text": "Skip tour",
           "target": "dismiss_caine"
         }
       ]
-    },
-    "asked_before": {
-      "beats": [
-        {
-          "speaker": "Caine",
-          "text": "You've asked me that a few times. I still catch myself waiting for you to remember. Ah... there it is again."
-        }
-      ],
-      "choices": [
-        {
-          "id": "confused",
-          "text": "there what is?",
-          "target": "confused_reply"
-        },
-        {
-          "id": "angry",
-          "text": "there what is? stop looking at me like that.",
-          "target": "angry_reply"
-        },
-        {
-          "id": "understands",
-          "text": "ah. i see what's happening here.",
-          "target": "insight_reply"
-        }
-      ]
-    },
-    "confused_reply": {
-      "beats": [
-        {
-          "speaker": "Caine",
-          "text": "Nevermind"
-        },
-        {
-          "speaker": "narrator",
-          "text": "Caine gives a quiet, rueful laugh and rests a hand on your shoulder. For a moment, he seems about to say something else."
-        }
-      ],
-      "next": "supply_transition"
-    },
-    "insight_reply": {
-      "beats": [
-        {
-          "speaker": "narrator",
-          "text": "Caine smiles, but it doesn't quite reach his eyes. He waits for you to go on."
-        },
-        {
-          "speaker": "narrator",
-          "text": "he’s probably heard that one too. fuck."
-        }
-      ],
-      "next": "supply_transition"
-    },
-    "angry_reply": {
-      "beats": [
-        {
-          "speaker": "Caine",
-          "text": "I'm sorry, {name}. That wasn't fair. I won't press you."
-        }
-      ],
-      "next": "supply_transition",
-      "flag": "ROUTED_BY_CODE: angry_reply -> supply_transition. Approved by Megan for now (2026-10-09; SP-157)"
-    },
-    "supply_transition": {
-      "beats": [
-        {
-          "speaker": "Caine",
-          "text": "Before you head out, let me show you where we keep the supplies. Med Supplies ride in your pouch, so save your room for what you find. I'd like to see you come home, {name}."
-        }
-      ],
-      "next": "building_introductions"
     },
     "building_introductions": {
       "beats": [
         {
           "speaker": "Caine",
-          "text": "Of course. We'll start here and work our way round to the Trapdoor. Take your time, {name}. This is still your home."
+          "text": "Of course. We'll start here and work our way round to the Trapdoor. Take your time, {name}."
         }
       ],
       "actions": [
