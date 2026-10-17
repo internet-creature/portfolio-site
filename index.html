@@ -140,8 +140,8 @@
     -webkit-user-select: text; user-select: text;
   }
 
-  /* maximized: fill the whole desktop and center sparse content (welcome + focus opt out — they manage their own layout) */
-  .window.maximized .window-body:not(:has(> .welcome-shell)):not(:has(> .wx-shell)):not(:has(> .focus-shell)) {
+  /* maximized: fill the whole desktop and center sparse content (welcome, focus + resume opt out — they manage their own layout) */
+  .window.maximized .window-body:not(:has(> .welcome-shell)):not(:has(> .wx-shell)):not(:has(> .focus-shell)):not(:has(> .rs-shell)) {
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
   }
@@ -392,9 +392,10 @@
     min-width: 0; overflow-wrap: anywhere;
   }
 
+  /* shrinkable so a wrapped header line can never push the résumé door out of the window */
   .cols {
-    display: flex; overflow: hidden; flex: none;
-    height: min(384px, calc(60vh - 112px));
+    display: flex; overflow: hidden; flex: 0 1 auto; min-height: 120px;
+    height: min(384px, calc(60vh - 146px));
     margin: 6px -60px 0;
   }
   .window.maximized .cols { height: auto; flex: 1; }
@@ -546,10 +547,29 @@
   .wd-art { width: 44px; height: 44px; display: block; }
 
   .wx-foot {
-    padding: 10px 20px; text-align: center; flex: none;
-    font-size: 11.5px; font-weight: 400; color: #58a86c;
+    padding: 10px 14px; flex: none; display: flex; justify-content: center;
     background: #0e0a13; border-top: 1px solid #1d1526;
   }
+  /* the résumé door: a glowing terminal button under the four columns */
+  .wx-resume {
+    display: flex; align-items: center; gap: 12px;
+    width: min(440px, 100%); min-height: 48px; padding: 8px 14px;
+    font: inherit; text-align: left; cursor: pointer; color: #8ef0a2;
+    background: #150f1c; border: 1px solid #3f8f52; border-radius: 10px;
+    box-shadow: 0 0 0 1px rgba(142,240,162,0.08), 0 0 14px -4px rgba(142,240,162,0.45);
+    transition: box-shadow .2s ease, border-color .2s ease, transform .2s ease;
+  }
+  .wx-resume:hover, .wx-resume:focus-visible {
+    border-color: #8ef0a2; outline: none; transform: translateY(-1px);
+    box-shadow: 0 0 0 1px rgba(142,240,162,0.35), 0 0 22px -2px rgba(142,240,162,0.6);
+  }
+  .wx-resume:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  .wx-r-icon { font-size: 22px; line-height: 1; }
+  .wx-r-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .wx-r-text b { font-size: 15px; font-weight: 700; text-shadow: 0 0 8px rgba(142,240,162,0.5); }
+  .wx-r-sub { font-size: 11.5px; color: #58a86c; }
+  .wx-r-go { font-size: 12px; color: #58a86c; white-space: nowrap; }
+  .wx-resume:hover .wx-r-go { color: #8ef0a2; }
 
   /* youtube program */
   .yt-link {
@@ -571,12 +591,15 @@
     .wx-hello { padding: 10px 18px 8px; }
     .cols { height: auto; flex: 1; margin-top: 0; }
     .col .inner { gap: 6px; }
-    .col .desc, .wx-foot { display: none; }
+    .col .desc, .wx-r-sub { display: none; }
+    .wx-foot { padding: 6px 12px; }
+    .wx-resume { min-height: 40px; padding: 5px 12px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .wx-hello .cursor, .col .arrow, .col .art, .doc-caret { animation: none !important; }
-    .col, .col .desc, .col .arrow, .col .art { transition: none !important; }
+    .col, .col .desc, .col .arrow, .col .art, .wx-resume { transition: none !important; }
+    .wx-resume:hover, .wx-resume:focus-visible { transform: none; }
   }
 
   /* ── focus.exe: the live pomodoro dashboard, embedded from its own origin ── */
@@ -606,6 +629,196 @@
     padding: 6px 16px; cursor: pointer;
   }
   .focus-retry:hover { border-color: #f97316; color: #fdba74; }
+
+  /* ── resume.exe: character sheet + quest log ──
+     one scroll region (the window body); the two columns stack when the
+     window itself is narrow, so it follows maximize/restore, not the viewport */
+  .rs-shell { container-type: inline-size; padding: 18px 18px 24px; }
+  .window.maximized .rs-shell { width: 100%; max-width: 1040px; margin: 0 auto; }
+  .rs-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  @container (min-width: 640px) {
+    .rs-grid { grid-template-columns: 236px minmax(0, 1fr); align-items: start; }
+  }
+
+  .rs-sheet {
+    background: #f6f0fc; border: 1px solid #e3d4f0; border-radius: 14px;
+    padding: 14px; display: grid; gap: 14px;
+  }
+  .rs-who { display: flex; gap: 12px; align-items: center; }
+  .rs-ava {
+    flex: none; width: 58px; height: 58px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #fbe3f0, #e8d9f8);
+    border: 2px solid #fff; box-shadow: 0 0 0 1.5px #dcc9f0;
+  }
+  .rs-ava img { width: 40px; height: 40px; image-rendering: pixelated; }
+  .rs-name { font-size: 21px; font-weight: 800; line-height: 1.1; }
+  .rs-class { font-size: 12.5px; font-weight: 600; color: #6a3a5c; margin-top: 3px; }
+  .rs-k {
+    display: block; font-size: 10.5px; font-weight: 800; letter-spacing: 0.09em;
+    text-transform: uppercase; color: #9a7fc0; margin-bottom: 5px;
+  }
+  .rs-k em { font-style: normal; color: var(--muted); letter-spacing: 0.04em; text-transform: none; font-weight: 700; }
+  .rs-k em::before { content: '· '; }
+  .rs-sheet p { font-size: 13px; line-height: 1.55; }
+
+  .rs-party { list-style: none; display: grid; gap: 4px; }
+  .rs-jump {
+    width: 100%; display: grid; grid-template-columns: auto 1fr; gap: 0 8px;
+    padding: 6px 8px; border: 1px solid transparent; border-radius: 9px;
+    background: none; font: inherit; color: var(--text); text-align: left; cursor: pointer;
+  }
+  .rs-jump:hover { background: #fff; border-color: #e3d4f0; }
+  .rs-jump .dot { grid-row: span 2; width: 10px; height: 10px; margin-top: 4px; border-radius: 50%; background: var(--ch-label); border: 1.5px solid var(--ch-border); }
+  .rs-jump .org { font-size: 13px; font-weight: 800; line-height: 1.3; }
+  .rs-jump .meta { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+
+  .rs-inv { display: grid; gap: 7px; }
+  .rs-inv-row { display: flex; flex-wrap: wrap; gap: 4px; }
+  .rs-inv-row .grp { width: 100%; font-size: 11px; font-weight: 700; color: var(--muted); }
+  .rs-chip {
+    font-size: 11.5px; font-weight: 700; color: #6b4f86;
+    background: #fff; border: 1px solid #e3d4f0; padding: 2px 9px; border-radius: 999px;
+  }
+
+  .rs-log-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .rs-log-title { font-size: 19px; font-weight: 800; margin-right: auto; }
+  .rs-tool {
+    font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer;
+    min-height: 32px; padding: 5px 13px; border-radius: 999px;
+    color: #6a3a5c; background: #fff; border: 1px solid #e3d4f0;
+  }
+  .rs-tool:hover { background: #f6f0fc; }
+
+  /* chapters reuse the about_me flavor palette: sage, pink, lavender, sky */
+  .rs-ch {
+    --ch-label: #c7e7bd; --ch-border: #a0c894; --ch-paper: #f0f8ec; --ch-ink: #3f6b35;
+  }
+  .rs-ch.aledade, .rs-jump.aledade { --ch-label: #f4c3dc; --ch-border: #dda4c5; --ch-paper: #fff1f8; --ch-ink: #8a3d66; }
+  .rs-ch.google, .rs-jump.google   { --ch-label: #dcc9f0; --ch-border: #bea4dd; --ch-paper: #f6f0fc; --ch-ink: #5e4488; }
+  .rs-ch.resident, .rs-jump.resident { --ch-label: #cfe6f8; --ch-border: #a8d4f2; --ch-paper: #f1f8fe; --ch-ink: #275f87; }
+  .rs-jump.studio { --ch-label: #c7e7bd; --ch-border: #a0c894; }
+  .rs-ch + .rs-ch { margin-top: 10px; }
+
+  .rs-ch > summary, .rs-q > summary {
+    list-style: none; cursor: pointer; position: relative; touch-action: manipulation;
+  }
+  .rs-ch > summary::-webkit-details-marker, .rs-q > summary::-webkit-details-marker { display: none; }
+  .rs-ch > summary {
+    display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px 10px; align-items: start;
+    padding: 11px 14px; border-radius: 14px;
+    background: var(--ch-label); border: 1px solid var(--ch-border);
+  }
+  .rs-ch[open] > summary { border-radius: 14px 14px 0 0; }
+  .rs-ch-num {
+    grid-row: span 3; align-self: center;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 700;
+    color: var(--ch-ink); background: rgba(255,255,255,0.65);
+    padding: 4px 7px; border-radius: 8px; white-space: nowrap;
+  }
+  .rs-ch-org { font-size: 15.5px; font-weight: 800; line-height: 1.3; }
+  .rs-ch-role { font-size: 12.5px; font-weight: 700; color: var(--ch-ink); }
+  .rs-ch-sum { font-size: 13px; line-height: 1.5; color: var(--text); margin-top: 3px; }
+  /* drawn chevron: points right when closed, down when open */
+  .rs-chev {
+    grid-row: span 3; align-self: center; width: 9px; height: 9px; margin: 0 4px;
+    border-right: 2.5px solid var(--ch-ink); border-bottom: 2.5px solid var(--ch-ink);
+    border-radius: 1px; transform: rotate(-45deg); transition: transform .2s ease;
+  }
+  details[open] > summary > .rs-chev { transform: rotate(45deg); }
+
+  .rs-status {
+    display: inline-flex; align-items: center; gap: 5px; vertical-align: 1px;
+    margin-left: 6px; padding: 1px 8px; border-radius: 999px;
+    font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+    background: rgba(255,255,255,0.7); color: var(--ch-ink); white-space: nowrap;
+  }
+  .rs-status.active::before {
+    content: ''; width: 7px; height: 7px; border-radius: 50%;
+    background: #4cc767; box-shadow: 0 0 0 0 rgba(76,199,103,0.6);
+    animation: rs-pulse 1.8s ease-out infinite;
+  }
+  @keyframes rs-pulse { 70% { box-shadow: 0 0 0 6px rgba(76,199,103,0); } 100% { box-shadow: 0 0 0 0 rgba(76,199,103,0); } }
+
+  .rs-ch-body {
+    padding: 12px; display: grid; gap: 8px;
+    background: var(--ch-paper); border: 1px solid var(--ch-border); border-top: 0;
+    border-radius: 0 0 14px 14px;
+  }
+  .rs-ch-body > .rs-more { font-size: 13px; line-height: 1.55; padding: 0 2px; }
+
+  .rs-q {
+    background: #fff; border: 1px solid var(--ch-border); border-radius: 12px;
+    box-shadow: 0 3px 10px -7px rgba(60,40,70,0.35);
+  }
+  .rs-q > summary {
+    display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 0 9px; align-items: start;
+    padding: 10px 12px; border-radius: 12px;
+  }
+  .rs-q > summary:hover { background: var(--ch-paper); }
+  .rs-q-gem { color: var(--ch-ink); font-size: 12px; line-height: 1.6; }
+  .rs-q-name { font-size: 14px; font-weight: 800; line-height: 1.4; }
+  .rs-q-tag { display: block; font-size: 12.5px; font-weight: 400; color: var(--muted); line-height: 1.45; margin-top: 1px; }
+  .rs-q .rs-chev { grid-row: auto; margin-top: 6px; align-self: start; }
+  .rs-q-body { padding: 2px 14px 14px 33px; display: grid; gap: 11px; }
+  .rs-q-body p { font-size: 13.5px; line-height: 1.6; }
+  .rs-q-body .rs-k { color: var(--ch-ink); }
+  .rs-loot { display: flex; flex-wrap: wrap; gap: 6px; }
+  .rs-loot a {
+    font-size: 12.5px; font-weight: 700; color: var(--ch-ink); text-decoration: none;
+    padding: 4px 11px; border-radius: 999px; background: var(--ch-paper); border: 1px solid var(--ch-border);
+  }
+  .rs-loot a:hover { background: var(--ch-label); }
+
+  .rs-shell a:not(.rs-loot a) { color: #8a3d66; }
+  .rs-shell summary:focus-visible, .rs-tool:focus-visible, .rs-jump:focus-visible, .rs-loot a:focus-visible {
+    outline: 2px solid #6a3a5c; outline-offset: 2px;
+  }
+  .rs-foot { margin-top: 14px; font-size: 12px; color: var(--muted); text-align: center; }
+
+  /* phone-width windows: chapter badge rides above the title instead of eating a column */
+  @container (max-width: 460px) {
+    .rs-ch > summary { grid-template-columns: minmax(0, 1fr) auto; padding: 10px 12px; }
+    .rs-ch-num { grid-row: 1; grid-column: 1; justify-self: start; margin-bottom: 4px; }
+    .rs-ch > summary > .rs-chev { grid-row: 1; grid-column: 2; }
+    .rs-ch-org, .rs-ch-role, .rs-ch-sum { grid-column: 1 / -1; }
+    .rs-ch-body { padding: 10px 8px; }
+    .rs-q-body { padding: 2px 12px 14px; }
+  }
+  @media (max-width: 520px) { .rs-shell { padding: 12px 10px 20px; } }
+
+  @media (pointer: coarse) {
+    .rs-tool { min-height: 40px; padding: 8px 15px; }
+    .rs-jump { padding: 9px 8px; }
+    .rs-loot a { padding: 8px 13px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .rs-status.active::before { animation: none; }
+    .rs-chev { transition: none; }
+  }
+
+  /* print: only the résumé, every chapter and quest opened (see beforeprint) */
+  @media print {
+    body.print-resume { height: auto; overflow: visible; background: #fff; }
+    body.print-resume #taskbar, body.print-resume #startmenu, body.print-resume #icons,
+    body.print-resume #tagline, body.print-resume #toast,
+    body.print-resume .window:not(:has(.rs-shell)),
+    body.print-resume .window .titlebar, body.print-resume .rs-tools { display: none !important; }
+    html:has(body.print-resume) { height: auto; overflow: visible; }
+    body.print-resume #desktop { position: static; background: none; overflow: visible; }
+    body.print-resume .window:has(.rs-shell) {
+      position: static; transform: none !important; width: auto !important; height: auto !important;
+      border: 0; box-shadow: none; border-radius: 0; overflow: visible; display: block !important;
+    }
+    body.print-resume .window:has(.rs-shell) .window-body { max-height: none !important; height: auto !important; overflow: visible; display: block; }
+    body.print-resume .rs-shell { padding: 0; max-width: none; }
+    body.print-resume .rs-grid { display: block; }
+    body.print-resume .rs-sheet { margin-bottom: 14px; }
+    body.print-resume .rs-q, body.print-resume .rs-ch > summary { break-inside: avoid-page; }
+    body.print-resume .rs-chev { visibility: hidden; }   /* keep its grid slot so headers don't reflow */
+    body.print-resume .rs-loot a[href^="http"]::after { content: ' ' attr(href); font-weight: 400; }
+    body.print-resume * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
 
   /* ───────── taskbar ───────── */
   #taskbar {
@@ -915,7 +1128,8 @@
     actions.className = 'welcome-actions';
     actions.innerHTML =
       '<button class="wa-btn sage" data-open="studio" title="my independent dev studio and current projects">✦ explore the studio</button>' +
-      '<button class="wa-btn sky" data-open="contact" title="twitter + email inside!">\u2709\ufe0f contact me</button>';
+      '<button class="wa-btn sky" data-open="contact" title="twitter + email inside!">\u2709\ufe0f contact me</button>' +
+      '<button class="wa-btn" data-open="resume" title="my career, as a quest log">📜 résumé</button>';
     actions.querySelectorAll('.wa-btn').forEach(b => {
       const key = b.dataset.open;
       b.addEventListener('click', () => WM.open(key));
@@ -1013,7 +1227,19 @@
           '</span>' +
         '</div>' +
       '</div>' +
-      '<div class="wx-foot">click around and explore!</div>';
+      '<div class="wx-foot">' +
+        '<button type="button" class="wx-resume" data-open="resume">' +
+          '<span class="wx-r-icon" aria-hidden="true">📜</span>' +
+          '<span class="wx-r-text"><b>resume.exe</b><span class="wx-r-sub">my career, as a quest log</span></span>' +
+          '<span class="wx-r-go" aria-hidden="true">open ↵</span>' +
+        '</button>' +
+      '</div>';
+
+    const resumeBtn = shell.querySelector('.wx-resume');
+    resumeBtn.addEventListener('click', () => {
+      WM.open('resume', { returnFocus: resumeBtn });
+      maximizeKey('resume');   // a long read deserves the whole desktop
+    });
 
     shell.querySelectorAll('.col-trigger').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1147,8 +1373,273 @@
     return shell;
   }
 
+  /* ── resume.exe: the résumé as a character sheet + quest log ────
+     content lives in RESUME so updates are data edits, not markup edits.
+     quest fields are all optional; only what's present gets rendered.   */
+  const RESUME = {
+    name: 'Megan',
+    klass: 'backend + data engineer → studio founder',
+    focus: 'Building <a href="#studio">Internet Creature Studios</a>, my independent dev studio. Right now that means RENEGADE, a browser tactics / roguelite.',
+    background: 'Backend and data infrastructure engineer who took end-to-end ownership of production systems, from ads and Google Drive backends at Google to clinical data pipelines at Aledade.',
+    inventory: [
+      ['languages', ['Python', 'SQL', 'C++', 'Java']],
+      ['data + cloud', ['Databricks', 'Spark', 'Airflow', 'PostgreSQL', 'AWS', 'Docker', 'Kubernetes']],
+      ['observability', ['Datadog']],
+      ['ml + robotics', ['TensorFlow', 'ROS']],
+      ['practices', ['pipeline architecture', 'data quality', 'cost optimization', 'code review']],
+    ],
+    chapters: [
+      {
+        id: 'studio', ch: 'ch. 4', org: 'Internet Creature Studios', role: 'Founder · creative direction + engineering',
+        dates: 'now', status: 'active quest', active: true,
+        summary: 'My independent dev studio: tools, apps, games, and other things I want to see in the world. I set the creative direction and build the software, with heavy AI assistance and my own judgment steering.',
+        quests: [
+          {
+            name: 'RENEGADE', status: 'in development',
+            tag: 'A browser tactics / roguelite set in the universe of my novel, DORMANT.',
+            contribution: 'I’m designing and building it as the studio’s current main project.',
+            evidence: [['the studio', '#studio'], ['DORMANT', '#dormant']],
+          },
+          {
+            name: 'chordial', status: 'mvp · public code',
+            tag: 'An ADHD productivity tool: a body double on your desktop.',
+            problem: 'Most productivity tools assume the hard part is deciding what to do. With ADHD, the hard parts are starting, staying, and coming back.',
+            contribution: 'I built it by myself, mostly because I wanted it to exist for me.',
+            how: 'One-tap focus blocks, time that banks instead of punishing wandering attention, a gently imposed two-week structure, a cast of helpers for different areas of life, and nudges that quiet down as habits grow steadier. Its live focus view runs inside this site as focus.exe.',
+            impact: 'It became the proving ground for willowden: the body double, the banking focus blocks, and the helper cast were all born here.',
+            evidence: [['code on github ↗', 'https://github.com/internet-creature/chordial-mvp'], ['focus.exe', '#focus'], ['chordial', '#chordial']],
+          },
+          {
+            name: 'willowden', status: 'on break',
+            tag: 'An ADHD planning companion and focus coach: a calm little presence on your desktop.',
+            problem: 'Help people both set goals and work toward them, gently. No streaks, anywhere, ever.',
+            contribution: 'I designed willowden 1.0 as chordial’s next chapter and wrote its public design doc.',
+            how: 'Life runs in small themed cycles, work happens in tiny focus blocks, and stopping early still banks the minutes, because starting was the achievement. A cast of helpers, each with a different role, can sit with you while you work.',
+            evidence: [['design doc', 'wiki/willowden/'], ['willowden', '#willowden']],
+          },
+        ],
+        more: 'Also in development: IDOL – Voice Trainer and hoardbird.',
+      },
+      {
+        id: 'aledade', ch: 'ch. 3', org: 'Aledade', role: 'Software Engineer II',
+        dates: 'June 2021 – April 2026', status: 'complete',
+        summary: 'Owned production clinical data pipelines at a company that helps doctors keep patients healthier through proactive care: cohort logic, vendor delivery, on-call, observability, and platform cost.',
+        quests: [
+          {
+            name: 'Patient lab-panel pipeline',
+            tag: 'Cohort selection, change detection, and validated delivery to external vendors.',
+            problem: 'External vendors needed patient lab panels built from several conformed data sources, and only validated changes should reach them.',
+            contribution: 'I owned the pipeline’s design, build, and operation, including the cohort-selection logic and the delta computation.',
+            how: 'The pipeline selects the patient cohort, computes what changed across multiple conformed data sources, and delivers only validated changes downstream.',
+            impact: 'A high-priority clinical pipeline that external vendors could rely on for validated updates.',
+          },
+          {
+            name: 'Reliability + on-call ownership',
+            tag: 'Tracing incidents through upstream systems the team didn’t control.',
+            problem: 'High-severity production incidents could start in upstream dependencies outside the team’s control.',
+            contribution: 'As primary technical owner and on-call responder for the lab-panel system, I diagnosed those incidents by tracing failures upstream, then built safeguards to account for them.',
+            impact: 'The pipeline itself now guards against upstream failures instead of passing them along.',
+          },
+          {
+            name: 'Observability + data quality',
+            tag: 'Datadog and Databricks monitoring for pipeline health and data-quality SLAs.',
+            problem: 'There was a critical observability gap: pipelines could fail silently.',
+            contribution: 'I identified the gap on my own, then led the design and rollout of the monitoring infrastructure.',
+            how: 'Monitoring in Datadog and Databricks tracks pipeline health and data-quality SLAs.',
+            impact: 'Silent failures surface before they reach clinical consumers.',
+          },
+          {
+            name: 'Platform cost monitoring',
+            tag: 'Making Databricks spend visible, then cutting the waste.',
+            problem: 'Wasteful spend across the company’s Databricks platform was hard to see.',
+            contribution: 'I led a cost-optimization initiative: monitoring around company-wide spend, plus analysis frameworks for finding and reducing waste.',
+            impact: 'Lower data storage costs and better job performance.',
+          },
+          {
+            name: 'Vendor specs, docs + review standards',
+            tag: 'The interface between internal clinical data and external systems.',
+            contribution: 'I partnered with external vendors on file specifications and integrations, and established documentation and code-review standards that the team adopted.',
+            impact: 'Higher quality, reliability, and maintainability across the team’s data engineering.',
+          },
+        ],
+      },
+      {
+        id: 'google', ch: 'ch. 2', org: 'Google', role: 'Software Engineer',
+        dates: 'July 2017 – February 2019', status: 'complete',
+        summary: 'Backend services for advertising and Google Drive, in C++ and Java.',
+        quests: [
+          {
+            name: 'Ad recommendation serving',
+            tag: 'Low-latency C++ server infrastructure.',
+            contribution: 'I designed and launched low-latency C++ server infrastructure for ad product recommendations.',
+            how: 'It integrated with Google’s core advertising systems at high request volume.',
+          },
+          {
+            name: 'Google Drive Approvals + migrations',
+            tag: 'Backend Java services for Drive.',
+            contribution: 'I built backend Java services for Google Drive, designed and implemented the Approvals feature, and contributed to large-scale codebase migrations.',
+          },
+        ],
+      },
+      {
+        id: 'resident', ch: 'ch. 1', org: 'Google', role: 'Engineering Residency',
+        dates: 'July 2016 – July 2017', status: 'complete',
+        summary: 'Backend work on YouTube comments, plus machine-learning and robotics data infrastructure.',
+        quests: [
+          {
+            name: 'YouTube comments backend',
+            tag: 'Java backend and RPC work.',
+            contribution: 'I optimized Java backend infrastructure for YouTube’s comment system, refactoring critical RPC services.',
+            impact: 'Better performance and reliability for a system running at YouTube scale.',
+          },
+          {
+            name: 'ML pipelines + serving',
+            tag: 'Python pipelines for TensorFlow models.',
+            contribution: 'I built Python pipelines for TensorFlow models and worked on their serving infrastructure.',
+          },
+          {
+            name: 'Robotics sensor infrastructure',
+            tag: 'ROS sensor integration in Python and C++.',
+            contribution: 'I built sensor integration for LiDAR and IoT devices using ROS, in Python and C++.',
+          },
+        ],
+      },
+    ],
+  };
+
+  // playful label first, plain label right beside it — no decoding required
+  const QUEST_FIELDS = [
+    ['problem',      'objective', 'the problem'],
+    ['contribution', 'my part',   'my contribution'],
+    ['how',          'mechanics', 'how it worked'],
+    ['impact',       'reward',    'why it mattered'],
+    ['learned',      'lore',      'what i learned'],
+  ];
+
+  function makeResume() {
+    const R = RESUME;
+    const shell = document.createElement('div');
+    shell.className = 'rs-shell';
+
+    const questHtml = q => {
+      let body = QUEST_FIELDS.filter(([k]) => q[k]).map(([k, fun, plain]) =>
+        '<div><span class="rs-k">' + fun + ' <em>' + plain + '</em></span><p>' + q[k] + '</p></div>').join('');
+      if (q.evidence) {
+        body += '<div><span class="rs-k">loot <em>evidence</em></span><div class="rs-loot">' +
+          q.evidence.map(([label, href]) => {
+            const ext = /^https?:/.test(href) ? ' target="_blank" rel="noopener"' : '';
+            return '<a href="' + href + '"' + ext + '>' + label + '</a>';
+          }).join('') + '</div></div>';
+      }
+      return '<details class="rs-q"><summary>' +
+          '<span class="rs-q-gem" aria-hidden="true">◆</span>' +
+          '<span class="rs-q-name">' + q.name +
+            (q.status ? '<span class="rs-status">' + q.status + '</span>' : '') +
+            '<span class="rs-q-tag">' + q.tag + '</span></span>' +
+          '<span class="rs-chev" aria-hidden="true"></span>' +
+        '</summary><div class="rs-q-body">' + body + '</div></details>';
+    };
+
+    const chapterHtml = c =>
+      '<details class="rs-ch ' + c.id + '" id="rs-' + c.id + '"><summary>' +
+          '<span class="rs-ch-num">' + c.ch + '</span>' +
+          '<span class="rs-ch-org">' + c.org +
+            '<span class="rs-status' + (c.active ? ' active' : '') + '">' + c.status + '</span></span>' +
+          '<span class="rs-chev" aria-hidden="true"></span>' +
+          '<span class="rs-ch-role">' + c.role + ' · ' + c.dates + '</span>' +
+          '<span class="rs-ch-sum">' + c.summary + '</span>' +
+        '</summary><div class="rs-ch-body">' +
+          c.quests.map(questHtml).join('') +
+          (c.more ? '<p class="rs-more">' + c.more + '</p>' : '') +
+        '</div></details>';
+
+    shell.innerHTML =
+      '<div class="rs-grid">' +
+        '<aside class="rs-sheet" aria-label="character sheet">' +
+          '<div class="rs-who">' +
+            '<span class="rs-ava"><img src="start-deer.png" alt=""/></span>' +
+            '<div><h1 class="rs-name">' + R.name + '</h1>' +
+            '<div class="rs-class">class: ' + R.klass + '</div></div>' +
+          '</div>' +
+          '<div><span class="rs-k">current quest <em>focus</em></span><p>' + R.focus + '</p></div>' +
+          '<div><span class="rs-k">backstory <em>summary</em></span><p>' + R.background + '</p></div>' +
+          '<div><span class="rs-k">party history <em>experience</em></span><ul class="rs-party">' +
+            R.chapters.map(c =>
+              '<li><button type="button" class="rs-jump ' + c.id + '" data-ch="' + c.id + '">' +
+                '<span class="dot" aria-hidden="true"></span>' +
+                '<span class="org">' + c.org + '</span>' +
+                '<span class="meta">' + c.role.split(' · ')[0] + ' · ' + c.dates + '</span>' +
+              '</button></li>').join('') +
+          '</ul></div>' +
+          '<div><span class="rs-k">inventory <em>skills</em></span><div class="rs-inv">' +
+            R.inventory.map(([grp, items]) =>
+              '<div class="rs-inv-row"><span class="grp">' + grp + '</span>' +
+                items.map(i => '<span class="rs-chip">' + i + '</span>').join('') + '</div>').join('') +
+          '</div></div>' +
+        '</aside>' +
+        '<section class="rs-log" aria-labelledby="rs-log-title">' +
+          '<div class="rs-log-head">' +
+            '<h2 class="rs-log-title" id="rs-log-title">quest log</h2>' +
+            '<span class="rs-tools">' +
+              '<button type="button" class="rs-tool rs-expand">expand all</button> ' +
+              '<button type="button" class="rs-tool rs-print">🖨 print</button>' +
+            '</span>' +
+          '</div>' +
+          R.chapters.map(chapterHtml).join('') +
+          '<p class="rs-foot">want to team up? <a href="#contact">say hi</a> ✨</p>' +
+        '</section>' +
+      '</div>';
+
+    // expand all ⇄ collapse all, kept honest as people open things by hand
+    const allDetails = () => shell.querySelectorAll('details');
+    const expandBtn = shell.querySelector('.rs-expand');
+    const syncExpand = () => {
+      const all = [...allDetails()].every(d => d.open);
+      expandBtn.textContent = all ? 'collapse all' : 'expand all';
+    };
+    expandBtn.addEventListener('click', () => {
+      const open = ![...allDetails()].every(d => d.open);
+      allDetails().forEach(d => { d.open = open; });
+      syncExpand();
+    });
+    shell.addEventListener('toggle', syncExpand, true);   // toggle doesn't bubble
+
+    shell.querySelector('.rs-print').addEventListener('click', () => window.print());
+
+    // party history jumps straight to (and opens) that chapter
+    const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    shell.querySelectorAll('.rs-jump').forEach(b => {
+      b.addEventListener('click', () => {
+        const ch = shell.querySelector('#rs-' + b.dataset.ch);
+        ch.open = true;
+        ch.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+        ch.querySelector('summary').focus({ preventScroll: true });
+      });
+    });
+
+    return shell;
+  }
+
+  /* printing with resume.exe open prints the résumé alone, fully expanded,
+     then puts every disclosure back the way the visitor left it */
+  let printRestore = null;
+  window.addEventListener('beforeprint', () => {
+    const shell = document.querySelector('.rs-shell');
+    if (!shell) return;
+    const ds = [...shell.querySelectorAll('details')];
+    const was = ds.map(d => d.open);
+    ds.forEach(d => { d.open = true; });
+    document.body.classList.add('print-resume');
+    printRestore = () => { ds.forEach((d, i) => { d.open = was[i]; }); };
+  });
+  window.addEventListener('afterprint', () => {
+    document.body.classList.remove('print-resume');
+    if (printRestore) { printRestore(); printRestore = null; }
+  });
+
   const PROGRAMS = {
     launcher:    { icon: '🦌', title: 'welcome.exe',          bg: '#0e0a13', width: 'min(600px, calc(100% - 24px))', pinned: true, render( ){ return makeLauncher(); } },
+    resume:      { icon: '📜', title: 'resume.exe',           bg: '#fdf6fb', width: 'min(900px, calc(100% - 24px))', pinned: true, render( ){ return makeResume(); } },
     welcome:     { icon: '🌱', title: 'about_me.txt',         bg: '#f3f9ee', width: 'min(660px, calc(100% - 24px))', render( ){ return makeWelcome(); } },
     youtube:     { icon: '▶️', title: 'youtube',              bg: '#fdeee0', render( ){ return makeYoutube(); } },
     studio:      { icon: '✦', title: 'studio.txt',           bg: '#f3f4ea', width: 'min(660px, calc(100% - 24px))', render( ){ return makeProjectDoc({
@@ -1220,7 +1711,7 @@
     'dain-img':  { icon: '🖼️', title: 'dain.jpg',             bg: '#fdeee0', render( ){ return makeImageViewer({ src: 'dain.jpg', alt: 'dain — character art', credit: 'Pricklepants', url: 'https://bsky.app/profile/pricklepants.bsky.social' }); } },
     contact:     { icon: '✉️', title: 'contact',              bg: '#e9f5fe', render( ){ return makeContact(); } },
   };
-  const DESKTOP_ICONS = ['launcher', 'welcome', 'youtube', 'studio', 'willowden', 'chordial', 'focus', 'chaos-cube', 'dormant', 'dain-img', 'contact'];
+  const DESKTOP_ICONS = ['launcher', 'resume', 'welcome', 'youtube', 'studio', 'willowden', 'chordial', 'focus', 'chaos-cube', 'dormant', 'dain-img', 'contact'];
 
   const desk    = document.getElementById('desktop');
   const tasksEl = document.getElementById('tasks');
